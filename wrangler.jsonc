@@ -12,7 +12,33 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "anime_db",
+			"database_name": "anime-db",
+			"database_id": "feb58a7c-5330-4261-be8a-279a630f3c39",
+			"remote": false
+		}
+	],
+	/**
+	 * R2 Buckets for image and media storage
+	 */
+	"r2_buckets": [
+		{
+			"binding": "MEDIA_BUCKET",
+			"bucket_name": "anime-blog"
+		}
+	],
+	/**
+	 * KV Namespaces for caching and rate limiting
+	 */
+	"kv_namespaces": [
+		{
+			"binding": "CACHE_KV",
+			"id": "dfb4a1a1868c488cb1f9a7500b4ae61b"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
