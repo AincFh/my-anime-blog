@@ -1,9 +1,15 @@
-import { createPagesFunctionHandler } from "@react-router/cloudflare";
+import { createRequestHandler } from "react-router";
 
 // @ts-ignore - virtual module provided by React Router at build time
 import * as serverBuild from "../build/server";
 
-export const onRequest = createPagesFunctionHandler({
-    build: serverBuild,
-    mode: process.env.NODE_ENV,
-});
+const requestHandler = createRequestHandler(serverBuild, "production");
+
+export const onRequest: PagesFunction<Env> = async (context) => {
+    return requestHandler(context.request, {
+        cloudflare: {
+            env: context.env,
+            ctx: context,
+        },
+    });
+};
