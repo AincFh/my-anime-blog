@@ -12,6 +12,7 @@
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
 	},
 	"dependencies": {
+		"@react-router/cloudflare": "^7.9.6",
 		"@react-router/node": "^7.9.6",
 		"clsx": "^2.1.1",
 		"easymde": "^2.20.0",
