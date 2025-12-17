@@ -143,9 +143,8 @@ export default function NewArticle() {
                       key={color}
                       type="button"
                       onClick={() => setMoodColor(color)}
-                      className={`w-6 h-6 rounded-full border-2 ${
-                        moodColor === color ? "border-gray-800 scale-110" : "border-gray-300"
-                      }`}
+                      className={`w-6 h-6 rounded-full border-2 ${moodColor === color ? "border-gray-800 scale-110" : "border-gray-300"
+                        }`}
                       style={{ backgroundColor: color }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -278,22 +277,18 @@ export default function NewArticle() {
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   文章内容 * (Markdown)
                 </label>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* 左侧：Markdown 编辑区 */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+                {/* Markdown 编辑器 */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    文章内容 * (Markdown)
+                  </label>
+                  {/* NotionEditor 自带双栏预览，不需要外部 Grid */}
+                  <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden shadow-inner">
                     <NotionEditor
                       value={content}
                       onChange={setContent}
                       placeholder="# 标题\n\n在这里用 Markdown 写下你的内容...\n\n支持拖拽上传图片，实时预览效果"
                     />
-                  </div>
-                  {/* 右侧：实时预览区 */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 overflow-y-auto max-h-[600px]">
-                    <div className="prose prose-sm max-w-none">
-                      {/* 这里应该使用marked渲染，暂时显示占位符 */}
-                      <p className="text-gray-500 text-sm">实时预览区域</p>
-                      <p className="text-gray-400 text-xs">（需要集成Markdown渲染）</p>
-                    </div>
                   </div>
                 </div>
               </div>

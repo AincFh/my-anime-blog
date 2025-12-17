@@ -39,6 +39,10 @@ export default [
   route("api/auth/register", "routes/api.auth.register.ts"),
   route("api/auth/send-code", "routes/api.auth.send-code.ts"),
   route("api/user/me", "routes/api.user.me.ts"),
+  route("api/upload", "routes/api.upload.ts"),
+  route("api/comments", "routes/api.comments.tsx"),
+  route("api/admin/comments", "routes/api.admin.comments.ts"),
+  route("sitemap.xml", "routes/sitemap[.]xml.ts"),
   // 404 页面
   route("*", "routes/404.tsx"),
 ] satisfies RouteConfig;

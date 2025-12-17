@@ -24,57 +24,8 @@ export function DynamicBackground({ images }: DynamicBackgroundProps) {
         }}
       />
 
-      {/* 动态光晕效果 */}
-      <motion.div
-        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 rounded-full opacity-30"
-        style={{
-          background: 'radial-gradient(circle, rgba(255,159,67,0.4) 0%, transparent 70%)',
-        }}
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.35, 0.2],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      {/* 动态光晕效果 - 移除浮动圆圈以避免转场时的视觉干扰 */}
 
-      <motion.div
-        className="absolute -bottom-1/4 -left-1/4 w-2/3 h-2/3 rounded-full opacity-25"
-        style={{
-          background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)',
-        }}
-        animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.15, 0.3, 0.15],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 2,
-        }}
-      />
-
-      <motion.div
-        className="absolute top-1/3 left-1/2 w-1/3 h-1/3 rounded-full opacity-20"
-        style={{
-          background: 'radial-gradient(circle, rgba(236,72,153,0.25) 0%, transparent 70%)',
-        }}
-        animate={{
-          scale: [1, 1.1, 1],
-          x: [0, 30, 0],
-          y: [0, -20, 0],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 4,
-        }}
-      />
 
       {/* 柔和的渐变遮罩 */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-white/20" />

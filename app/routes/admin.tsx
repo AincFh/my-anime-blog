@@ -33,6 +33,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         likes: 28,
         storage: 1200,
       },
+      pendingComments: [],
     };
   }
 
@@ -53,6 +54,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect("/login-admin");
   }
 
+  // Fetch pending comments
+  let pendingComments: any[] = [];
+  try {
+    const result = await db.prepare(
+      "SELECT * FROM comments WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5"
+    ).all();
+    if (result.results) {
+      pendingComments = result.results;
+    }
+  } catch (e) {
+    console.error("Failed to fetch pending comments", e);
+  }
+
   return {
     stats: {
       pv: 1234, // 今日PV
@@ -63,13 +77,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       likes: 28, // 点赞数
       storage: 1200, // R2存储使用量（MB）
     },
+    pendingComments,
   };
 }
 
 export default function Admin({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isRoot = location.pathname === "/admin";
-  const { stats } = loaderData;
+  const { stats, pendingComments } = loaderData;
 
   if (!isRoot) {
     return <Outlet />;
@@ -237,10 +252,10 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
           {/* 最新留言 */}
           <div className="glass-card-deep p-6 tech-border">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 font-orbitron">
-              <span className="text-violet-400">::</span> 最新留言
+              <span className="text-violet-400">::</span> 待审核留言
             </h2>
             <div className="space-y-3">
-              <CommentManager />
+              <CommentManager initialComments={pendingComments || []} />
             </div>
           </div>
         </div>

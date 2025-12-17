@@ -53,19 +53,23 @@
 }
 
 .markdown-content img {
-  @apply rounded-lg shadow-lg max-w-full my-4 cursor-pointer;
+  @apply rounded-xl shadow-lg max-w-full max-h-[600px] w-auto mx-auto my-8 block cursor-pointer transition-transform duration-300;
+}
+
+.markdown-content img:hover {
+  @apply scale-[1.02];
 }
 
 .markdown-content pre {
-  @apply bg-slate-800 rounded-lg p-4 overflow-x-auto my-4;
+  @apply bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 overflow-x-auto my-8 border border-slate-700/50;
 }
 
 .markdown-content code {
-  @apply bg-slate-800/50 px-1 py-0.5 rounded text-sm;
+  @apply bg-slate-800/50 px-1.5 py-0.5 rounded text-sm font-mono text-orange-300;
 }
 
 .markdown-content pre code {
-  @apply bg-transparent p-0;
+  @apply bg-transparent p-0 text-slate-200;
 }
 
 .markdown-content h1,
@@ -74,41 +78,70 @@
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-  @apply font-bold text-white mt-6 mb-3;
+  @apply font-bold text-white mt-10 mb-6 leading-tight;
 }
 
 .markdown-content h1 {
-  @apply text-3xl;
+  @apply text-4xl border-b border-slate-700/50 pb-4;
 }
 
 .markdown-content h2 {
-  @apply text-2xl;
+  @apply text-3xl;
 }
 
 .markdown-content h3 {
-  @apply text-xl;
+  @apply text-2xl;
 }
 
 .markdown-content p {
-  @apply mb-4 leading-relaxed;
+  @apply mb-6 leading-loose text-lg text-slate-300/90;
 }
 
 .markdown-content ul,
 .markdown-content ol {
-  @apply mb-4 pl-6;
+  @apply mb-6 pl-6 space-y-2 text-slate-300;
 }
 
 .markdown-content li {
-  @apply mb-2;
+  @apply leading-relaxed;
 }
 
 .markdown-content blockquote {
-  @apply border-l-4 pl-4 italic my-4 text-slate-300;
+  @apply border-l-4 pl-6 italic my-8 text-slate-400 bg-slate-800/30 py-4 rounded-r-lg;
   border-color: #FF9F43;
 }
 
 .markdown-content a {
-  @apply text-primary-start hover:text-primary-end underline;
+  @apply text-primary-start hover:text-primary-end underline decoration-2 underline-offset-4 transition-colors;
+}
+
+/* Spoiler Styles */
+[data-spoiler] {
+  @apply relative rounded bg-black text-transparent transition-all duration-300 cursor-pointer select-none overflow-hidden my-2;
+}
+
+[data-spoiler] * {
+  @apply opacity-0 transition-opacity duration-300;
+}
+
+[data-spoiler]:hover,
+[data-spoiler]:active {
+  @apply bg-transparent text-slate-200 select-auto;
+}
+
+[data-spoiler]:hover *,
+[data-spoiler]:active * {
+  @apply opacity-100;
+}
+
+[data-spoiler]::before {
+  content: attr(data-warning);
+  @apply absolute inset-0 flex items-center justify-center text-sm font-bold text-white/50 uppercase tracking-widest pointer-events-none;
+  text-shadow: 0 0 2px black;
+}
+
+[data-spoiler]:hover::before {
+  @apply opacity-0;
 }
 
 @theme {

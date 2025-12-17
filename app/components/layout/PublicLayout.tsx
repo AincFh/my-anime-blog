@@ -31,8 +31,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Atmosphere Layer - Bokeh Lights - 简化动画减少性能开销 */}
-            <div className="fixed inset-0 z-[1] pointer-events-none">
-                {/* Large bokeh circles - 使用 CSS 动画替代 Framer Motion */}
+            {/* Atmosphere Layer - Bokeh Lights - 简化动画减少性能开销 - 已移除以修复转场闪烁问题 */}
+            {/* <div className="fixed inset-0 z-[1] pointer-events-none">
                 <div
                     className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary-start/20 blur-3xl animate-pulse-slow"
                 />
@@ -42,7 +42,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <div
                     className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-yellow-300/15 blur-3xl animate-pulse-slowest"
                 />
-            </div>
+            </div> */}
 
             {/* 金色光尘粒子效果 - 性能优化：低性能设备禁用 */}
             {enableParticles && <GlobalParticleEffect />}
@@ -54,7 +54,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <FloatingNav />
 
             {/* Content */}
-            <div className="relative z-10 pb-20 md:pb-0">
+            <div className="relative z-10 pb-20 md:pb-0 md:pt-24">
                 {children}
             </div>
         </div>

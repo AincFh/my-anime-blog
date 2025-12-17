@@ -19,5 +19,24 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "anime_db",
+			"database_name": "my-anime-blog-db",
+			"database_id": "8402c527-79c1-4d4a-87d6-b7c2d44d0ab7"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE_KV",
+			"id": "c4d47b9eb05b4638ae5ef5e91bd59fb0"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "IMAGES_BUCKET",
+			"bucket_name": "my-anime-blog"
+		}
+	]
 }

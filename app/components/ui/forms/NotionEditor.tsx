@@ -104,16 +104,54 @@ export function NotionEditor({ value, onChange, placeholder, onSave }: NotionEdi
       return;
     }
 
-    // TODO: 实际上传到R2
-    // 这里先使用base64作为占位符
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      // 插入Markdown图片语法
-      insertText(`![${file.name}](${base64})\n`);
-    };
-    reader.readAsDataURL(file);
-  }, [insertText]);
+    // 插入上传中占位符
+    const placeholderId = `uploading-${Date.now()}`;
+    insertText(`![上传中...](${placeholderId})`);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        // 替换占位符为真实链接
+        if (textareaRef.current) {
+          const newContent = textareaRef.current.value.replace(
+            `![上传中...](${placeholderId})`,
+            `![${file.name}](${data.url})`
+          );
+          onChange(newContent);
+        }
+      } else {
+        alert("上传失败: " + (data.error || "未知错误"));
+        // 移除占位符
+        if (textareaRef.current) {
+          const newContent = textareaRef.current.value.replace(
+            `![上传中...](${placeholderId})`,
+            ""
+          );
+          onChange(newContent);
+        }
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("上传出错");
+      // 移除占位符
+      if (textareaRef.current) {
+        const newContent = textareaRef.current.value.replace(
+          `![上传中...](${placeholderId})`,
+          ""
+        );
+        onChange(newContent);
+      }
+    }
+  }, [insertText, onChange, value]); // Added value to dependency as we read it via ref/onChange but better to be safe
 
   // 拖拽处理
   const handleDragOver = useCallback((e: React.DragEvent) => {

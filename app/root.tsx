@@ -77,15 +77,34 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 简化的页面转场动画
+  // 优化的页面转场动画 - 丝滑流体感
   const pageVariants = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
+    initial: {
+      opacity: 0,
+      y: 20, // 从下方轻微浮入
+      scale: 0.98, // 轻微放大
+      filter: "blur(8px)", // 初始模糊
+    },
+    animate: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: "blur(0px)",
+    },
+    exit: {
+      opacity: 0,
+      filter: "blur(5px)", // 仅保留模糊和透明度变化，避免位移导致的"闪烁"感
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut"
+      }
+    },
   };
 
   const pageTransition = {
-    duration: 0.3,
+    type: "tween",
+    ease: "anticipate",
+    duration: 0.4,
   };
 
   // 如果是管理员登录页，直接渲染，不使用任何布局
@@ -105,7 +124,7 @@ export default function App() {
           <CustomCursor />
           <MusicPlayer />
           <Live2D />
-          <EyeCatch />
+          {/* <EyeCatch /> - 移除过场动画，避免视觉闪烁 */}
           <TheatricalMode />
           <AmbientSound scene="default" />
           <OmniCommand />

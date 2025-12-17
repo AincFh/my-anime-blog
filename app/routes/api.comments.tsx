@@ -1,6 +1,6 @@
 import type { Route } from "./+types/api.comments";
 import { isSpamComment, sanitizeComment, jsonWithSecurity } from "~/utils/security";
-import { json } from "@remix-run/cloudflare";
+
 
 /**
  * 评论API
@@ -35,20 +35,19 @@ export async function action({ request, context }: Route.ActionArgs) {
           }),
         }
       );
-      
+
       if (!verifyResponse.ok) {
         return jsonWithSecurity({ error: "验证服务异常" }, { status: 500 });
-  }
+      }
 
-  const verifyData = await verifyResponse.json();
-  if (!verifyData.success) {
-    return jsonWithSecurity({ error: "人机验证失败" }, { status: 400 });
-  }
+      const verifyData = await verifyResponse.json();
+      if (!verifyData.success) {
+        return jsonWithSecurity({ error: "人机验证失败" }, { status: 400 });
       }
     } catch (error) {
-    console.error('Turnstile verification error:', error);
-    return jsonWithSecurity({ error: '验证服务不可用' }, { status: 500 });
-  }
+      console.error('Turnstile verification error:', error);
+      return jsonWithSecurity({ error: '验证服务不可用' }, { status: 500 });
+    }
   } else {
     // 开发环境：记录警告但不阻断
     console.warn('TURNSTILE_SECRET not configured, skipping verification');

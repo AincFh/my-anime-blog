@@ -101,9 +101,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="container mx-auto px-4 py-20">
+    <div className="container mx-auto px-4 pb-8 md:pb-12 pt-0 overflow-x-hidden">
       {/* Hero Section - 优化版：减少动画延迟，提升 LCP */}
-      <div className="flex flex-col lg:flex-row items-center justify-between min-h-[80vh] px-4 relative z-10">
+      <div className="flex flex-col lg:flex-row items-center justify-between min-h-[60vh] px-4 relative z-10">
         {/* Left: Greeting Text - 立即显示，无延迟 */}
         <div className="lg:w-1/2 mb-12 lg:mb-0 text-center lg:text-left">
           <div className="mb-6">
