@@ -41,12 +41,12 @@ export function DailyQuests() {
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div className="glass-card-deep p-6 tech-border">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          📅 每日任务
+        <h2 className="text-xl font-bold text-white flex items-center gap-2 font-orbitron">
+          <span className="text-violet-400">📅</span> 每日任务
         </h2>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-white/50 font-mono">
           {completedCount}/{totalCount} 完成
         </span>
       </div>
@@ -55,54 +55,67 @@ export function DailyQuests() {
         {quests.map((quest, index) => (
           <motion.div
             key={quest.id}
-            className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
             onClick={() => toggleQuest(quest.id)}
           >
-            <input
-              type="checkbox"
-              checked={quest.completed}
-              onChange={() => toggleQuest(quest.id)}
-              className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-500"
-            />
+            <div className="relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={quest.completed}
+                onChange={() => toggleQuest(quest.id)}
+                className="peer appearance-none w-5 h-5 rounded border border-white/30 bg-white/5 checked:bg-pink-500 checked:border-pink-500 transition-colors cursor-pointer"
+              />
+              <svg
+                className="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+                viewBox="0 0 14 14"
+                fill="none"
+              >
+                <path
+                  d="M3 7L5.5 9.5L11 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
             <div className="flex-1">
               <p
-                className={`text-sm ${
-                  quest.completed ? "line-through text-gray-400" : "text-gray-700"
-                }`}
+                className={`text-sm transition-colors ${quest.completed ? "line-through text-white/30" : "text-white/80 group-hover:text-white"
+                  }`}
               >
                 {quest.task}
               </p>
             </div>
-            <span className="text-xs font-bold text-yellow-600">+{quest.exp} EXP</span>
+            <span className="text-xs font-bold text-yellow-400 font-mono shadow-[0_0_10px_rgba(250,204,21,0.2)]">+{quest.exp} EXP</span>
           </motion.div>
         ))}
       </div>
 
-      <div className="pt-4 border-t border-gray-200">
+      <div className="pt-4 border-t border-white/10">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-gray-700">今日获得经验</span>
-          <span className="text-lg font-bold text-yellow-600">{totalExp} EXP</span>
+          <span className="text-sm font-medium text-white/60">今日获得经验</span>
+          <span className="text-lg font-bold text-yellow-400 font-mono text-neon" style={{ textShadow: "0 0 10px rgba(250, 204, 21, 0.5)" }}>{totalExp} EXP</span>
         </div>
 
         {/* 成就徽章 */}
         <div className="mt-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">🏆 成就徽章</h3>
+          <h3 className="text-sm font-medium text-white/60 mb-3 tracking-wider">🏆 成就徽章</h3>
           <div className="flex gap-2">
             {achievements.map((achievement) => (
               <motion.div
                 key={achievement.id}
-                className={`flex flex-col items-center p-2 rounded-lg ${
-                  achievement.unlocked
-                    ? "bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-yellow-300"
-                    : "bg-gray-100 border-2 border-gray-200 opacity-50"
-                }`}
+                className={`flex flex-col items-center p-2 rounded-lg border ${achievement.unlocked
+                    ? "bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.1)]"
+                    : "bg-white/5 border-white/10 opacity-50 grayscale"
+                  }`}
                 whileHover={{ scale: 1.05 }}
               >
-                <span className="text-2xl mb-1">{achievement.icon}</span>
-                <p className="text-xs font-bold text-gray-700">{achievement.name}</p>
+                <span className="text-2xl mb-1 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">{achievement.icon}</span>
+                <p className={`text-xs font-bold ${achievement.unlocked ? "text-yellow-300" : "text-white/40"}`}>{achievement.name}</p>
               </motion.div>
             ))}
           </div>

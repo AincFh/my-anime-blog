@@ -32,24 +32,27 @@ export function MemoPad() {
 
   return (
     <motion.div
-      className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 shadow-sm border-2 border-yellow-200"
+      className="glass-card-deep p-6 tech-border relative overflow-hidden group"
       initial={{ opacity: 0, rotate: -2 }}
       animate={{ opacity: 1, rotate: 0 }}
-      style={{
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)",
-      }}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          📝 灵感便签
+      {/* 背景装饰：全息网格 */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+
+      {/* 顶部发光条 */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/50 via-orange-500/50 to-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+
+      <div className="flex items-center justify-between mb-4 relative z-10">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2 font-orbitron">
+          <span className="text-yellow-400">📝</span> 灵感便签
         </h2>
         <motion.button
           onClick={handleSave}
-          className="px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors"
+          className="px-4 py-1.5 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 text-sm font-medium rounded hover:bg-yellow-500/30 transition-all shadow-[0_0_10px_rgba(234,179,8,0.2)]"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          保存
+          SAVE
         </motion.button>
       </div>
       <textarea
@@ -57,13 +60,12 @@ export function MemoPad() {
         onChange={(e) => setMemo(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="随手记下你的想法...&#10;支持 Ctrl+Enter 快速保存"
-        className="w-full h-48 bg-transparent border-none outline-none resize-none text-gray-800 placeholder-gray-400 font-serif"
-        style={{ fontFamily: "'Noto Serif SC', serif" }}
+        className="w-full h-48 bg-black/20 border border-white/5 rounded-lg p-4 outline-none resize-none text-white/90 placeholder-white/30 font-mono focus:border-yellow-500/30 focus:bg-black/30 transition-all relative z-10"
+        style={{ fontFamily: "'JetBrains Mono', monospace" }}
       />
-      <p className="text-xs text-gray-500 mt-2">
-        💡 提示：按 Ctrl+Enter 快速保存
+      <p className="text-xs text-white/40 mt-2 font-mono relative z-10">
+        <span className="text-yellow-500/70">TIP:</span> Ctrl+Enter to save
       </p>
     </motion.div>
   );
 }
-

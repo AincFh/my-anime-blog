@@ -1,0 +1,226 @@
+/**
+ * 代码高亮样式 - GitHub Dark 风格
+ * 基于 highlight.js 的主题定制
+ */
+
+/* 代码块容器 */
+.code-block-wrapper {
+    @apply relative my-6 rounded-xl overflow-hidden;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.3),
+        0 2px 4px -2px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 代码块头部 */
+.code-block-header {
+    @apply flex items-center justify-between px-4 py-2;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 语言标签 */
+.code-language {
+    @apply text-xs font-mono font-medium uppercase tracking-wider;
+    color: #94a3b8;
+}
+
+/* 复制按钮 */
+.copy-code-btn {
+    @apply text-xs px-3 py-1 rounded-md font-medium transition-all duration-200;
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.copy-code-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 代码块内容 */
+.code-block-wrapper pre {
+    @apply p-4 m-0 overflow-x-auto;
+    background: transparent !important;
+}
+
+.code-block-wrapper pre code {
+    @apply font-mono text-sm leading-relaxed;
+    background: transparent !important;
+    padding: 0 !important;
+    tab-size: 2;
+}
+
+/* 行内代码 */
+.inline-code {
+    @apply px-1.5 py-0.5 rounded text-sm font-mono;
+    background: rgba(255, 159, 67, 0.15);
+    color: #FF9F43;
+    border: 1px solid rgba(255, 159, 67, 0.2);
+}
+
+/* ============================================
+   Highlight.js GitHub Dark 主题
+   ============================================ */
+
+.hljs {
+    color: #e6edf3;
+    background: transparent;
+}
+
+/* 注释 */
+.hljs-comment,
+.hljs-quote {
+    color: #8b949e;
+    font-style: italic;
+}
+
+/* 关键字 */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-addition {
+    color: #ff7b72;
+}
+
+/* 数字 */
+.hljs-number,
+.hljs-regexp,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+    color: #79c0ff;
+}
+
+/* 字符串 */
+.hljs-string,
+.hljs-doctag,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-meta .hljs-string {
+    color: #a5d6ff;
+}
+
+/* 变量、属性 */
+.hljs-variable,
+.hljs-attribute,
+.hljs-property,
+.hljs-params {
+    color: #ffa657;
+}
+
+/* 函数 */
+.hljs-function,
+.hljs-title.function_ {
+    color: #d2a8ff;
+}
+
+/* 类名 */
+.hljs-class .hljs-title,
+.hljs-title.class_,
+.hljs-literal,
+.hljs-built_in,
+.hljs-type {
+    color: #7ee787;
+}
+
+/* 标签名 */
+.hljs-tag,
+.hljs-name {
+    color: #7ee787;
+}
+
+/* 属性名 */
+.hljs-attr {
+    color: #79c0ff;
+}
+
+/* 符号 */
+.hljs-symbol,
+.hljs-bullet,
+.hljs-subst {
+    color: #ff7b72;
+}
+
+/* 标题 */
+.hljs-title,
+.hljs-section {
+    color: #d2a8ff;
+    font-weight: bold;
+}
+
+/* 删除 */
+.hljs-deletion {
+    color: #ffa198;
+    background-color: rgba(248, 81, 73, 0.15);
+}
+
+/* 添加 */
+.hljs-addition {
+    color: #7ee787;
+    background-color: rgba(46, 160, 67, 0.15);
+}
+
+/* 强调 */
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
+}
+
+/* Meta */
+.hljs-meta {
+    color: #8b949e;
+}
+
+.hljs-meta .hljs-keyword {
+    color: #ff7b72;
+}
+
+/* 链接 */
+.hljs-link {
+    color: #a5d6ff;
+    text-decoration: underline;
+}
+
+/* ============================================
+   Spoiler 剧透块样式
+   ============================================ */
+
+[data-spoiler] {
+    @apply relative my-4 p-4 rounded-xl overflow-hidden;
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 159, 67, 0.1) 100%);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+[data-spoiler]::before {
+    content: attr(data-warning);
+    @apply block text-sm font-medium mb-2 pb-2;
+    color: #ff6b6b;
+    border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+[data-spoiler]>* {
+    filter: blur(5px);
+    transition: filter 0.3s ease;
+}
+
+[data-spoiler]:hover>* {
+    filter: blur(0);
+}
+
+[data-spoiler]::after {
+    content: "悬停查看";
+    @apply absolute inset-0 flex items-center justify-center text-sm font-medium;
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+[data-spoiler]:hover::after {
+    opacity: 0;
+}

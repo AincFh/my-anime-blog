@@ -12,7 +12,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
 
   // 安全检查：本地开发环境可能没有 cloudflare context  
-  const db = (context?.cloudflare?.env as any)?.DB;
+  const db = ((context as any)?.cloudflare?.env as any)?.DB;
 
   // 如果没有数据库连接（本地开发模式）
   if (!db) {
@@ -95,7 +95,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
   }) => {
     return (
       <motion.div
-        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+        className="glass-card-deep p-6 tech-border"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -4 }}
@@ -103,28 +103,30 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{icon}</span>
-            <h3 className="font-bold text-gray-800">{title}</h3>
+            <span className="text-3xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">{icon}</span>
+            <h3 className="font-bold text-white/90 tracking-wide">{title}</h3>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold font-mono" style={{ color }}>
+            <div className="text-2xl font-bold font-mono text-neon" style={{ color, textShadow: `0 0 10px ${color}` }}>
               {value.toLocaleString()}
-              {unit}
+              <span className="text-sm ml-1 opacity-70">{unit}</span>
             </div>
             {max > 0 && (
-              <div className="text-xs text-gray-500 font-mono">/ {max.toLocaleString()}</div>
+              <div className="text-xs text-white/40 font-mono">/ {max.toLocaleString()}</div>
             )}
           </div>
         </div>
         {/* 进度条 */}
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <motion.div
-            className="h-full rounded-full"
-            style={{ backgroundColor: color }}
+            className="h-full rounded-full relative overflow-hidden"
+            style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(percentage, 100)}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-          />
+          >
+            <div className="absolute inset-0 bg-white/30 w-full h-full animate-[shimmer_2s_infinite]"></div>
+          </motion.div>
         </div>
       </motion.div>
     );
@@ -144,7 +146,9 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">指挥中心</h1>
+        <h1 className="text-3xl font-bold text-white mb-8 font-orbitron tracking-wider flex items-center gap-3">
+          <span className="text-violet-400">///</span> 指挥中心
+        </h1>
 
         {/* 第一行：RPG 属性卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -172,7 +176,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
             max={100}
             color="#F59E0B"
             icon="⭐"
-            unit=" 条评论"
+            unit=" 评"
             percentage={88}
           />
           <StatCard
@@ -207,23 +211,23 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
         {/* 第三行：日志区 - 2栏布局 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* 系统日志 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              🚀 系统日志
+          <div className="glass-card-deep p-6 tech-border">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 font-orbitron">
+              <span className="text-violet-400">::</span> 系统日志
             </h2>
             <div className="space-y-3">
               {systemLogs.map((log, index) => (
                 <motion.div
                   key={index}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
                   <span className="text-xl">{log.icon}</span>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-700">{log.action}</p>
-                    <p className="text-xs text-gray-500 font-mono">{log.time}</p>
+                    <p className="text-sm text-white/90">{log.action}</p>
+                    <p className="text-xs text-white/40 font-mono">{log.time}</p>
                   </div>
                 </motion.div>
               ))}
@@ -231,9 +235,9 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* 最新留言 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              💬 最新留言
+          <div className="glass-card-deep p-6 tech-border">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 font-orbitron">
+              <span className="text-violet-400">::</span> 最新留言
             </h2>
             <div className="space-y-3">
               <CommentManager />
@@ -245,42 +249,42 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link to="/admin/article/new">
             <motion.div
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 cursor-pointer"
+              className="glass-card-deep p-6 tech-border cursor-pointer group"
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-center text-center">
-                <span className="text-5xl mb-4">✍️</span>
-                <h3 className="font-bold text-pink-600 mb-2">撰写手记</h3>
-                <p className="text-sm text-gray-500">开始创作新内容</p>
+                <span className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">✍️</span>
+                <h3 className="font-bold text-pink-400 mb-2 font-orbitron tracking-wide group-hover:text-pink-300">撰写手记</h3>
+                <p className="text-sm text-white/50">开始创作新内容</p>
               </div>
             </motion.div>
           </Link>
 
           <Link to="/admin/anime/manage">
             <motion.div
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 cursor-pointer"
+              className="glass-card-deep p-6 tech-border cursor-pointer group"
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-center text-center">
-                <span className="text-5xl mb-4">🎬</span>
-                <h3 className="font-bold text-blue-500 mb-2">番剧记录</h3>
-                <p className="text-sm text-gray-500">管理我的追番</p>
+                <span className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">🎬</span>
+                <h3 className="font-bold text-blue-400 mb-2 font-orbitron tracking-wide group-hover:text-blue-300">番剧记录</h3>
+                <p className="text-sm text-white/50">管理我的追番</p>
               </div>
             </motion.div>
           </Link>
 
           <Link to="/admin/gallery">
             <motion.div
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 cursor-pointer"
+              className="glass-card-deep p-6 tech-border cursor-pointer group"
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex flex-col items-center text-center">
-                <span className="text-5xl mb-4">🖼️</span>
-                <h3 className="font-bold text-purple-500 mb-2">影像仓库</h3>
-                <p className="text-sm text-gray-500">管理图片资源</p>
+                <span className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">🖼️</span>
+                <h3 className="font-bold text-purple-400 mb-2 font-orbitron tracking-wide group-hover:text-purple-300">影像仓库</h3>
+                <p className="text-sm text-white/50">管理图片资源</p>
               </div>
             </motion.div>
           </Link>

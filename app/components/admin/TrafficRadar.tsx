@@ -39,15 +39,15 @@ export function TrafficRadar() {
   const totalReferrers = referrers.reduce((sum, r) => sum + r.count, 0);
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-        📊 流量分析雷达
+    <div className="glass-card-deep p-6 tech-border">
+      <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 font-orbitron">
+        <span className="text-violet-400">📊</span> 流量分析雷达
       </h2>
 
       <div className="space-y-6">
         {/* 访问趋势图 */}
         <div>
-          <h3 className="text-sm font-medium text-gray-600 mb-4">最近7天访问趋势</h3>
+          <h3 className="text-sm font-medium text-white/60 mb-4 tracking-wider">最近7天访问趋势</h3>
           <div className="relative h-48">
             <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
               {/* 网格线 */}
@@ -58,7 +58,7 @@ export function TrafficRadar() {
                   y1={30 + i * 30}
                   x2="400"
                   y2={30 + i * 30}
-                  stroke="#E5E7EB"
+                  stroke="rgba(255,255,255,0.1)"
                   strokeWidth="1"
                 />
               ))}
@@ -80,6 +80,7 @@ export function TrafficRadar() {
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 1.5, ease: "easeInOut" }}
+                style={{ filter: "drop-shadow(0 0 4px rgba(139, 92, 246, 0.5))" }}
               />
 
               {/* UV曲线 */}
@@ -105,12 +106,12 @@ export function TrafficRadar() {
               {/* 渐变定义 */}
               <defs>
                 <linearGradient id="gradientPV" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8" />
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="1" />
                 </linearGradient>
                 <linearGradient id="gradientUV" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.8" />
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="1" />
                 </linearGradient>
               </defs>
 
@@ -121,13 +122,13 @@ export function TrafficRadar() {
                 const uvY = 150 - (d.uv / maxUV) * 120 - 15;
                 return (
                   <g key={i}>
-                    <circle cx={x} cy={pvY} r="4" fill="#3B82F6" />
-                    <circle cx={x} cy={uvY} r="4" fill="#10B981" />
+                    <circle cx={x} cy={pvY} r="4" fill="#3B82F6" className="drop-shadow-[0_0_4px_rgba(59,130,246,0.8)]" />
+                    <circle cx={x} cy={uvY} r="4" fill="#10B981" className="drop-shadow-[0_0_4px_rgba(16,185,129,0.8)]" />
                     <text
                       x={x}
                       y="145"
                       textAnchor="middle"
-                      className="text-xs fill-gray-500"
+                      className="text-xs fill-white/40 font-mono"
                     >
                       {d.day}
                     </text>
@@ -135,13 +136,13 @@ export function TrafficRadar() {
                 );
               })}
             </svg>
-            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+            <div className="flex items-center gap-4 mt-2 text-xs text-white/50 font-mono">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-blue-500 rounded-full shadow-[0_0_5px_#3b82f6]"></div>
                 <span>PV</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-dashed"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-dashed shadow-[0_0_5px_#22c55e]"></div>
                 <span>UV</span>
               </div>
             </div>
@@ -150,22 +151,25 @@ export function TrafficRadar() {
 
         {/* 热点文章榜 */}
         <div>
-          <h3 className="text-sm font-medium text-gray-600 mb-4">热点文章榜</h3>
+          <h3 className="text-sm font-medium text-white/60 mb-4 tracking-wider">热点文章榜</h3>
           <div className="space-y-2">
             {topArticles.map((article, index) => (
               <motion.div
                 key={article.rank}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-sm">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${article.rank === 1
+                    ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-[0_0_10px_rgba(234,179,8,0.5)]"
+                    : "bg-white/10 text-white/70"
+                  }`}>
                   {article.rank === 1 ? "👑" : article.rank}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">{article.title}</p>
-                  <p className="text-xs text-gray-500">{article.views} 次阅读</p>
+                  <p className="text-sm font-medium text-white/90">{article.title}</p>
+                  <p className="text-xs text-white/40 font-mono">{article.views} 次阅读</p>
                 </div>
               </motion.div>
             ))}
@@ -174,7 +178,7 @@ export function TrafficRadar() {
 
         {/* 访客来源 */}
         <div>
-          <h3 className="text-sm font-medium text-gray-600 mb-4">访客来源</h3>
+          <h3 className="text-sm font-medium text-white/60 mb-4 tracking-wider">访客来源</h3>
           <div className="flex items-center justify-center">
             <svg width="200" height="200" viewBox="0 0 200 200">
               <circle
@@ -182,7 +186,7 @@ export function TrafficRadar() {
                 cy="100"
                 r="80"
                 fill="none"
-                stroke="#E5E7EB"
+                stroke="rgba(255,255,255,0.1)"
                 strokeWidth="20"
               />
               {referrers.map((ref, index) => {
@@ -210,6 +214,8 @@ export function TrafficRadar() {
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     transition={{ duration: 1, delay: index * 0.2 }}
+                    stroke="rgba(15, 23, 42, 0.5)"
+                    strokeWidth="2"
                   />
                 );
               })}
@@ -219,11 +225,11 @@ export function TrafficRadar() {
             {referrers.map((ref) => (
               <div key={ref.source} className="flex items-center gap-2 text-sm">
                 <div
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: ref.color }}
+                  className="w-3 h-3 rounded-full shadow-[0_0_5px_currentColor]"
+                  style={{ backgroundColor: ref.color, color: ref.color }}
                 ></div>
-                <span className="text-gray-600">{ref.source}</span>
-                <span className="text-gray-400 ml-auto">{ref.count}%</span>
+                <span className="text-white/70">{ref.source}</span>
+                <span className="text-white/40 ml-auto font-mono">{ref.count}%</span>
               </div>
             ))}
           </div>
