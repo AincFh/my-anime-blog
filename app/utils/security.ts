@@ -30,13 +30,13 @@ export function getSecurityHeaders(): SecurityHeaders {
  */
 export function addSecurityHeaders(response: Response): Response {
   const headers = getSecurityHeaders();
-  
+
   Object.entries(headers).forEach(([key, value]) => {
     if (value) {
       response.headers.set(key, value);
     }
   });
-  
+
   return response;
 }
 
@@ -46,4 +46,43 @@ export function addSecurityHeaders(response: Response): Response {
 export function jsonWithSecurity(data: any, init?: ResponseInit): Response {
   const response = Response.json(data, init);
   return addSecurityHeaders(response);
+}
+
+/**
+ * 清理评论内容，移除潜在危险字符
+ */
+export function sanitizeComment(content: string): string {
+  if (!content) return '';
+
+  return content
+    .trim()
+    // 移除HTML标签
+    .replace(/<[^>]*>/g, '')
+    // 移除script相关内容
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+=/gi, '')
+    // 限制长度
+    .slice(0, 2000);
+}
+
+/**
+ * 检测是否为垃圾评论
+ */
+export function isSpamComment(content: string): boolean {
+  if (!content) return false;
+
+  const spamPatterns = [
+    // 常见垃圾邮件关键词
+    /赌博|博彩|棋牌|老虎机/i,
+    /代开发票|代办证件/i,
+    /加微信|加QQ|加我/i,
+    /免费领取|点击领取/i,
+    /日赚|月入|躺赚/i,
+    // 链接类
+    /https?:\/\/[^\s]+\.(xyz|top|cc|tk|ml|ga|cf)/i,
+    // 重复字符
+    /(.)\1{10,}/,
+  ];
+
+  return spamPatterns.some(pattern => pattern.test(content));
 }
