@@ -15,39 +15,66 @@
 - ✅ **全文搜索**: 基于 SQLite FTS5 的高性能搜索
 
 #### 2. 核心功能页面
-- ✅ **首页 (Home)**: 沉浸式 Hero 区域，最新动态展示
+- ✅ **首页 (Home)**: 沉浸式 Hero 区域，视差滚动，最新动态展示
 - ✅ **文章列表 (Articles)**: 响应式网格布局，支持分类筛选
 - ✅ **时光机 (Archive)**: 双列交互式时间轴，记录生活点滴
 - ✅ **番剧墙 (Bangumi)**: 瀑布流海报展示，支持状态过滤和评分
 - ✅ **图库 (Gallery)**: 拍立得风格照片墙，支持随机旋转和视差效果
-- ✅ **文章详情**: Markdown 渲染、代码高亮、目录导航、剧透标签、作者信息侧边栏
+- ✅ **文章详情**: Markdown 渲染、代码高亮 (highlight.js)、目录导航、剧透标签、作者信息侧边栏
+- ✅ **用户仪表盘**: 个人数据统计、活动时间线
+- ✅ **成就系统**: 徽章展示、解锁进度追踪
+- ✅ **RSS/Atom 订阅**: 自动生成 `rss.xml` 和 `atom.xml` 订阅源
 
 #### 3. 后台管理系统 (Project: MAGI)
-- ✅ **仪表盘**: 赛博朋克风格 (NERV Command Center)，流量雷达，RPG 风格状态卡片
-- ✅ **内容管理**: 文章发布/编辑/删除
-- ✅ **番剧管理**: 追番进度更新
-- ✅ **系统设置**: 全局配置管理
-- ✅ **评论管理**: 评论审核与状态管理
+- ✅ **仪表盘**: NERV 风格指挥中心，RPG 状态卡片 (HP/MP/EXP)，流量雷达图
+- ✅ **流量分析**: TrafficRadar 实时流量可视化
+- ✅ **系统健康**: SystemHealth 服务器状态监控
+- ✅ **每日任务**: DailyQuests 成就解锁系统
+- ✅ **便签**: MemoPad 全息风格备忘录
+- ✅ **内容管理**: 文章/番剧/图库/标签 CRUD
+- ✅ **评论管理**: CommentManager 评论审核与弹幕管理
+- ✅ **智能裁剪**: SmartCrop 图片智能裁剪工具
+- ✅ **缓存清理**: 一键清理 KV 缓存
+- ✅ **系统设置**: 全局配置管理、密码修改
 
-#### 4. 交互与社区功能
+#### 4. 用户系统
+- ✅ **用户注册/登录**: 表单验证、邮箱验证码
+- ✅ **忘记密码**: 完整的密码重置流程
+- ✅ **用户仪表盘**: 个人数据统计
+- ✅ **成就系统**: 徽章收集与展示
+
+#### 5. 游戏化功能
+- ✅ **扭蛋机**: GachaMachine 抽奖交互
+- ✅ **成就徽章**: AchievementBadge 六边形徽章系统
+- ✅ **灵魂同步率**: SoulSync EVA 风格同步率显示
+- ✅ **HexagonBadge**: 六边形成就徽章组件
+
+#### 6. 交互与社区功能
 - ✅ **评论系统**: 支持弹幕模式、乐观 UI 提交、时间格式化
-- ✅ **图片上传**: 拖拽上传到 R2，支持 Markdown 编辑器内直接插入
+- ✅ **图片上传**: 拖拽上传到 R2，Markdown 编辑器内直接插入
+- ✅ **音乐播放器**: AdminMusicPlayer 后台背景音乐
 
-#### 5. SEO 与性能
+#### 7. SEO 与性能
 - ✅ **站点地图**: 动态生成 `sitemap.xml`
 - ✅ **结构化数据**: 文章页面 JSON-LD 支持
+- ✅ **RSS/Atom**: 标准订阅源生成
+- ✅ **OG 图片**: 动态生成 Open Graph 预览图
 
-#### 6. 视觉设计
+#### 8. 视觉设计
 - ✅ **Glassmorphism**: 全局深色磨砂玻璃质感
 - ✅ **Dynamic Backgrounds**: `animated-mesh-gradient` 动态流体背景
-- ✅ **Silky Transitions**: 基于 Framer Motion 的丝滑页面切换，无闪烁
+- ✅ **Silky Transitions**: 基于 Framer Motion 的丝滑页面切换
 - ✅ **Responsive**: 完美适配移动端、平板和桌面端
-- ✅ **Typography Optimization**: 文章内容优化排版、合理行高与间距
+- ✅ **Typography Optimization**: 文章内容优化排版
+- ✅ **Parallax Effects**: 视差滚动背景效果
+- ✅ **Particle Effects**: 粒子动画背景
+- ✅ **Theme Switcher**: 亮色/暗色主题切换
 
-#### 7. 部署与架构
+#### 9. 部署与架构
 - ✅ **Cloudflare Workers**: 边缘计算 SSR 渲染
 - ✅ **Cloudflare D1**: 分布式 SQL 数据库
 - ✅ **Cloudflare R2**: 对象存储（图片/媒体）
+- ✅ **Cloudflare KV**: 缓存存储
 - ✅ **GitHub Actions**: 自动化 CI/CD 部署流程
 
 ### 🚧 待完成功能
@@ -67,17 +94,28 @@
 ### v1.1.0 (2024-12-18)
 
 **新增功能:**
-- ✨ **评论系统**: 完整的评论功能，支持弹幕模式显示，表单优化至顶部
+- ✨ **评论系统**: 完整评论功能，弹幕模式，表单优化至顶部
 - ✨ **图片上传**: 编辑器内拖拽上传图片至 R2
-- ✨ **SEO 优化**: 动态 sitemap.xml 和 JSON-LD 结构化数据
+- ✨ **SEO 优化**: sitemap.xml、JSON-LD、OG 图片
 - ✨ **文章目录导航**: 侧边栏 Table of Contents
-- ✨ **剧透标签**: 支持 `:::spoiler` 语法，鼠标悬停显示内容
+- ✨ **剧透标签**: `:::spoiler` 语法支持
+- ✨ **用户仪表盘**: 个人数据统计页面
+- ✨ **成就系统**: 徽章收集与展示
+- ✨ **RSS/Atom 订阅**: 标准订阅源
+- ✨ **游戏化组件**: 扭蛋机、成就徽章、灵魂同步率
+
+**后台增强:**
+- 🎛️ **流量雷达**: TrafficRadar 实时流量可视化
+- 🎛️ **系统健康监控**: SystemHealth 状态面板
+- 🎛️ **每日任务**: DailyQuests 成就系统
+- 🎛️ **智能裁剪**: SmartCrop 图片处理
+- 🎛️ **缓存管理**: 一键清理 KV 缓存
 
 **布局优化:**
 - 🎨 **文章详情页**: 两栏布局，左侧内容 + 右侧目录/作者信息
 - 🎨 **首页**: 减少垂直间距，优化视觉层次
 - 🎨 **导航栏**: 修复重复渲染问题
-- 🎨 **Typography**: 文章内容排版优化，增加行高和段落间距
+- 🎨 **Typography**: 文章内容排版优化
 
 **Bug 修复:**
 - 🐛 修复页面切换时的白屏闪烁问题
@@ -194,18 +232,21 @@ app/
 ## 🔧 技术栈
 
 - **Framework**: React Router v7
-- **Runtime**: Cloudflare Workers
+- **Runtime**: Cloudflare Workers (SSR)
 - **Database**: Cloudflare D1 (SQLite)
+- **Storage**: Cloudflare R2 (对象存储)
+- **Cache**: Cloudflare KV
 - **Styling**: Tailwind CSS v4
 - **Animation**: Framer Motion
 - **Icons**: Lucide React
-- **Markdown**: Rehype / Remark
+- **Markdown**: marked + highlight.js
+- **Build**: Vite 7
 
 ## 📝 下一步计划
 
-1. 完善后台的文章编辑器，支持所见即所得。
-2. 接入 Cloudflare R2 实现图片上传功能。
-3. 优化移动端的交互体验。
+1. Live2D 看板娘集成
+2. 番剧评分短评展示
+3. 更多彩蛋交互
 
 ## 💡 提示
 
