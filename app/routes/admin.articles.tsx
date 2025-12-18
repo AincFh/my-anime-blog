@@ -9,15 +9,24 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (!sessionId) {
     throw redirect("/admin/login");
   }
-  
-  // TODO: 从数据库获取文章列表
-  const articles = [
-    { id: 1, title: "React教程：从入门到放弃", slug: "react-tutorial", views: 500, status: "published", createdAt: "2024-01-15" },
-    { id: 2, title: "芙莉莲剧评：千年之旅", slug: "frieren-review", views: 300, status: "published", createdAt: "2024-01-14" },
-    { id: 3, title: "我的追番清单2024", slug: "anime-list-2024", views: 250, status: "draft", createdAt: "2024-01-13" },
-  ];
-  
-  return { articles };
+
+  const { anime_db } = context.cloudflare.env;
+
+  try {
+    const { results } = await anime_db
+      .prepare("SELECT id, slug, title, views, status, created_at FROM articles ORDER BY created_at DESC")
+      .all();
+
+    const articles = (results || []).map((article: any) => ({
+      ...article,
+      createdAt: new Date(article.created_at * 1000).toISOString().split('T')[0],
+    }));
+
+    return { articles };
+  } catch (error) {
+    console.error("Failed to fetch articles:", error);
+    return { articles: [] };
+  }
 }
 
 export default function ArticlesManager({ loaderData }: Route.ComponentProps) {
@@ -69,11 +78,10 @@ export default function ArticlesManager({ loaderData }: Route.ComponentProps) {
                     </Link>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                      article.status === "published" 
-                        ? "bg-green-100 text-green-700" 
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${article.status === "published"
+                        ? "bg-green-100 text-green-700"
                         : "bg-yellow-100 text-yellow-700"
-                    }`}>
+                      }`}>
                       {article.status === "published" ? "已发布" : "草稿"}
                     </span>
                   </td>

@@ -4,44 +4,56 @@ import type { Route } from "./+types/admin.comments";
 import { redirect } from "react-router";
 import { getSessionId } from "~/utils/auth";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
     throw redirect("/admin/login");
   }
-  
-  // TODO: 从数据库获取评论
-  const comments = [
-    {
-      id: 1,
-      author: "路人A",
-      content: "博主，请问这个 D1 数据库怎么配置呀？",
-      time: "2分钟前",
-      article: "React教程",
-      status: "pending",
-      isSpam: false,
-    },
-    {
-      id: 2,
-      author: "广告机",
-      content: "澳门首家线上赌场上线啦...",
-      time: "10分钟前",
-      article: "技术分享",
-      status: "pending",
-      isSpam: true,
-    },
-    {
-      id: 3,
-      author: "二次元爱好者",
-      content: "这个设计太棒了！",
-      time: "1小时前",
-      article: "设计心得",
-      status: "approved",
-      isSpam: false,
-    },
-  ];
-  
-  return { comments };
+
+  const { anime_db } = context.cloudflare.env;
+
+  try {
+    const { results } = await anime_db
+      .prepare(`
+        SELECT c.id, c.content, c.status, c.is_spam as isSpam, c.created_at,
+               c.guest_name as author, a.title as article
+        FROM comments c
+        LEFT JOIN articles a ON c.article_id = a.id
+        ORDER BY c.created_at DESC
+        LIMIT 50
+      `)
+      .all();
+
+    const comments = (results || []).map((comment: any) => {
+      const createdAt = new Date(comment.created_at * 1000);
+      const now = new Date();
+      const diffMs = now.getTime() - createdAt.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+
+      let time = '';
+      if (diffMins < 60) {
+        time = `${diffMins}分钟前`;
+      } else if (diffHours < 24) {
+        time = `${diffHours}小时前`;
+      } else {
+        time = createdAt.toISOString().split('T')[0];
+      }
+
+      return {
+        ...comment,
+        author: comment.author || '匿名',
+        article: comment.article || '未知文章',
+        time,
+        isSpam: Boolean(comment.isSpam),
+      };
+    });
+
+    return { comments };
+  } catch (error) {
+    console.error("Failed to fetch comments:", error);
+    return { comments: [] };
+  }
 }
 
 export default function CommentsManager({ loaderData }: Route.ComponentProps) {
@@ -75,11 +87,10 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
             <motion.button
               key={tab.key}
               onClick={() => setFilter(tab.key as typeof filter)}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                filter === tab.key
+              className={`px-4 py-2 rounded-xl font-medium transition-colors ${filter === tab.key
                   ? "bg-pink-500 text-white"
                   : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
+                }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -93,13 +104,12 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
           {filteredComments.map((comment, index) => (
             <motion.div
               key={comment.id}
-              className={`p-4 rounded-xl border-2 ${
-                comment.status === "pending"
+              className={`p-4 rounded-xl border-2 ${comment.status === "pending"
                   ? "bg-yellow-50 border-yellow-200"
                   : comment.isSpam
-                  ? "bg-red-50 border-red-200"
-                  : "bg-white border-gray-200"
-              }`}
+                    ? "bg-red-50 border-red-200"
+                    : "bg-white border-gray-200"
+                }`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}

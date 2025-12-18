@@ -11,53 +11,62 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   // 检查 admin_session cookie
   const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
 
-  // 安全检查：本地开发环境可能没有 cloudflare context  
-  const db = ((context as any)?.cloudflare?.env as any)?.DB;
+  const { anime_db } = context.cloudflare.env;
 
-  // 如果没有数据库连接（本地开发模式）
-  if (!db) {
-    // 本地开发模式：检查是否有 admin_session cookie
-    if (!sessionId) {
-      throw redirect("/login-admin");
-    }
-
-    // 有 session，返回模拟数据
-    console.warn("Local dev mode: using mock data");
-    return {
-      stats: {
-        pv: 1234,
-        uv: 800,
-        articles: 42,
-        words: 0,
-        comments: 88,
-        likes: 28,
-        storage: 1200,
-      },
-      pendingComments: [],
-    };
-  }
-
-  // 生产环境：验证 session 是否有效
+  // 如果没有 session，跳转登录
   if (!sessionId) {
-    throw redirect("/login-admin");
+    throw redirect("/admin/login");
   }
 
+  // 验证 session 是否有效
   try {
-    const session = await db.prepare(
-      "SELECT * FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
+    const session = await anime_db.prepare(
+      "SELECT * FROM sessions WHERE token = ? AND expires_at > unixepoch()"
     ).bind(sessionId).first();
 
     if (!session) {
-      throw redirect("/login-admin");
+      throw redirect("/admin/login");
     }
   } catch (e) {
-    throw redirect("/login-admin");
+    console.error("Session validation error:", e);
+    throw redirect("/admin/login");
+  }
+
+  // 获取真实统计数据
+  let stats = {
+    pv: 0,
+    uv: 0,
+    articles: 0,
+    words: 0,
+    comments: 0,
+    likes: 0,
+    storage: 0,
+  };
+
+  try {
+    // 文章数
+    const articlesCount = await anime_db.prepare("SELECT COUNT(*) as count FROM articles").first();
+    stats.articles = (articlesCount as any)?.count || 0;
+
+    // 评论数
+    const commentsCount = await anime_db.prepare("SELECT COUNT(*) as count FROM comments").first();
+    stats.comments = (commentsCount as any)?.count || 0;
+
+    // 番剧数 (作为 likes 展示)
+    const animesCount = await anime_db.prepare("SELECT COUNT(*) as count FROM animes").first();
+    stats.likes = (animesCount as any)?.count || 0;
+
+    // 总浏览量
+    const totalViews = await anime_db.prepare("SELECT SUM(views) as total FROM articles").first();
+    stats.pv = (totalViews as any)?.total || 0;
+  } catch (e) {
+    console.error("Failed to fetch stats:", e);
   }
 
   // Fetch pending comments
   let pendingComments: any[] = [];
   try {
-    const result = await db.prepare(
+    const result = await anime_db.prepare(
       "SELECT * FROM comments WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5"
     ).all();
     if (result.results) {
@@ -68,15 +77,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   return {
-    stats: {
-      pv: 1234, // 今日PV
-      uv: 800, // 今日UV
-      articles: 42, // 文章总数
-      words: 0, // 总字数
-      comments: 88, // 评论数
-      likes: 28, // 点赞数
-      storage: 1200, // R2存储使用量（MB）
-    },
+    stats,
     pendingComments,
   };
 }
