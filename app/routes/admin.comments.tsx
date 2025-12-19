@@ -60,127 +60,111 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
   const { comments } = loaderData;
   const [filter, setFilter] = useState<"all" | "pending" | "spam">("all");
 
-  const filteredComments = comments.filter((c) => {
+  const filteredComments = comments.filter((c: any) => {
     if (filter === "pending") return c.status === "pending";
     if (filter === "spam") return c.isSpam;
     return true;
   });
 
-  const pendingCount = comments.filter((c) => c.status === "pending").length;
+  const pendingCount = comments.filter((c: any) => c.status === "pending").length;
 
   return (
-    <div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">羁绊通信</h1>
-
-        {/* 筛选标签 */}
-        <div className="flex gap-3 mb-6">
-          {[
-            { key: "all", label: "全部" },
-            { key: "pending", label: `待审核 (${pendingCount})` },
-            { key: "spam", label: "垃圾箱" },
-          ].map((tab) => (
-            <motion.button
-              key={tab.key}
-              onClick={() => setFilter(tab.key as typeof filter)}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors ${filter === tab.key
-                  ? "bg-pink-500 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {tab.label}
-            </motion.button>
-          ))}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Comments</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage community interactions.</p>
         </div>
+      </div>
 
-        {/* 评论列表 - 聊天气泡流 */}
-        <div className="space-y-4">
-          {filteredComments.map((comment, index) => (
+      {/* iOS Segmented Control */}
+      <div className="bg-gray-100/80 p-1 rounded-lg inline-flex mb-6">
+        {[
+          { key: "all", label: "All" },
+          { key: "pending", label: `Pending (${pendingCount})` },
+          { key: "spam", label: "Spam" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key as typeof filter)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === tab.key
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Comment List */}
+      <div className="space-y-4">
+        {filteredComments.length === 0 ? (
+          <div className="p-12 text-center text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
+            No comments found in this filter.
+          </div>
+        ) : (
+          filteredComments.map((comment: any, index: number) => (
             <motion.div
               key={comment.id}
-              className={`p-4 rounded-xl border-2 ${comment.status === "pending"
-                  ? "bg-yellow-50 border-yellow-200"
-                  : comment.isSpam
-                    ? "bg-red-50 border-red-200"
-                    : "bg-white border-gray-200"
-                }`}
+              className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex gap-4"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
             >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center text-white font-bold text-sm">
-                  {comment.author[0]}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0 ${comment.isSpam ? "bg-red-400" : "bg-blue-500"
+                }`}>
+                {comment.author[0].toUpperCase()}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-gray-900">{comment.author}</span>
+                    <span className="text-xs text-gray-400">• {comment.time}</span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase ${comment.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                      comment.isSpam ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                    }`}>
+                    {comment.isSpam ? "SPAM" : comment.status}
+                  </span>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-800">{comment.author}</span>
-                    <span className="text-xs text-gray-500 font-mono">({comment.time})</span>
-                    <span className="text-xs text-gray-500">来自文章《{comment.article}》</span>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 mb-3 shadow-sm">
-                    <p className="text-sm text-gray-700">💬 {comment.content}</p>
-                  </div>
+
+                <p className="text-gray-600 text-sm leading-relaxed mb-3 break-words">
+                  {comment.content}
+                </p>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400 truncate max-w-[200px]">
+                    on <span className="font-medium text-gray-500">{comment.article}</span>
+                  </span>
+
                   <div className="flex gap-2">
                     {comment.status === "pending" && !comment.isSpam && (
                       <>
-                        <motion.button
-                          className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition-colors"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          ✅ 批准
-                        </motion.button>
-                        <motion.button
-                          className="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          ↩️ 回复
-                        </motion.button>
+                        <button className="text-xs font-medium text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-full transition-colors">
+                          Approve
+                        </button>
+                        <button className="text-xs font-medium text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-full transition-colors">
+                          Spam
+                        </button>
                       </>
                     )}
-                    {comment.isSpam && (
-                      <>
-                        <motion.button
-                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          🚫 永久封禁 IP
-                        </motion.button>
-                        <motion.button
-                          className="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          🗑️ 删除
-                        </motion.button>
-                      </>
-                    )}
-                    {!comment.isSpam && comment.status === "approved" && (
-                      <motion.button
-                        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        ↩️ 回复
-                      </motion.button>
-                    )}
+                    <button className="text-xs font-medium text-gray-400 hover:text-gray-600 px-2 py-1.5 transition-colors">
+                      Reply
+                    </button>
                   </div>
                 </div>
               </div>
             </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </div>
+          ))
+        )}
+      </div>
+    </motion.div>
   );
 }
 

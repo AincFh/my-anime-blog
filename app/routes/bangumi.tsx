@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import type { Route } from "./+types/bangumi";
 
 /**

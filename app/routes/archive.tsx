@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import type { Route } from "./+types/archive";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 
 export async function loader({ context }: Route.LoaderArgs) {
     // 检查环境，避免在本地开发时出错
@@ -183,7 +183,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
     const years = Object.keys(groupedByYear).sort((a, b) => parseInt(b) - parseInt(a));
     const containerRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({ target: containerRef });
-    
+
     // 视差效果：时间线随滚动移动
     const timelineY = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
@@ -191,7 +191,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
     const separateActivities = () => {
         const articles: any[] = [];
         const animes: any[] = [];
-        
+
         years.forEach((year) => {
             groupedByYear[year].forEach((activity: any) => {
                 if (activity.type === "article") {
@@ -201,7 +201,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
                 }
             });
         });
-        
+
         return { articles, animes };
     };
 
@@ -237,7 +237,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
                         return yearActivities.map((activity: any, idx: number) => {
                             const isLeft = activity.type === "article";
                             const totalIdx = yearIdx * 100 + idx;
-                            
+
                             return (
                                 <motion.div
                                     key={`${activity.type}-${activity.id}`}

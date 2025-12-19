@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import type { Route } from "./+types/gallery";
 
 // 示例图片数据 - 使用二次元图片API
@@ -108,7 +108,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   // 实际应用中，这里应该从数据库或R2存储获取图片
   // const { anime_db } = context.cloudflare.env;
   // const images = await fetchImagesFromDB();
-  
+
   return {
     images: sampleImages,
   };
@@ -141,15 +141,15 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
       <div className="flex flex-wrap justify-center gap-8">
         {images.map((image: any, index: number) => {
           const rotation = getRandomRotation(index);
-          
+
           return (
             <motion.div
               key={image.id}
               initial={{ opacity: 0, scale: 0.8, rotate: rotation }}
               animate={{ opacity: 1, scale: 1, rotate: rotation }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={{ 
-                scale: 1.05, 
+              whileHover={{
+                scale: 1.05,
                 rotate: rotation + (rotation > 0 ? 2 : -2),
                 zIndex: 10,
               }}
@@ -166,10 +166,10 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
+
                 {/* 底部留白 - 手写体注释 */}
                 <div className="px-2 pb-2">
-                  <p 
+                  <p
                     className="text-sm text-slate-700 font-handwriting"
                     style={{
                       fontFamily: "'Comfortaa', 'Noto Sans SC', cursive",
@@ -183,7 +183,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
               </div>
 
               {/* 阴影效果 */}
-              <div 
+              <div
                 className="absolute inset-0 bg-black/10 rounded-lg blur-xl -z-10"
                 style={{ transform: `rotate(${rotation * 0.5}deg) translateY(10px)` }}
               />

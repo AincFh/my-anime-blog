@@ -33,73 +33,65 @@ export default function ArticlesManager({ loaderData }: Route.ComponentProps) {
   const { articles } = loaderData;
 
   return (
-    <div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">文章管理</h1>
-          <Link to="/admin/article/new">
-            <motion.button
-              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-shadow"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              + 新建文章
-            </motion.button>
-          </Link>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Articles</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage your blog posts.</p>
         </div>
+        <Link to="/admin/article/new">
+          <button className="px-4 py-2 rounded-full font-medium transition-all active:scale-95 shadow-sm hover:shadow bg-[#007AFF] text-white hover:bg-[#0071E3] shadow-lg shadow-blue-500/30 text-sm">
+            + New Article
+          </button>
+        </Link>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">标题</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">浏览量</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">创建时间</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {articles.map((article, index) => (
-                <motion.tr
-                  key={article.id}
-                  className="hover:bg-gray-50 transition-colors"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <td className="px-6 py-4">
-                    <Link to={`/articles/${article.slug}`} className="font-medium text-gray-800 hover:text-pink-600">
-                      {article.title}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${article.status === "published"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                      }`}>
-                      {article.status === "published" ? "已发布" : "草稿"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600 font-mono">{article.views}</td>
-                  <td className="px-6 py-4 text-gray-600 font-mono text-sm">{article.createdAt}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button className="text-blue-600 hover:text-blue-800 text-sm">编辑</button>
-                      <button className="text-red-600 hover:text-red-800 text-sm">删除</button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
-    </div>
+      <div className="bg-white rounded-xl overflow-hidden divide-y divide-gray-100 border border-gray-100 shadow-sm">
+        {articles.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No articles found. Start writing!
+          </div>
+        ) : (
+          articles.map((article: any, index: number) => (
+            <div key={article.id} className="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-between group">
+              <div className="flex-1 min-w-0 pr-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Link to={`/articles/${article.slug}`} className="font-medium text-gray-900 truncate hover:text-blue-600 transition-colors">
+                    {article.title}
+                  </Link>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide ${article.status === "published"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                    }`}>
+                    {article.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-gray-400">
+                  <span>{article.createdAt}</span>
+                  <span>•</span>
+                  <span>{article.views} views</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                  <span className="sr-only">Edit</span>
+                  ✎
+                </button>
+                <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
+                  <span className="sr-only">Delete</span>
+                  🗑
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </motion.div>
   );
 }
 
