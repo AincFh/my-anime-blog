@@ -5,9 +5,9 @@ import type { Route } from "./+types/api.achievement";
  * 功能：检查并解锁用户成就
  */
 export async function action({ request, context }: Route.ActionArgs) {
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
   const formData = await request.formData();
-  
+
   const userId = formData.get("user_id") as string;
   const achievementId = formData.get("achievement_id") as string;
 

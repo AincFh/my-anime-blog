@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, useNavigate, redirect } from "react-router";
 import type { Route } from "./+types/admin.article.new";
-import { NotionEditor } from "~/components/ui/forms/NotionEditor";
+import { NotionEditor } from "~/components/forms/NotionEditor";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSessionId } from "~/utils/auth";
 
@@ -277,18 +277,22 @@ export default function NewArticle() {
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   文章内容 * (Markdown)
                 </label>
-                {/* Markdown 编辑器 */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    文章内容 * (Markdown)
-                  </label>
-                  {/* NotionEditor 自带双栏预览，不需要外部 Grid */}
-                  <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden shadow-inner">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* 左侧：Markdown 编辑区 */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                     <NotionEditor
                       value={content}
                       onChange={setContent}
                       placeholder="# 标题\n\n在这里用 Markdown 写下你的内容...\n\n支持拖拽上传图片，实时预览效果"
                     />
+                  </div>
+                  {/* 右侧：实时预览区 */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-4 overflow-y-auto max-h-[600px]">
+                    <div className="prose prose-sm max-w-none">
+                      {/* 这里应该使用marked渲染，暂时显示占位符 */}
+                      <p className="text-gray-500 text-sm">实时预览区域</p>
+                      <p className="text-gray-400 text-xs">（需要集成Markdown渲染）</p>
+                    </div>
                   </div>
                 </div>
               </div>

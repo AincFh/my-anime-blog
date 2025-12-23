@@ -7,7 +7,7 @@ import type { Route } from "./+types/api.user.me";
 import { verifySession, getSessionToken } from "../services/auth.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = context?.cloudflare?.env as any;
+  const env = (context as any).cloudflare.env;
   const anime_db = env?.anime_db;
 
   try {

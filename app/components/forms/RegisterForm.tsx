@@ -169,8 +169,9 @@ export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps
                 <label htmlFor="terms" className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
                     我已阅读并同意
                     <Link to="/terms" className="text-primary-start hover:underline mx-1">服务条款</Link>
-                    和
+                    、
                     <Link to="/privacy" className="text-primary-start hover:underline mx-1">隐私政策</Link>
+                    及开启个性化服务
                 </label>
             </div>
 

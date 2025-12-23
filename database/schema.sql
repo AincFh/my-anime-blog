@@ -51,6 +51,8 @@ CREATE TABLE users (
     exp INTEGER DEFAULT 0,
     coins INTEGER DEFAULT 0,          -- 代币
     achievements TEXT,                -- JSON数组，存储成就ID，如 ['night_owl', 'combo_master']
+    bio TEXT,                         -- 个人简介
+    preferences TEXT DEFAULT '{}',    -- 用户偏好设置 JSON
     
     created_at INTEGER DEFAULT (unixepoch())
 );
@@ -103,25 +105,6 @@ CREATE TRIGGER articles_ad AFTER DELETE ON articles BEGIN
   INSERT INTO articles_fts(articles_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.content);
 END;
 
-DROP TRIGGER IF EXISTS articles_au;
-CREATE TRIGGER articles_au AFTER UPDATE ON articles BEGIN
-  INSERT INTO articles_fts(articles_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.content);
-  INSERT INTO articles_fts(rowid, title, content) VALUES (new.id, new.title, new.content);
-END;
-
--- 注意：测试用户密码需要使用 bcrypt 哈希后插入
--- 示例哈希值（密码: admin123）需要在应用启动时通过服务生成
--- INSERT INTO users (email, password_hash, username, role) 
--- VALUES ('admin@example.com', '$2b$10$...', 'admin', 'admin');
-
--- 插入测试文章
-INSERT INTO articles (slug, title, description, content, category, cover_image) 
-VALUES 
-('hello-world', '欢迎来到 A.T. Field', '这是我的第一篇二次元博文', '# 你好，世界！\n\n这是我的**绝对领域**。在这里，我会分享关于动漫、游戏和技术的一切。\n\n## 关于本站\n\n本站基于 Cloudflare 全家桶构建，追求极致的视觉体验和流畅的交互。', '公告', NULL),
-('my-anime-journey', '我的二次元之旅', '记录我的追番历程', '# 我的二次元之旅\n\n从小时候第一次看到动漫开始，我就被这个充满想象力的世界所吸引。\n\n## 启蒙作品\n\n每个人都有自己的启蒙作品，对我来说...\n\n## 现在\n\n现在我依然保持着追番的习惯，每一季都会精心挑选。', '随笔', NULL);
-
--- 插入测试番剧数据
-INSERT INTO animes (title, status, progress, rating, review) 
 VALUES 
 ('新世纪福音战士', 'completed', '26/26', 10, '神作！A.T. Field 的概念太震撼了。'),
 ('鬼灭之刃', 'completed', '26/26', 9, '作画精美，剧情紧凑。'),

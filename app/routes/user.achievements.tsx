@@ -61,7 +61,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     const userId = 1;
 
     try {
-        const { anime_db } = context.cloudflare.env;
+        const { anime_db } = (context as any).cloudflare.env;
         const user = await anime_db
             .prepare("SELECT achievements, username, avatar_url, level FROM users WHERE id = ?")
             .bind(userId)
@@ -88,7 +88,7 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
     const progress = Math.round((unlocked / total) * 100);
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden">
+        <div className="min-h-screen pb-12 px-4 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute inset-0 bg-[url('/patterns/hex-grid.svg')] opacity-5 pointer-events-none" />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-at-purple/10 blur-[120px] rounded-full pointer-events-none" />

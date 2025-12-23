@@ -7,14 +7,14 @@ import { getSessionId } from "~/utils/auth";
  */
 export async function action({ request, context }: Route.ActionArgs) {
   const sessionId = getSessionId(request);
-  
+
   if (!sessionId) {
     return Response.json({ success: false, error: "未授权" }, { status: 401 });
   }
 
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
   const formData = await request.formData();
-  
+
   const currentPassword = formData.get("current_password") as string;
   const newPassword = formData.get("new_password") as string;
   const confirmPassword = formData.get("confirm_password") as string;
@@ -61,9 +61,9 @@ export async function action({ request, context }: Route.ActionArgs) {
       .bind(newPassword, session.user_id)
       .run();
 
-    return Response.json({ 
-      success: true, 
-      message: "密码修改成功，请重新登录" 
+    return Response.json({
+      success: true,
+      message: "密码修改成功，请重新登录"
     });
   } catch (error) {
     console.error("Failed to change password:", error);

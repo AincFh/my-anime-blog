@@ -7,7 +7,8 @@ import { isSpamComment, sanitizeComment, jsonWithSecurity } from "~/utils/securi
  * 功能：处理评论提交，包含Turnstile验证和关键词拦截
  */
 export async function action({ request, context }: Route.ActionArgs) {
-  const { anime_db } = context.cloudflare.env;
+  const env = (context as any).cloudflare.env;
+  const { anime_db } = env;
   const formData = await request.formData();
 
   const content = formData.get("content") as string;
@@ -21,7 +22,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   // 验证Turnstile Token
-  const turnstileSecret = context.cloudflare.env.TURNSTILE_SECRET;
+  const turnstileSecret = env.TURNSTILE_SECRET;
   if (turnstileSecret) {
     try {
       const verifyResponse = await fetch(
@@ -40,7 +41,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         return jsonWithSecurity({ error: "验证服务异常" }, { status: 500 });
       }
 
-      const verifyData = await verifyResponse.json();
+      const verifyData = await verifyResponse.json() as any;
       if (!verifyData.success) {
         return jsonWithSecurity({ error: "人机验证失败" }, { status: 400 });
       }

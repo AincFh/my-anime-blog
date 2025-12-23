@@ -1,110 +1,48 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "~/components/ui/layout/GlassCard";
+import { GlassCard } from "~/components/layout/GlassCard";
 import type { Route } from "./+types/gallery";
 
-// 示例图片数据 - 使用二次元图片API
+// 示例图片数据 - 实际应用中应该从数据库或API获取
 const sampleImages = [
   {
     id: 1,
-    url: "https://acg.yaohud.cn/api/random",
+    url: "https://images.unsplash.com/photo-1577056922428-a79963db266d?q=80&w=2070&auto=format&fit=crop",
     note: "2023.10.05 补番完成",
     date: "2023-10-05",
   },
   {
     id: 2,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
+    url: "https://images.unsplash.com/photo-1616486339569-9c4050911745?q=80&w=2070&auto=format&fit=crop",
     note: "2023.09.20 新番开播",
     date: "2023-09-20",
   },
   {
     id: 3,
-    url: "https://acg.yaohud.cn/api/random",
+    url: "https://images.unsplash.com/photo-1542596594-649edbc13630?q=80&w=1974&auto=format&fit=crop",
     note: "2023.08.15 夏日祭典",
     date: "2023-08-15",
   },
   {
     id: 4,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
+    url: "https://images.unsplash.com/photo-1577056922428-a79963db266d?q=80&w=2070&auto=format&fit=crop",
     note: "2023.07.10 追番记录",
     date: "2023-07-10",
   },
   {
     id: 5,
-    url: "https://acg.yaohud.cn/api/random",
+    url: "https://images.unsplash.com/photo-1616486339569-9c4050911745?q=80&w=2070&auto=format&fit=crop",
     note: "2023.06.25 番剧推荐",
     date: "2023-06-25",
   },
   {
     id: 6,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
+    url: "https://images.unsplash.com/photo-1542596594-649edbc13630?q=80&w=1974&auto=format&fit=crop",
     note: "2023.05.12 春季新番",
     date: "2023-05-12",
-  },
-  {
-    id: 7,
-    url: "https://acg.yaohud.cn/api/random",
-    note: "2023.04.20 樱花盛开",
-    date: "2023-04-20",
-  },
-  {
-    id: 8,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
-    note: "2023.03.15 二次元展览",
-    date: "2023-03-15",
-  },
-  {
-    id: 9,
-    url: "https://acg.yaohud.cn/api/random",
-    note: "2023.02.14 情人节特辑",
-    date: "2023-02-14",
-  },
-  {
-    id: 10,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
-    note: "2023.01.01 新年新气象",
-    date: "2023-01-01",
-  },
-  {
-    id: 11,
-    url: "https://acg.yaohud.cn/api/random",
-    note: "2022.12.25 圣诞特辑",
-    date: "2022-12-25",
-  },
-  {
-    id: 12,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
-    note: "2022.11.11 动漫周边购物节",
-    date: "2022-11-11",
-  },
-  {
-    id: 13,
-    url: "https://acg.yaohud.cn/api/random",
-    note: "2022.10.31 万圣节特辑",
-    date: "2022-10-31",
-  },
-  {
-    id: 14,
-    url: "https://uapis.cn/api/v1/random/image?category=anime",
-    note: "2022.09.10 教师节特辑",
-    date: "2022-09-10",
-  },
-  {
-    id: 15,
-    url: "https://acg.yaohud.cn/api/random",
-    note: "2022.08.01 夏日泳装特辑",
-    date: "2022-08-01",
   },
 ];
 
 export async function loader({ context }: Route.LoaderArgs) {
-  // 检查环境，避免在本地开发时出错
-  if (!context.cloudflare || !context.cloudflare.env) {
-    // 本地开发环境返回模拟数据
-    return {
-      images: sampleImages,
-    };
-  }
-
   // 实际应用中，这里应该从数据库或R2存储获取图片
   // const { anime_db } = context.cloudflare.env;
   // const images = await fetchImagesFromDB();

@@ -1,7 +1,7 @@
 import { useFetcher } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { GlassCard } from "~/components/ui/layout/GlassCard";
+import { GlassCard } from "~/components/layout/GlassCard";
 import { Send, MessageSquare } from "lucide-react";
 
 interface Comment {

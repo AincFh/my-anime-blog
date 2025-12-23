@@ -10,7 +10,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect("/admin/login");
   }
 
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
 
   try {
     const { results } = await anime_db

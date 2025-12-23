@@ -9,7 +9,7 @@ import { useState } from "react";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
 
   if (!sessionId) throw redirect("/admin/login");
 

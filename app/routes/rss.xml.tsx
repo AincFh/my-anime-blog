@@ -1,10 +1,18 @@
-import type { Route } from "./+types/rss.xml";
-
 /**
  * RSS Feed生成
  * 功能：自动生成RSS 2.0格式的订阅源
  */
-export async function loader({ context, request }: Route.LoaderArgs) {
+
+interface Article {
+  slug: string;
+  title: string;
+  description: string | null;
+  content: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export async function loader({ context, request }: { context: any, request: Request }) {
   const { anime_db } = context.cloudflare.env;
   const url = new URL(request.url);
 
@@ -12,21 +20,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     // 获取最新文章
     const articlesResult = await anime_db
       .prepare(
-        `SELECT slug, title, description, content, created_at, updated_at
+        `SELECT slug, title, content, created_at, updated_at
          FROM articles
          ORDER BY created_at DESC
          LIMIT 20`
       )
-      .all<{
-        slug: string;
-        title: string;
-        description: string | null;
-        content: string;
-        created_at: number;
-        updated_at: number;
-      }>();
+      .all();
 
-    const articles = articlesResult.results || [];
+    const articles = (articlesResult.results || []) as Article[];
     const siteUrl = `${url.protocol}//${url.host}`;
     const feedUrl = `${siteUrl}/rss.xml`;
 
@@ -41,12 +42,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     <atom:link href="${feedUrl}" rel="self" type="application/rss+xml" />
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     ${articles
-      .map((article) => {
-        const pubDate = new Date(article.created_at * 1000).toUTCString();
-        const articleUrl = `${siteUrl}/articles/${article.slug}`;
-        const description = article.description || article.content.substring(0, 200) + "...";
+        .map((article: Article) => {
+          const pubDate = new Date(article.created_at * 1000).toUTCString();
+          const articleUrl = `${siteUrl}/articles/${article.slug}`;
+          const description = article.content ? article.content.substring(0, 200) + "..." : "";
 
-        return `
+          return `
     <item>
       <title><![CDATA[${article.title}]]></title>
       <link>${articleUrl}</link>
@@ -54,8 +55,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       <description><![CDATA[${description}]]></description>
       <pubDate>${pubDate}</pubDate>
     </item>`;
-      })
-      .join("")}
+        })
+        .join("")}
   </channel>
 </rss>`;
 
@@ -70,4 +71,3 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return new Response("RSS generation failed", { status: 500 });
   }
 }
-

@@ -3,7 +3,7 @@ import type { Route } from "./+types/admin.anime.manage";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSessionId } from "~/utils/auth";
 import { useState } from "react";
-import { RadarChart } from "~/components/ui/system/RadarChart";
+import { RadarChart } from "~/components/system/RadarChart";
 import { QuickSyncButton } from "~/components/admin/QuickSyncButton";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -11,7 +11,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     if (!sessionId) {
         throw redirect("/admin/login");
     }
-    
+
     const { anime_db } = context.cloudflare.env;
 
     try {
@@ -31,7 +31,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     if (!sessionId) {
         throw redirect("/admin/login");
     }
-    
+
     const { anime_db } = context.cloudflare.env;
 
     try {
@@ -45,7 +45,7 @@ export async function action({ request, context }: Route.ActionArgs) {
             const progress = formData.get("progress") as string;
             const rating = formData.get("rating") ? parseInt(formData.get("rating") as string) : null;
             const review = formData.get("review") as string;
-            
+
             const rating_radar = formData.get("rating_radar") as string;
             const radarData = rating_radar ? JSON.parse(rating_radar) : null;
 
@@ -55,11 +55,11 @@ export async function action({ request, context }: Route.ActionArgs) {
            VALUES (?, ?, ?, ?, ?, ?, ?)`
                 )
                 .bind(
-                    title, 
-                    cover_url || null, 
-                    status, 
-                    progress || null, 
-                    rating, 
+                    title,
+                    cover_url || null,
+                    status,
+                    progress || null,
+                    rating,
                     radarData ? JSON.stringify(radarData) : null,
                     review || null
                 )

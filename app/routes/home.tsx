@@ -1,66 +1,14 @@
-import { GlassCard } from "~/components/ui/layout/GlassCard";
-import { GlitchText } from "~/components/ui/animations/GlitchText";
+import { GlassCard } from "~/components/layout/GlassCard";
+import { GlitchText } from "~/components/animations/GlitchText";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
 import { AnimeCard } from "~/components/anime/AnimeCard";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  // 在本地开发环境中，context.cloudflare 可能是 undefined
-  // 因此需要添加适当的检查和回退数据
-  if (!context || !context.cloudflare || !context.cloudflare.env) {
-    // 本地开发环境：返回模拟数据（不使用外部图片API）
-    console.log("Running in local development mode, returning mock data");
-    return {
-      articles: [
-        {
-          id: 1,
-          slug: "welcome-to-my-blog",
-          title: "欢迎来到我的动漫博客",
-          description: "这是我的第一篇博客文章，介绍了这个博客的功能和特色。",
-          category: "公告",
-          cover_image: null, // 不使用外部图片
-          views: 123,
-          created_at: Date.now() / 1000
-        },
-        {
-          id: 2,
-          slug: "my-favorite-anime-2024",
-          title: "2024年我最喜爱的动漫推荐",
-          description: "分享我在2024年观看的一些优秀动漫作品。",
-          category: "动漫推荐",
-          cover_image: null,
-          views: 456,
-          created_at: Date.now() / 1000 - 86400
-        }
-      ],
-      animes: [
-        {
-          id: 1,
-          title: "进击的巨人",
-          cover_url: null,
-          status: "completed",
-          progress: 139,
-          rating: 9.5,
-          review: "史诗级的故事，震撼的结局。"
-        },
-        {
-          id: 2,
-          title: "鬼灭之刃",
-          cover_url: null,
-          status: "watching",
-          progress: 45,
-          rating: 9.2,
-          review: "精美的画面，感人的故事。"
-        }
-      ]
-    };
-  }
+  const { anime_db } = context.cloudflare.env;
 
   try {
-    // Cloudflare Workers 环境：从数据库获取真实数据
-    const { anime_db } = context.cloudflare.env;
-
     // 获取最新文章
     const articlesResult = await anime_db
       .prepare(
@@ -101,82 +49,108 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="container mx-auto px-4 pb-8 md:pb-12 pt-0 overflow-x-hidden">
-      {/* Hero Section - 优化版：减少动画延迟，提升 LCP */}
-      <div className="flex flex-col lg:flex-row items-center justify-between min-h-[60vh] px-4 relative z-10">
-        {/* Left: Greeting Text - 立即显示，无延迟 */}
+    <div className="container mx-auto px-4 py-20">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="flex flex-col lg:flex-row items-center justify-between min-h-[70vh] px-4"
+      >
+        {/* Left: Greeting Text */}
         <div className="lg:w-1/2 mb-12 lg:mb-0 text-center lg:text-left">
-          <div className="mb-6">
-            <h2 className="text-xl md:text-2xl font-display text-at-orange tracking-[0.2em] uppercase mb-2">
-              System Online
-            </h2>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-at-orange via-at-red to-at-purple bg-clip-text text-transparent font-display leading-tight">
-              A.T. FIELD
-              <br />
-              <span className="text-4xl md:text-6xl lg:text-7xl text-slate-800 dark:text-slate-200 font-sans font-light">
-                下午好，旅人
-              </span>
-            </h1>
-          </div>
-
-          {/* LCP 元素 - 立即显示，无动画延迟 */}
-          <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-2xl font-light tracking-wide mb-8 border-l-4 border-at-orange pl-6">
-            绝对领域展开中... <br />
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 bg-gradient-to-r from-primary-start to-primary-end bg-clip-text text-transparent"
+          >
+            下午好，旅人
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-xl md:text-2xl text-slate-700 max-w-2xl font-light tracking-wide mb-8"
+          >
             在这里分享关于动漫、游戏和技术的一切
-          </p>
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="text-base md:text-lg text-slate-600 max-w-xl font-light mb-12"
+          >
+            沉浸在京阿尼/新海诚风格的世界中
+          </motion.p>
 
-          {/* Navigation Links - 轻量动画 */}
-          <div className="flex gap-6 flex-wrap justify-center lg:justify-start">
+          {/* Navigation Links */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.6 }}
+            className="flex gap-4 flex-wrap justify-center lg:justify-start"
+          >
             {[
-              { name: "文章", path: "/articles", color: "from-at-orange to-at-red" },
-              { name: "归档", path: "/archive", color: "from-at-purple to-blue-500" },
-            ].map((item) => (
+              { name: "文章", path: "/articles" },
+              { name: "归档", path: "/archive" },
+            ].map((item, index) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`px-10 py-4 bg-gradient-to-r ${item.color} text-white rounded-xl font-display font-bold text-lg uppercase tracking-widest shadow-lg relative overflow-hidden group transition-transform hover:scale-105 hover:-translate-y-1 active:scale-95`}
               >
-                <span className="relative z-10">{item.name}</span>
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                <motion.div
+                  className="px-8 py-3 bg-gradient-to-r from-primary-start to-primary-end text-white rounded-full font-bold text-lg uppercase tracking-wider"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {item.name}
+                </motion.div>
               </Link>
             ))}
-          </div>
+          </motion.div>
         </div>
 
-        {/* Right: Hero Card - 简化版，使用 CSS 渐变替代外部图片 */}
-        <div className="lg:w-5/12 relative">
-          <div className="glass-card rounded-3xl overflow-hidden shadow-2xl border border-white/20 animate-float">
-            <div className="relative aspect-[4/5]">
-              {/* 使用 CSS 渐变替代外部图片 */}
-              <div
-                className="w-full h-full"
-                style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #fda085 100%)',
-                }}
+        {/* Right: 3D Tilt Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 50, rotateY: 20 }}
+          animate={{ opacity: 1, y: 0, rotateY: 0 }}
+          transition={{ delay: 0.5, duration: 1 }}
+          className="lg:w-1/3 relative"
+          style={{ perspective: 1000 }}
+        >
+          <motion.div
+            className="glass-card rounded-3xl overflow-hidden shadow-xl"
+            whileHover={{ scale: 1.05, rotateY: 5, rotateX: 5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <div className="relative h-96">
+              <img
+                src="https://images.unsplash.com/photo-1577056922428-a79963db266d?q=80&w=2070&auto=format&fit=crop"
+                alt="Anime illustration"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-
-              {/* Card Content */}
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-1 bg-at-orange text-white text-xs font-display font-bold rounded">LIVE</span>
-                  <span className="text-at-orange font-display text-xs tracking-widest">SYNC RATE: 400%</span>
-                </div>
-                <h3 className="text-white text-3xl font-bold mb-2 font-display">LATEST VISUAL</h3>
-                <p className="text-white/80 text-sm font-light">沉浸在美好的二次元世界中</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6">
+                <h3 className="text-white text-2xl font-bold mb-2">最新插画</h3>
+                <p className="text-white/80 text-sm">沉浸在美好的二次元世界中</p>
               </div>
-
-              {/* Decorative HUD Elements - 使用 CSS 动画 */}
-              <div className="absolute top-4 right-4 w-12 h-12 border-2 border-white/30 rounded-full border-t-at-orange animate-spin-slow" />
-              <div className="absolute top-4 right-4 w-12 h-12 flex items-center justify-center text-white/50 text-[10px] font-display">01</div>
             </div>
-          </div>
-
-          {/* Floating Elements - 使用 CSS 动画 */}
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-at-orange/20 blur-2xl animate-pulse-slow" />
-          <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-at-purple/20 blur-2xl animate-pulse-slower" />
-        </div>
-      </div>
+          </motion.div>
+          {/* Floating Elements */}
+          <motion.div
+            className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-primary-start/30 blur-xl"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0.9, 0.7] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-primary-end/20 blur-xl"
+            animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.8, 0.6] }}
+            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Latest Articles Section */}
       <motion.section

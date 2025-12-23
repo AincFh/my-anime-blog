@@ -78,6 +78,9 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
     const [stats, setStats] = useState<UserStats>(() => {
+        if (typeof window === 'undefined') {
+            return { level: 1, exp: 0, maxExp: 100, coins: 500, mood: "neutral" };
+        }
         const saved = localStorage.getItem("gamification_stats");
         return saved
             ? JSON.parse(saved)
@@ -85,11 +88,17 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     });
 
     const [achievements, setAchievements] = useState<Achievement[]>(() => {
+        if (typeof window === 'undefined') {
+            return INITIAL_ACHIEVEMENTS;
+        }
         const saved = localStorage.getItem("gamification_achievements");
         return saved ? JSON.parse(saved) : INITIAL_ACHIEVEMENTS;
     });
 
     const [inventory, setInventory] = useState<InventoryItem[]>(() => {
+        if (typeof window === 'undefined') {
+            return [];
+        }
         const saved = localStorage.getItem("gamification_inventory");
         return saved ? JSON.parse(saved) : [];
     });

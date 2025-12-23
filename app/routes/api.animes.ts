@@ -1,7 +1,8 @@
 import type { Route } from "./+types/api.animes";
 
 export async function loader({ context }: Route.LoaderArgs) {
-    const { anime_db } = context.cloudflare.env;
+    const env = (context as any).cloudflare.env;
+    const { anime_db } = env;
 
     try {
         // 获取所有番剧，按状态和创建时间排序
@@ -28,7 +29,8 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-    const { anime_db } = context.cloudflare.env;
+    const env = (context as any).cloudflare.env;
+    const { anime_db } = env;
 
     try {
         const formData = await request.formData();

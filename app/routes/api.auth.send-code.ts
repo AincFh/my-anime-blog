@@ -7,7 +7,7 @@ import type { Route } from "./+types/api.auth.send-code";
 import { sendVerificationCode } from "../services/auth.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const env = context?.cloudflare?.env as any;
+  const env = (context as any).cloudflare.env;
   const CACHE_KV = env?.CACHE_KV;
 
   if (request.method !== "POST") {

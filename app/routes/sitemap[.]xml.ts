@@ -1,7 +1,7 @@
 import type { Route } from "./+types/sitemap[.]xml";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-    const { anime_db } = context.cloudflare.env;
+    const { anime_db } = (context as any).cloudflare.env;
     const baseUrl = new URL(request.url).origin;
 
     // 1. 获取所有公开文章

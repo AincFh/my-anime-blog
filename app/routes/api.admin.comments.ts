@@ -13,7 +13,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         return jsonWithSecurity({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { anime_db } = context.cloudflare.env;
+    const { anime_db } = (context as any).cloudflare.env;
     const formData = await request.formData();
     const intent = formData.get("intent") as string;
     const commentId = formData.get("commentId") as string;

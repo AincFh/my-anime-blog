@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { isMobileDevice } from "~/utils/performance";
 
 // 使用第三方 Live2D 看板娘库：live2d-widget.js
 export function Live2D() {
@@ -9,9 +10,16 @@ export function Live2D() {
     const [dialog, setDialog] = useState<string>("");
     const lastActivityRef = useRef<number>(Date.now());
     const scrollBottomTriggeredRef = useRef<boolean>(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // 检测移动端
+    useEffect(() => {
+        setIsMobile(isMobileDevice());
+    }, []);
 
     useEffect(() => {
-        if (!isVisible || !containerRef.current) return;
+        // 移动端不加载 Live2D 以提升性能
+        if (!isVisible || !containerRef.current || isMobile) return;
 
         // 延迟加载，避免影响页面初始渲染
         const timer = setTimeout(() => {
@@ -35,8 +43,8 @@ export function Live2D() {
                         vOffset: -20,
                     },
                     mobile: {
-                        show: true,
-                        scale: 0.6, // 减小移动端尺寸
+                        show: false, // 移动端禁用 Live2D 提升性能
+                        scale: 0.6,
                     },
                     react: {
                         opacityDefault: 0.7, // 降低默认透明度
@@ -142,7 +150,7 @@ export function Live2D() {
 
         // 监听滚动
         window.addEventListener('scroll', handleScroll, { passive: true });
-        
+
         // 监听用户活动
         window.addEventListener('mousemove', handleActivity, { passive: true });
         window.addEventListener('click', handleActivity, { passive: true });
@@ -159,6 +167,9 @@ export function Live2D() {
             clearInterval(inactivityInterval);
         };
     }, [isLoaded, dialog]);
+
+    // 移动端完全不渲染
+    if (isMobile) return null;
 
     return (
         <div className="fixed bottom-4 right-4 z-50">

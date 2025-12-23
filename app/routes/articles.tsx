@@ -1,139 +1,244 @@
+/**
+ * 文章列表页
+ */
 
-import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
+import { Link, useLoaderData } from "react-router";
 import { motion } from "framer-motion";
-import { Link } from "react-router";
+import { Calendar, Eye, Heart, Tag, ArrowRight, Search } from "lucide-react";
+import { useState } from "react";
+import type { Route } from "./+types/articles";
 
-// 模拟文章数据
-const MOCK_ARTICLES = [
-    {
-        id: 1,
-        title: "新世纪福音战士：终 - 终结与新生",
-        excerpt: "再见了，所有的福音战士。这部跨越25年的神作终于迎来了它的终章...",
-        cover: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800",
-        date: "2023-12-01",
-        category: "影评",
-        tags: ["EVA", "动漫", "神作"]
-    },
-    {
-        id: 2,
-        title: "赛博朋克边缘行者：夜之城的悲歌",
-        excerpt: "在夜之城，没有活着的传奇。大卫·马丁内斯的故事让我们看到了赛博朋克世界...",
-        cover: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=800",
-        date: "2023-11-25",
-        category: "推荐",
-        tags: ["Cyberpunk", "Netflix", "扳机社"]
-    },
-    {
-        id: 3,
-        title: "葬送的芙莉莲：时间与记忆的旅程",
-        excerpt: "勇者逝去后的世界，精灵魔法使芙莉莲重新踏上旅途，去了解人类...",
-        cover: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800",
-        date: "2023-11-15",
-        category: "感悟",
-        tags: ["治愈", "奇幻", "冒险"]
-    },
-    {
-        id: 4,
-        title: "进击的巨人：自由的代价",
-        excerpt: "海的那边是敌人。艾伦·耶格尔为了追寻自由，最终付出了怎样的代价...",
-        cover: "https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=800",
-        date: "2023-11-05",
-        category: "深度",
-        tags: ["巨人", "热血", "战争"]
-    },
-    {
-        id: 5,
-        title: "鬼灭之刃：无限列车篇",
-        excerpt: "大哥没有输！炼狱杏寿郎用生命守护了整列火车的乘客...",
-        cover: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800",
-        date: "2023-10-28",
-        category: "热血",
-        tags: ["鬼灭", "ufotable", "战斗"]
-    },
-    {
-        id: 6,
-        title: "间谍过家家：优雅的谎言",
-        excerpt: "为了世界和平，间谍、杀手和超能力者组成了临时家庭...",
-        cover: "https://images.unsplash.com/photo-1620503374956-c942862f0372?q=80&w=800",
-        date: "2023-10-15",
-        category: "日常",
-        tags: ["搞笑", "家庭", "治愈"]
-    }
-];
+interface Article {
+    id: number;
+    slug: string;
+    title: string;
+    content: string;
+    category: string;
+    cover_image: string | null;
+    tags: string | null;
+    views: number;
+    likes: number;
+    created_at: number;
+}
 
-export default function Articles() {
+// 从content中提取简介
+const getDescription = (content: string): string => {
+    if (!content) return '';
+    // 移除 markdown 标题和格式
+    const cleaned = content
+        .replace(/^#.*$/gm, '')
+        .replace(/[\*\#\[\]\(\)]/g, '')
+        .replace(/\n+/g, ' ')
+        .trim();
+    return cleaned.slice(0, 120) + (cleaned.length > 120 ? '...' : '');
+};
+
+export async function loader({ context }: Route.LoaderArgs) {
+    const db = context.cloudflare.env.anime_db;
+
+    const result = await db
+        .prepare(`
+            SELECT id, slug, title, content, category, cover_image, tags, views, likes, created_at
+            FROM articles 
+            WHERE status = 'published' OR status IS NULL
+            ORDER BY created_at DESC
+        `)
+        .all();
+
+    return {
+        articles: (result.results || []) as Article[],
+    };
+}
+
+export default function ArticlesPage() {
+    const { articles } = useLoaderData<typeof loader>();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+
+    const categories = ['all', ...new Set(articles.map(a => a.category).filter(Boolean))];
+
+    const filteredArticles = articles.filter(article => {
+        const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            article.content?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    const formatDate = (timestamp: number) => {
+        return new Date(timestamp * 1000).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const getCategoryColor = (category: string) => {
+        const colors: Record<string, string> = {
+            '技术': 'from-blue-500 to-cyan-500',
+            '动漫': 'from-pink-500 to-rose-500',
+            '游戏': 'from-purple-500 to-indigo-500',
+            '随笔': 'from-amber-500 to-orange-500',
+            '公告': 'from-green-500 to-emerald-500',
+        };
+        return colors[category] || 'from-slate-500 to-gray-500';
+    };
+
     return (
-        <ResponsiveContainer maxWidth="lg" className="py-4 md:py-8">
-            {/* 页面标题区 */}
-            <div className="mb-12 text-center">
-                <motion.h1
-                    className="text-4xl md:text-5xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary-start to-primary-end"
-                    initial={{ opacity: 0, y: -20 }}
+        <div className="min-h-screen pt-24 pb-12 px-4">
+            <div className="max-w-6xl mx-auto">
+                {/* 标题区域 */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-12"
                 >
-                    文章列表
-                </motion.h1>
-                <motion.p
-                    className="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    记录动漫观看心得，分享二次元生活点滴。这里有深度解析，也有随笔吐槽。
-                </motion.p>
-            </div>
+                    <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">
+                        文章归档
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+                        记录技术探索、动漫感想和生活随笔
+                    </p>
+                </motion.div>
 
-            {/* 文章网格 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {MOCK_ARTICLES.map((article, index) => (
-                    <motion.div
-                        key={article.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                    >
-                        <Link to={`/articles/${article.id}`} className="block h-full group">
-                            <div className="glass-card h-full flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 border border-white/20 dark:border-white/10">
+                {/* 搜索和筛选 */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="glass-card p-4 rounded-2xl mb-8"
+                >
+                    <div className="flex flex-col md:flex-row gap-4">
+                        {/* 搜索框 */}
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="搜索文章..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start"
+                            />
+                        </div>
+
+                        {/* 分类筛选 */}
+                        <div className="flex flex-wrap gap-2">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setSelectedCategory(cat)}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === cat
+                                        ? 'bg-primary-start text-white'
+                                        : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                        }`}
+                                >
+                                    {cat === 'all' ? '全部' : cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 文章列表 */}
+                {filteredArticles.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredArticles.map((article, index) => (
+                            <motion.article
+                                key={article.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + index * 0.05 }}
+                                whileHover={{ y: -5 }}
+                                className="glass-card rounded-2xl overflow-hidden group"
+                            >
                                 {/* 封面图 */}
-                                <div className="relative h-48 overflow-hidden">
-                                    <img
-                                        src={article.cover}
-                                        alt={article.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                    <div className="absolute top-4 left-4">
-                                        <span className="px-3 py-1 text-xs font-bold text-white bg-black/50 backdrop-blur-md rounded-full border border-white/20">
-                                            {article.category}
+                                <div className="aspect-video relative overflow-hidden bg-slate-200 dark:bg-slate-700">
+                                    {article.cover_image ? (
+                                        <img
+                                            src={article.cover_image}
+                                            alt={article.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(article.category)} opacity-50 flex items-center justify-center`}>
+                                            <span className="text-4xl">📝</span>
+                                        </div>
+                                    )}
+                                    {/* 分类标签 */}
+                                    <div className="absolute top-3 left-3">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getCategoryColor(article.category)}`}>
+                                            {article.category || '未分类'}
                                         </span>
                                     </div>
                                 </div>
 
-                                {/* 内容区 */}
-                                <div className="p-6 flex-1 flex flex-col">
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2">
-                                        <span>{article.date}</span>
-                                        <span>•</span>
-                                        <div className="flex gap-1">
-                                            {article.tags.map(tag => (
-                                                <span key={tag} className="text-primary-start">#{tag}</span>
-                                            ))}
+                                {/* 内容 */}
+                                <div className="p-5">
+                                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-2 line-clamp-2 group-hover:text-primary-start transition-colors">
+                                        <Link to={`/articles/${article.slug}`}>
+                                            {article.title}
+                                        </Link>
+                                    </h2>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
+                                        {getDescription(article.content)}
+                                    </p>
+
+                                    {/* 元信息 */}
+                                    <div className="flex items-center justify-between text-xs text-slate-400">
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex items-center gap-1">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                {formatDate(article.created_at)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex items-center gap-1">
+                                                <Eye className="w-3.5 h-3.5" />
+                                                {article.views || 0}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Heart className="w-3.5 h-3.5" />
+                                                {article.likes || 0}
+                                            </span>
                                         </div>
                                     </div>
-                                    <h2 className="text-xl font-bold mb-3 text-slate-800 dark:text-white group-hover:text-primary-start transition-colors line-clamp-2">
-                                        {article.title}
-                                    </h2>
-                                    <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-3 mb-4 flex-1">
-                                        {article.excerpt}
-                                    </p>
-                                    <div className="flex items-center text-primary-start text-sm font-medium group-hover:translate-x-1 transition-transform">
-                                        阅读全文 <span className="ml-1">→</span>
-                                    </div>
+
+                                    {/* 阅读更多 */}
+                                    <Link
+                                        to={`/articles/${article.slug}`}
+                                        className="mt-4 flex items-center gap-2 text-sm font-medium text-primary-start hover:gap-3 transition-all"
+                                    >
+                                        阅读全文 <ArrowRight className="w-4 h-4" />
+                                    </Link>
                                 </div>
-                            </div>
-                        </Link>
+                            </motion.article>
+                        ))}
+                    </div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-center py-20"
+                    >
+                        <div className="text-6xl mb-4">📝</div>
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                            还没有文章
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 mb-6">
+                            {searchTerm ? '没有找到匹配的文章' : '去后台创建第一篇文章吧！'}
+                        </p>
+                        {!searchTerm && (
+                            <Link
+                                to="/admin/article/new"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-start text-white rounded-xl hover:bg-primary-end transition-colors"
+                            >
+                                创建文章 <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        )}
                     </motion.div>
-                ))}
+                )}
             </div>
-        </ResponsiveContainer>
+        </div>
     );
 }

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 
 interface ClientOnlyProps {
-  children: React.ReactNode;
+  children: () => ReactNode;
+  fallback?: ReactNode;
 }
 
-export function ClientOnly({ children }: ClientOnlyProps) {
+export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -12,8 +13,8 @@ export function ClientOnly({ children }: ClientOnlyProps) {
   }, []);
 
   if (!isClient) {
-    return null;
+    return <>{fallback}</>;
   }
 
-  return <>{children}</>;
+  return <>{children()}</>;
 }

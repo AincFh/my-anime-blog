@@ -6,7 +6,7 @@ import type { Route } from "./+types/api.og";
  */
 export async function loader({ params, context, request }: Route.LoaderArgs) {
   const { slug } = params;
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
 
   // 检查User-Agent，判断是否为爬虫
   const userAgent = request.headers.get("User-Agent") || "";

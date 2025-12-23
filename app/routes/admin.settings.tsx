@@ -6,15 +6,15 @@ import { requireAdmin } from "~/utils/auth";
 import type { SystemSettings } from "~/contexts/SettingsContext";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const db = context.cloudflare.env.anime_db;
-  
+  const db = (context as any).cloudflare.env.anime_db;
+
   // 验证管理员权限
   const session = await requireAdmin(request, db);
   if (!session) {
     throw redirect("/admin/login");
   }
 
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
 
   try {
     // 从数据库读取配置JSON
@@ -34,15 +34,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const db = context.cloudflare.env.anime_db;
-  
+  const db = (context as any).cloudflare.env.anime_db;
+
   // 验证管理员权限
   const session = await requireAdmin(request, db);
   if (!session) {
     throw redirect("/admin/login");
   }
 
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
   const formData = await request.formData();
   const configJson = formData.get("config_json") as string;
 
@@ -167,7 +167,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
         setToastMessage(result.message || "保存成功");
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
-        
+
         // 重新加载页面以应用新设置
         window.location.reload();
       } else {
@@ -202,9 +202,9 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
     { key: "about", label: "关于系统", icon: "ℹ️", description: "版本信息与更新日志" },
   ];
 
-  const ToggleSwitch = ({ enabled, onChange, label, description }: { 
-    enabled: boolean; 
-    onChange: (v: boolean) => void; 
+  const ToggleSwitch = ({ enabled, onChange, label, description }: {
+    enabled: boolean;
+    onChange: (v: boolean) => void;
     label: string;
     description?: string;
   }) => (
@@ -217,9 +217,8 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           className="sr-only"
         />
         <div
-          className={`w-14 h-8 rounded-full transition-all duration-300 ${
-            enabled ? "bg-green-500" : "bg-gray-300"
-          } group-hover:shadow-lg`}
+          className={`w-14 h-8 rounded-full transition-all duration-300 ${enabled ? "bg-green-500" : "bg-gray-300"
+            } group-hover:shadow-lg`}
         >
           <motion.div
             className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md`}
@@ -261,11 +260,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 <motion.button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as SettingsTab)}
-                  className={`w-full px-4 py-3 rounded-xl text-left transition-all ${
-                    activeTab === tab.key
+                  className={`w-full px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.key
                       ? "bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 shadow-sm border border-pink-200"
                       : "text-gray-600 hover:bg-gray-50"
-                  }`}
+                    }`}
                   whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -291,7 +289,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       🏠 网站身份信息
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -423,7 +421,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       🎨 视觉主题配置
                     </div>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">默认背景图 URL</label>
@@ -440,9 +438,9 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                         />
                         {settings.theme.default_wallpaper && (
                           <div className="w-24 h-16 rounded-lg overflow-hidden border-2 border-gray-200">
-                            <img 
-                              src={settings.theme.default_wallpaper} 
-                              alt="Preview" 
+                            <img
+                              src={settings.theme.default_wallpaper}
+                              alt="Preview"
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = "none";
@@ -468,9 +466,9 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                         />
                         {settings.theme.dark_mode_wallpaper && (
                           <div className="w-24 h-16 rounded-lg overflow-hidden border-2 border-gray-200">
-                            <img 
-                              src={settings.theme.dark_mode_wallpaper} 
-                              alt="Preview" 
+                            <img
+                              src={settings.theme.dark_mode_wallpaper}
+                              alt="Preview"
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = "none";
@@ -523,11 +521,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                                 ...settings,
                                 theme: { ...settings.theme, primary_color: color.value }
                               })}
-                              className={`relative px-4 py-2 rounded-lg border-2 transition-all ${
-                                settings.theme.primary_color === color.value
+                              className={`relative px-4 py-2 rounded-lg border-2 transition-all ${settings.theme.primary_color === color.value
                                   ? "border-gray-800 scale-105 shadow-lg"
                                   : "border-gray-300 hover:border-gray-400"
-                              }`}
+                                }`}
                               style={{ backgroundColor: color.value }}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
@@ -593,11 +590,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                               ...settings,
                               theme: { ...settings.theme, radius: option.value as any }
                             })}
-                            className={`px-4 py-3 border-2 rounded-xl transition-all ${
-                              settings.theme.radius === option.value
+                            className={`px-4 py-3 border-2 rounded-xl transition-all ${settings.theme.radius === option.value
                                 ? "border-pink-500 bg-pink-50 text-pink-700"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                            }`}
+                              }`}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -650,7 +646,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       🧩 功能开关与配置
                     </div>
                   </div>
-                  
+
                   <div className="space-y-8">
                     <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
                       <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -819,7 +815,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       🔌 外部服务集成
                     </div>
                   </div>
-                  
+
                   <div className="space-y-8">
                     <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
                       <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -999,7 +995,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       🛡️ 系统安全与数据管理
                     </div>
                   </div>
-                  
+
                   <div className="space-y-8">
                     <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl border border-red-200">
                       <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -1042,7 +1038,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                                 const currentPassword = (document.getElementById("current-password") as HTMLInputElement)?.value;
                                 const newPassword = (document.getElementById("new-password") as HTMLInputElement)?.value;
                                 const confirmPassword = (document.getElementById("confirm-password") as HTMLInputElement)?.value;
-                                
+
                                 if (!currentPassword || !newPassword || !confirmPassword) {
                                   setToastType("error");
                                   setToastMessage("请填写所有密码字段");
@@ -1050,7 +1046,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                                   setTimeout(() => setShowToast(false), 3000);
                                   return;
                                 }
-                                
+
                                 if (newPassword.length < 8) {
                                   setToastType("error");
                                   setToastMessage("新密码至少需要8位");
@@ -1058,7 +1054,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                                   setTimeout(() => setShowToast(false), 3000);
                                   return;
                                 }
-                                
+
                                 if (newPassword !== confirmPassword) {
                                   setToastType("error");
                                   setToastMessage("两次输入的密码不一致");
@@ -1066,20 +1062,20 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                                   setTimeout(() => setShowToast(false), 3000);
                                   return;
                                 }
-                                
+
                                 try {
                                   const formData = new FormData();
                                   formData.append("current_password", currentPassword);
                                   formData.append("new_password", newPassword);
                                   formData.append("confirm_password", confirmPassword);
-                                  
+
                                   const response = await fetch("/api/admin/change-password", {
                                     method: "POST",
                                     body: formData,
                                   });
-                                  
+
                                   const result = await response.json();
-                                  
+
                                   if (result.success) {
                                     setToastType("success");
                                     setToastMessage(result.message || "密码修改成功");
@@ -1136,7 +1132,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                             a.download = `backup-${Date.now()}.json`;
                             a.click();
                             URL.revokeObjectURL(url);
-                            
+
                             setToastType("success");
                             setToastMessage("数据已导出");
                             setShowToast(true);
@@ -1202,13 +1198,13 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                           if (!confirm("确定要清除全站CDN缓存吗？这可能会影响性能。")) {
                             return;
                           }
-                          
+
                           try {
                             const response = await fetch("/api/admin/purge-cache", {
                               method: "POST",
                             });
                             const result = await response.json();
-                            
+
                             if (result.success) {
                               setToastType("success");
                               setToastMessage(result.message || "CDN缓存已清除");
@@ -1251,7 +1247,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       ℹ️ 版本信息与更新日志
                     </div>
                   </div>
-                  
+
                   <div className="space-y-6">
                     {/* 系统信息卡片 */}
                     <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-6 border border-gray-200">
@@ -1392,15 +1388,14 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
         <AnimatePresence>
           {showToast && (
             <motion.div
-              className={`fixed top-20 right-8 z-[200] rounded-xl shadow-xl p-4 border min-w-[300px] ${
-                toastType === "success"
+              className={`fixed top-20 right-8 z-[200] rounded-xl shadow-xl p-4 border min-w-[300px] ${toastType === "success"
                   ? "bg-green-500 text-white border-green-600"
                   : toastType === "error"
-                  ? "bg-red-500 text-white border-red-600"
-                  : toastType === "warning"
-                  ? "bg-yellow-500 text-white border-yellow-600"
-                  : "bg-blue-500 text-white border-blue-600"
-              }`}
+                    ? "bg-red-500 text-white border-red-600"
+                    : toastType === "warning"
+                      ? "bg-yellow-500 text-white border-yellow-600"
+                      : "bg-blue-500 text-white border-blue-600"
+                }`}
               initial={{ opacity: 0, y: -20, x: 100 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
               exit={{ opacity: 0, y: -20, x: 100 }}

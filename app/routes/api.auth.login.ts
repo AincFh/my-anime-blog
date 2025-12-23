@@ -7,7 +7,7 @@ import type { Route } from "./+types/api.auth.login";
 import { loginUser } from "../services/auth.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const env = context?.cloudflare?.env as any;
+  const env = (context as any).cloudflare.env;
   const anime_db = env?.anime_db;
   const CACHE_KV = env?.CACHE_KV;
 
@@ -52,12 +52,15 @@ export async function action({ request, context }: Route.ActionArgs) {
       );
     }
 
-    // 设置 Cookie
+    // 设置 Cookie（生产环境添加 Secure 标志）
+    const isProduction = !request.url.includes('localhost');
+    const cookieOptions = `session=${result.session.token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict${isProduction ? '; Secure' : ''}`;
+
     return Response.json(
       { success: true, user: result.user },
       {
         headers: {
-          "Set-Cookie": `session=${result.session.token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`,
+          "Set-Cookie": cookieOptions,
         },
       }
     );

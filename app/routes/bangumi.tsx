@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "~/components/ui/layout/GlassCard";
+import { GlassCard } from "~/components/layout/GlassCard";
 import type { Route } from "./+types/bangumi";
 
 /**
@@ -11,65 +11,6 @@ import type { Route } from "./+types/bangumi";
  * 4. 状态标签（在看/看过/想看/弃番）
  */
 export async function loader({ context }: Route.LoaderArgs) {
-  // 检查环境，避免在本地开发时出错
-  if (!context.cloudflare || !context.cloudflare.env) {
-    // 本地开发环境返回模拟数据
-    return {
-      animes: [
-        {
-          id: 1,
-          title: "葬送的芙莉莲",
-          cover_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800",
-          status: "watching",
-          progress: "24/28",
-          rating: 9.5,
-          review: "平淡中见真章，这才是真正的神作。",
-          created_at: Date.now() / 1000
-        },
-        {
-          id: 2,
-          title: "进击的巨人 最终季",
-          cover_url: "https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=800",
-          status: "completed",
-          progress: "完结",
-          rating: 10,
-          review: "献出心脏！跨越十年的史诗。",
-          created_at: Date.now() / 1000 - 86400
-        },
-        {
-          id: 3,
-          title: "间谍过家家",
-          cover_url: "https://images.unsplash.com/photo-1620503374956-c942862f0372?q=80&w=800",
-          status: "watching",
-          progress: "12/24",
-          rating: 8.5,
-          review: "哇库哇库！",
-          created_at: Date.now() / 1000 - 172800
-        },
-        {
-          id: 4,
-          title: "鬼灭之刃",
-          cover_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800",
-          status: "plan",
-          progress: "0/26",
-          rating: 0,
-          review: "",
-          created_at: Date.now() / 1000 - 259200
-        },
-        {
-          id: 5,
-          title: "新世纪福音战士",
-          cover_url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800",
-          status: "completed",
-          progress: "完结",
-          rating: 10,
-          review: "勇敢的少年啊，快去创造奇迹！",
-          created_at: Date.now() / 1000 - 345600
-        }
-      ],
-    };
-  }
-
   const { anime_db } = context.cloudflare.env;
 
   try {

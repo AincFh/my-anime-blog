@@ -17,6 +17,7 @@ export interface User {
   level: number;
   exp: number;
   coins: number;
+  preferences?: string;
 }
 
 export interface Session {
@@ -163,7 +164,7 @@ export async function registerUser(
     // 获取新创建的用户
     const newUser = await queryFirst<User>(
       db,
-      'SELECT id, email, username, avatar_url, role, level, exp, coins FROM users WHERE id = ?',
+      'SELECT id, email, username, avatar_url, role, level, exp, coins, preferences FROM users WHERE id = ?',
       result.meta.last_row_id
     );
 
@@ -174,7 +175,6 @@ export async function registerUser(
     return { success: true, user: newUser };
   } catch (error) {
     console.error('Registration error:', error);
-    // 避免泄露具体的数据库错误信息，使用通用错误消息
     return { success: false, error: '注册失败，请检查输入信息' };
   }
 }
@@ -187,13 +187,10 @@ export async function generateTempPassword(
   kv: KVNamespace | null
 ): Promise<string> {
   if (!kv) {
-    // 开发环境：使用固定临时密码
     return 'dev_temp_password_2024';
   }
-  
-  // 生成安全的临时密码
+
   const tempPassword = generateToken();
-  // 存储5分钟有效期
   await kv.put(`temp_password:${email}`, tempPassword, { expirationTtl: 300 });
   return tempPassword;
 }
@@ -207,16 +204,14 @@ export async function verifyTempPassword(
   kv: KVNamespace | null
 ): Promise<boolean> {
   if (!kv) {
-    // 开发环境：允许固定临时密码
     return password === 'dev_temp_password_2024';
   }
-  
+
   const storedPassword = await kv.get(`temp_password:${email}`);
   if (!storedPassword) {
     return false;
   }
-  
-  // 验证后删除（一次性使用）
+
   await kv.delete(`temp_password:${email}`);
   return storedPassword === password;
 }
@@ -231,11 +226,10 @@ export async function loginUser(
   db: any,
   kv: KVNamespace | null
 ): Promise<{ success: boolean; error?: string; session?: Session; user?: User }> {
-  // 设备指纹验证
   const userAgent = request.headers.get('user-agent') || 'unknown';
   const ip = getClientIP(request);
   const deviceFingerprint = generateDeviceFingerprint(userAgent, ip);
-  
+
   // 检查设备异常
   if (kv) {
     const deviceKey = `device_anomaly:${deviceFingerprint}`;
@@ -245,22 +239,21 @@ export async function loginUser(
     }
   }
 
-  // 速率限制检查（登录失败）
+  // 速率限制检查
   const failLimit = await checkRateLimit(kv, `${ip}:login_fail`, RATE_LIMITS.LOGIN_FAIL);
   if (!failLimit.allowed) {
-    // 记录设备异常
     if (kv) {
       const deviceKey = `device_anomaly:${deviceFingerprint}`;
       const currentCount = await kv.get(deviceKey) || '0';
-      await kv.put(deviceKey, (parseInt(currentCount) + 1).toString(), { expirationTtl: 86400 }); // 24小时过期
+      await kv.put(deviceKey, (parseInt(currentCount) + 1).toString(), { expirationTtl: 86400 });
     }
     return { success: false, error: '登录失败次数过多，请10分钟后再试' };
   }
 
   // 查询用户
-  const user = await queryFirst<{ id: number; email: string; password_hash: string; username: string; avatar_url: string | null; role: string; level: number; exp: number; coins: number }>(
+  const user = await queryFirst<{ id: number; email: string; password_hash: string; username: string; avatar_url: string | null; role: string; level: number; exp: number; coins: number; preferences: string }>(
     db,
-    'SELECT id, email, password_hash, username, avatar_url, role, level, exp, coins FROM users WHERE email = ?',
+    'SELECT id, email, password_hash, username, avatar_url, role, level, exp, coins, preferences FROM users WHERE email = ?',
     email
   );
 
@@ -268,20 +261,16 @@ export async function loginUser(
     return { success: false, error: '邮箱或密码错误' };
   }
 
-  // 验证密码（支持临时密码和正常密码）
+  // 验证密码
   let passwordValid = false;
-  
-  // 首先尝试作为临时密码验证
   const isTempPassword = await verifyTempPassword(email, password, kv);
   if (isTempPassword) {
     passwordValid = true;
   } else {
-    // 如果不是临时密码，验证正常密码
     passwordValid = await verifyPassword(password, user.password_hash);
   }
-  
+
   if (!passwordValid) {
-    // 记录失败次数
     if (kv) {
       const failKey = `ratelimit:login_fail:${ip}`;
       const failCount = await kv.get(failKey);
@@ -293,7 +282,7 @@ export async function loginUser(
 
   // 创建会话
   const token = generateToken();
-  const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7天
+  const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
 
   await execute(
     db,
@@ -311,7 +300,6 @@ export async function loginUser(
     user_agent: userAgent,
   };
 
-  // 记录设备信息到会话存储
   if (kv) {
     const deviceInfo = {
       fingerprint: deviceFingerprint,
@@ -331,6 +319,7 @@ export async function loginUser(
     level: user.level,
     exp: user.exp,
     coins: user.coins,
+    preferences: user.preferences
   };
 
   return { success: true, session, user: userData };
@@ -360,10 +349,9 @@ export async function verifySession(
     return { valid: false };
   }
 
-  // 获取用户信息
   const user = await queryFirst<User>(
     db,
-    'SELECT id, email, username, avatar_url, role, level, exp, coins FROM users WHERE id = ?',
+    'SELECT id, email, username, avatar_url, role, level, exp, coins, preferences FROM users WHERE id = ?',
     session.user_id
   );
 
@@ -371,7 +359,6 @@ export async function verifySession(
     return { valid: false };
   }
 
-  // 设备指纹验证（可选）
   if (kv && request) {
     const deviceData = await kv.get(`session_device:${token}`);
     if (deviceData) {
@@ -380,12 +367,9 @@ export async function verifySession(
         request.headers.get('user-agent') || 'unknown',
         getClientIP(request)
       );
-      
-      // 设备指纹不匹配时记录异常
+
       if (deviceInfo.fingerprint !== currentFingerprint) {
         console.warn(`Device fingerprint mismatch for session ${token}`);
-        // 可以选择在这里返回 valid: false 来强制重新登录
-        // return { valid: false };
       }
     }
   }
@@ -397,14 +381,12 @@ export async function verifySession(
  * 从请求中获取会话令牌
  */
 export function getSessionToken(request: Request): string | null {
-  // 优先从 Cookie 获取
   const cookieHeader = request.headers.get('Cookie');
   const cookieMatch = cookieHeader?.match(/session=([^;]+)/);
   if (cookieMatch) {
     return cookieMatch[1];
   }
 
-  // 也可以从 Authorization header 获取
   const authHeader = request.headers.get('Authorization');
   if (authHeader?.startsWith('Bearer ')) {
     return authHeader.substring(7);
@@ -414,7 +396,7 @@ export function getSessionToken(request: Request): string | null {
 }
 
 /**
- * 登出（删除会话）
+ * 登出
  */
 export async function logoutUser(
   token: string,
@@ -425,13 +407,12 @@ export async function logoutUser(
     return { success: true };
   } catch (error) {
     console.error('Logout error:', error);
-    // 不暴露具体的登出失败原因，统一返回失败
     return { success: false };
   }
 }
 
 /**
- * 删除用户的所有会话（用于后台踢人）
+ * 删除用户的所有会话
  */
 export async function revokeAllUserSessions(
   userId: number,
@@ -446,3 +427,117 @@ export async function revokeAllUserSessions(
   }
 }
 
+/**
+ * 更新用户资料
+ */
+export async function updateUserProfile(
+  userId: number,
+  updates: { username?: string; avatar_url?: string; bio?: string },
+  db: any
+): Promise<{ success: boolean; error?: string; user?: User }> {
+  try {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (updates.username) {
+      fields.push('username = ?');
+      values.push(updates.username);
+    }
+
+    if (updates.avatar_url !== undefined) {
+      fields.push('avatar_url = ?');
+      values.push(updates.avatar_url);
+    }
+
+    if (fields.length === 0) {
+      return { success: true };
+    }
+
+    values.push(userId);
+
+    await execute(
+      db,
+      `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+      ...values
+    );
+
+    const updatedUser = await queryFirst<User>(
+      db,
+      'SELECT id, email, username, avatar_url, role, level, exp, coins, preferences FROM users WHERE id = ?',
+      userId
+    );
+
+    if (!updatedUser) {
+      return { success: false, error: '用户不存在' };
+    }
+
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return { success: false, error: '更新失败，请稍后重试' };
+  }
+}
+
+/**
+ * 更新用户偏好设置
+ */
+export async function updateUserPreferences(
+  userId: number,
+  preferences: any,
+  db: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const preferencesString = JSON.stringify(preferences);
+    await execute(
+      db,
+      'UPDATE users SET preferences = ? WHERE id = ?',
+      preferencesString,
+      userId
+    );
+    return { success: true };
+  } catch (error) {
+    console.error('Update preferences error:', error);
+    return { success: false, error: '偏好设置保存失败' };
+  }
+}
+
+/**
+ * 修改密码
+ */
+export async function changePassword(
+  userId: number,
+  oldPassword: string,
+  newPassword: string,
+  db: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await queryFirst<{ password_hash: string }>(
+      db,
+      'SELECT password_hash FROM users WHERE id = ?',
+      userId
+    );
+
+    if (!user) {
+      return { success: false, error: '用户不存在' };
+    }
+
+    const isValid = await verifyPassword(oldPassword, user.password_hash);
+    if (!isValid) {
+      return { success: false, error: '旧密码错误' };
+    }
+
+    const newHash = await hashPassword(newPassword);
+
+    await execute(
+      db,
+      'UPDATE users SET password_hash = ? WHERE id = ?',
+      newHash,
+      userId
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error('Change password error:', error);
+    return { success: false, error: '密码修改失败，请稍后重试' };
+  }
+}

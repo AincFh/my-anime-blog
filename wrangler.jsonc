@@ -38,5 +38,16 @@
 			"binding": "IMAGES_BUCKET",
 			"bucket_name": "my-anime-blog"
 		}
+	],
+	// Workers AI - Cloudflare 原生 AI 模型 (免费 10,000 次/天)
+	"ai": {
+		"binding": "AI"
+	},
+	// Analytics Engine - 访问统计 (免费 100,000 次/月)
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS",
+			"dataset": "my_anime_blog_analytics"
+		}
 	]
 }

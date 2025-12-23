@@ -10,7 +10,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect("/admin/login");
   }
 
-  const { anime_db } = context.cloudflare.env;
+  const { anime_db } = (context as any).cloudflare.env;
 
   try {
     const { results } = await anime_db
@@ -92,8 +92,8 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
             key={tab.key}
             onClick={() => setFilter(tab.key as typeof filter)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === tab.key
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
               }`}
           >
             {tab.label}
@@ -128,7 +128,7 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
                     <span className="text-xs text-gray-400">• {comment.time}</span>
                   </div>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase ${comment.status === "pending" ? "bg-yellow-100 text-yellow-700" :
-                      comment.isSpam ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                    comment.isSpam ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
                     }`}>
                     {comment.isSpam ? "SPAM" : comment.status}
                   </span>

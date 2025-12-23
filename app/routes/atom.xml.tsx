@@ -1,10 +1,18 @@
-import type { Route } from "./+types/atom.xml";
-
 /**
  * Atom Feed生成
  * 功能：自动生成Atom 1.0格式的订阅源
  */
-export async function loader({ context, request }: Route.LoaderArgs) {
+
+interface Article {
+  slug: string;
+  title: string;
+  description: string | null;
+  content: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export async function loader({ context, request }: { context: any, request: Request }) {
   const { anime_db } = context.cloudflare.env;
   const url = new URL(request.url);
 
@@ -12,21 +20,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     // 获取最新文章
     const articlesResult = await anime_db
       .prepare(
-        `SELECT slug, title, description, content, created_at, updated_at
+        `SELECT slug, title, content, created_at, updated_at
          FROM articles
          ORDER BY created_at DESC
          LIMIT 20`
       )
-      .all<{
-        slug: string;
-        title: string;
-        description: string | null;
-        content: string;
-        created_at: number;
-        updated_at: number;
-      }>();
+      .all();
 
-    const articles = articlesResult.results || [];
+    const articles = (articlesResult.results || []) as Article[];
     const siteUrl = `${url.protocol}//${url.host}`;
     const feedUrl = `${siteUrl}/atom.xml`;
 
@@ -40,13 +41,15 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   <updated>${new Date().toISOString()}</updated>
   <id>${siteUrl}/</id>
   ${articles
-    .map((article) => {
-      const published = new Date(article.created_at * 1000).toISOString();
-      const updated = new Date(article.updated_at * 1000).toISOString();
-      const articleUrl = `${siteUrl}/articles/${article.slug}`;
-      const content = article.content || article.description || "";
+        .map((article: Article) => {
+          const published = new Date(article.created_at * 1000).toISOString();
+          const updated = article.updated_at
+            ? new Date(article.updated_at * 1000).toISOString()
+            : published;
+          const articleUrl = `${siteUrl}/articles/${article.slug}`;
+          const content = article.content || "";
 
-      return `
+          return `
   <entry>
     <title type="html"><![CDATA[${article.title}]]></title>
     <link href="${articleUrl}" rel="alternate" />
@@ -55,8 +58,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     <updated>${updated}</updated>
     <content type="html"><![CDATA[${content}]]></content>
   </entry>`;
-    })
-    .join("")}
+        })
+        .join("")}
 </feed>`;
 
     return new Response(atom, {
@@ -70,4 +73,3 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return new Response("Atom generation failed", { status: 500 });
   }
 }
-

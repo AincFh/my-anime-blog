@@ -203,17 +203,61 @@
 }
 
 .dark {
-  /* Dark Mode (The Void - Deep Sea) */
-  --bg-primary: #1a1f2e;
-  --text-primary: #e2e8f0;
+  /* Dark Mode - 优化版：深邃但不压抑 */
+  --bg-primary: #0f172a;
+  --text-primary: #f8fafc;
 
-  /* Glass Surface - Dark */
-  --glass-bg: rgba(30, 41, 59, 0.6);
-  --glass-border: rgba(139, 92, 246, 0.2);
-  /* Purple tint in dark mode */
-  --glass-glow: rgba(139, 92, 246, 0.2);
+  /* 次要文字颜色 - 提高对比度 */
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
-  --card-bg: linear-gradient(135deg, rgba(45, 55, 72, 0.8), rgba(30, 41, 59, 0.6));
+  /* Glass Surface - Dark：添加温暖的橙色调 */
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 159, 67, 0.2);
+  --glass-glow: rgba(255, 159, 67, 0.1);
+
+  /* 卡片背景保持暖色调 */
+  --card-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.9));
+}
+
+/* 深色模式下的文字颜色覆盖 - 确保高对比度 */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f8fafc !important;
+}
+
+.dark p,
+.dark span,
+.dark div {
+  color: inherit;
+}
+
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-400 {
+  color: #9ca3af !important;
 }
 
 @layer base {
@@ -221,6 +265,9 @@
   html,
   body {
     @apply h-full w-full m-0 p-0 overflow-x-hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* 平滑滚动 */
@@ -818,6 +865,97 @@
   animation: pulse-slowest 12s ease-in-out infinite 4s;
 }
 
+/* 淡入上移动画 - 用于 LCP 优化 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* 慢速旋转动画 */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* Bokeh 光晕动画 - 替代 Framer Motion */
+@keyframes bokeh-1 {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes bokeh-2 {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bokeh-3 {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+.animate-bokeh-1 {
+  animation: bokeh-1 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-bokeh-2 {
+  animation: bokeh-2 10s ease-in-out infinite 2s;
+  will-change: transform, opacity;
+}
+
+.animate-bokeh-3 {
+  animation: bokeh-3 12s ease-in-out infinite 4s;
+  will-change: transform, opacity;
+}
+
 /* 慢速旋转 */
 @keyframes spin-slow {
   from {
@@ -941,4 +1079,86 @@
 .text-neon-orange {
   color: #fff;
   text-shadow: 0 0 5px rgba(255, 159, 67, 0.8), 0 0 10px rgba(255, 159, 67, 0.5);
+}
+
+/* ============ 内容保护：禁止选中和复制 ============ */
+
+/* 全局禁止选中 */
+body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 禁止拖拽图片 */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: auto;
+}
+
+/* 可复制区域例外 - 代码块 */
+pre,
+code,
+.copyable,
+.selectable,
+[data-copyable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+
+/* 代码块容器样式 */
+.code-block-wrapper {
+  position: relative;
+}
+
+/* 代码块复制按钮 */
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.code-block-wrapper:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.code-copy-btn.copied {
+  background: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* 输入框允许选中 */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }

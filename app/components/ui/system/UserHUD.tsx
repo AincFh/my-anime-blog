@@ -24,7 +24,7 @@ export function UserHUD({ user, compact = false }: UserHUDProps) {
             <div className="flex items-center gap-2">
                 {/* Avatar Ring with Level */}
                 <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-at-orange to-at-red p-[2px]">
+                    <div className="w-8 h-8 rounded-full p-[1px] bg-gradient-to-br from-at-orange to-at-red">
                         <div className="w-full h-full rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
                             {user.avatar_url ? (
                                 <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
@@ -35,7 +35,7 @@ export function UserHUD({ user, compact = false }: UserHUDProps) {
                             )}
                         </div>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 bg-at-purple text-white text-[8px] font-display font-bold px-1 rounded-sm border border-slate-900">
+                    <div className="absolute -bottom-1 -right-1 bg-at-purple text-white text-[8px] font-display font-bold px-1 rounded-full border border-white dark:border-slate-900 shadow-sm">
                         LV.{level}
                     </div>
                 </div>
