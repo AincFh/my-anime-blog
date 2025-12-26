@@ -41,6 +41,8 @@ interface GamificationContextType {
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
+const DEFAULT_STATS: UserStats = { level: 1, exp: 0, maxExp: 100, coins: 500, mood: "neutral" };
+
 const INITIAL_ACHIEVEMENTS: Achievement[] = [
     {
         id: "first_visit",
@@ -77,44 +79,54 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
 ];
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
-    const [stats, setStats] = useState<UserStats>(() => {
-        if (typeof window === 'undefined') {
-            return { level: 1, exp: 0, maxExp: 100, coins: 500, mood: "neutral" };
-        }
-        const saved = localStorage.getItem("gamification_stats");
-        return saved
-            ? JSON.parse(saved)
-            : { level: 1, exp: 0, maxExp: 100, coins: 500, mood: "neutral" };
-    });
+    // 使用固定初始值，避免 SSR/CSR 不匹配
+    const [stats, setStats] = useState<UserStats>(DEFAULT_STATS);
+    const [achievements, setAchievements] = useState<Achievement[]>(INITIAL_ACHIEVEMENTS);
+    const [inventory, setInventory] = useState<InventoryItem[]>([]);
+    const [isHydrated, setIsHydrated] = useState(false);
 
-    const [achievements, setAchievements] = useState<Achievement[]>(() => {
-        if (typeof window === 'undefined') {
-            return INITIAL_ACHIEVEMENTS;
-        }
-        const saved = localStorage.getItem("gamification_achievements");
-        return saved ? JSON.parse(saved) : INITIAL_ACHIEVEMENTS;
-    });
-
-    const [inventory, setInventory] = useState<InventoryItem[]>(() => {
-        if (typeof window === 'undefined') {
-            return [];
-        }
-        const saved = localStorage.getItem("gamification_inventory");
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // 持久化到localStorage
+    // 客户端加载后从 localStorage 恢复数据
     useEffect(() => {
-        localStorage.setItem("gamification_stats", JSON.stringify(stats));
-    }, [stats]);
+        const savedStats = localStorage.getItem("gamification_stats");
+        const savedAchievements = localStorage.getItem("gamification_achievements");
+        const savedInventory = localStorage.getItem("gamification_inventory");
+
+        if (savedStats) {
+            try {
+                setStats(JSON.parse(savedStats));
+            } catch (e) { }
+        }
+        if (savedAchievements) {
+            try {
+                setAchievements(JSON.parse(savedAchievements));
+            } catch (e) { }
+        }
+        if (savedInventory) {
+            try {
+                setInventory(JSON.parse(savedInventory));
+            } catch (e) { }
+        }
+        setIsHydrated(true);
+    }, []);
+
+    // 持久化到 localStorage
+    useEffect(() => {
+        if (isHydrated) {
+            localStorage.setItem("gamification_stats", JSON.stringify(stats));
+        }
+    }, [stats, isHydrated]);
 
     useEffect(() => {
-        localStorage.setItem("gamification_achievements", JSON.stringify(achievements));
-    }, [achievements]);
+        if (isHydrated) {
+            localStorage.setItem("gamification_achievements", JSON.stringify(achievements));
+        }
+    }, [achievements, isHydrated]);
 
     useEffect(() => {
-        localStorage.setItem("gamification_inventory", JSON.stringify(inventory));
-    }, [inventory]);
+        if (isHydrated) {
+            localStorage.setItem("gamification_inventory", JSON.stringify(inventory));
+        }
+    }, [inventory, isHydrated]);
 
     const addExp = (amount: number) => {
         setStats((prev) => {
@@ -122,7 +134,6 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
             let newLevel = prev.level;
             let newMaxExp = prev.maxExp;
 
-            // 升级检查
             while (newExp >= newMaxExp) {
                 newExp -= newMaxExp;
                 newLevel += 1;

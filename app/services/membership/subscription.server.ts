@@ -210,14 +210,16 @@ export async function resumeAutoRenew(
 export async function getUserSubscription(
     db: any,
     userId: number
-): Promise<Subscription | null> {
+): Promise<(Subscription & { display_name: string }) | null> {
     const now = Math.floor(Date.now() / 1000);
 
-    return queryFirst<Subscription>(
+    return queryFirst<Subscription & { display_name: string }>(
         db,
-        `SELECT * FROM subscriptions 
-     WHERE user_id = ? AND status = 'active' AND end_date > ?
-     ORDER BY end_date DESC
+        `SELECT s.*, t.display_name 
+     FROM subscriptions s
+     JOIN membership_tiers t ON s.tier_id = t.id
+     WHERE s.user_id = ? AND s.status = 'active' AND s.end_date > ?
+     ORDER BY s.end_date DESC
      LIMIT 1`,
         userId,
         now

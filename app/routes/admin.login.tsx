@@ -15,7 +15,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
   if (sessionId) {
     // 验证 session 是否有效
-    const db = context?.cloudflare?.env?.DB;
+    const { getDBSafe } = await import("~/utils/db");
+    const db = getDBSafe(context);
     if (db) {
       try {
         const session = await db.prepare(
@@ -25,6 +26,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           throw redirect("/admin");
         }
       } catch (e) {
+        if (e instanceof Response) throw e;
         // session 无效，继续显示登录页
       }
     }
@@ -43,7 +45,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   // 获取数据库
-  const db = context?.cloudflare?.env?.DB;
+  const { getDBSafe } = await import("~/utils/db");
+  const db = getDBSafe(context);
 
   if (!db) {
     // 本地开发模式：使用硬编码的管理员账号
@@ -114,7 +117,7 @@ export default function AdminLogin() {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-900">
+    <div className="fixed inset-0 flex items-center justify-center p-4 overflow-hidden bg-slate-900 z-50">
       {/* 动态背景 */}
       <div className="absolute inset-0">
         {/* 渐变背景 */}

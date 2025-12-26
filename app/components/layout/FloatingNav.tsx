@@ -15,16 +15,15 @@ interface NavItem {
 export function FloatingNav() {
   const { scrollY } = useScroll();
   const location = useLocation();
-  const backdropFilter = useTransform(scrollY, [0, 100], ['blur(10px)', 'blur(25px)']);
-  const opacity = useTransform(scrollY, [0, 50], [0.8, 1]);
-  const scale = useTransform(scrollY, [0, 50], [0.95, 1]);
+  // 调整滚动时的变换效果
+  const y = useTransform(scrollY, [0, 100], [0, -10]); // 稍微上移一点
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const { user, loading } = useUser();
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
 
-  // 计算下拉菜单位置 - 头像正下方，右边缘对齐
+  // 计算下拉菜单位置
   const calculateDropdownPosition = () => {
     if (avatarButtonRef.current) {
       const rect = avatarButtonRef.current.getBoundingClientRect();
@@ -88,72 +87,87 @@ export function FloatingNav() {
 
   return (
     <>
-      {/* 导航栏 */}
+      {/* 导航栏容器 */}
       <motion.nav
-        className="fixed bottom-6 md:bottom-auto md:top-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-fit"
-        style={{ backdropFilter, opacity, scale }}
-        initial={{ opacity: 0, y: 20 }}
+        className="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[95vw]"
+        style={{ y }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5, ease: "out" }}
       >
         <div
-          className="px-4 py-3 md:px-8 md:py-4 rounded-full flex items-center justify-between gap-2 md:gap-6 border border-white/20 dark:border-slate-700/50 shadow-lg"
-          style={{
-            background: "var(--glass-bg)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
+          className="
+            relative flex items-center py-2.5 px-2 rounded-full
+            /* --- iOS 玻璃态核心样式 --- */
+            bg-white/60                 /* 1. 高透的白色背景 */
+            backdrop-blur-xl            /* 2. 极强的背景高斯模糊 */
+            border border-white/40      /* 3. 半透明的白色边框 */
+            shadow-lg shadow-black/5    /* 4. 柔和的投影 */
+            /* 兼容暗色模式 */
+            dark:bg-slate-900/60 dark:border-white/10
+          "
         >
           {/* 桌面端导航 */}
-          <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`text-sm font-medium transition-colors duration-300 ${location.pathname === item.path
-                    ? "text-primary-start"
-                    : "text-slate-700 dark:text-slate-200 hover:text-primary-start"
-                  }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+          <div className="hidden md:flex items-center">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  className={`
+                    relative px-5 py-2 text-[15px] font-medium transition-colors duration-300 rounded-full z-10
+                    /* 文字颜色逻辑 */
+                    ${isActive ? "text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"}
+                  `}
+                >
+                  {/* 文字层 */}
+                  <span className="relative z-20">{item.name}</span>
+
+                  {/* --- 液体切换背景层 --- */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-pill-glass"
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 30,
+                      }}
+                      className="absolute inset-0 z-10 bg-white dark:bg-slate-800 rounded-full shadow-sm"
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
-          {/* 移动端导航 */}
-          <div className="flex md:hidden items-center gap-1">
-            {navItems.slice(0, 4).map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`p-2 rounded-full transition-all ${location.pathname === item.path
-                    ? "bg-primary-start/20 scale-110"
-                    : "hover:bg-white/20"
-                  }`}
-              >
-                <span className="text-lg">{item.icon}</span>
-              </Link>
-            ))}
+          {/* 移动端导航 (简化版) */}
+          <div className="flex md:hidden items-center gap-1 px-2">
+            <Link to="/" className="p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10">
+              <span className="text-xl">🏠</span>
+            </Link>
             <motion.button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-full hover:bg-white/20"
+              className="p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200"
               whileTap={{ scale: 0.9 }}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </motion.button>
           </div>
 
-          {/* 右侧区域 */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden md:block w-px h-4 bg-slate-200 dark:bg-slate-600" />
+          {/* 分割线 */}
+          <div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-3 hidden md:block"></div>
 
+          {/* 右侧区域 (用户 & 主题) */}
+          <div className="flex items-center gap-2 pr-2">
             {loading ? (
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
             ) : user ? (
               <motion.button
                 ref={avatarButtonRef}
                 onClick={handleAvatarClick}
-                className="flex items-center gap-2 focus:outline-none p-1 rounded-full hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 focus:outline-none p-1 rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -162,7 +176,7 @@ export function FloatingNav() {
             ) : (
               <Link
                 to="/login"
-                className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-primary-start transition-colors duration-300"
+                className="px-3 py-1.5 text-[14px] font-medium text-slate-500 hover:text-slate-800 transition-colors dark:text-slate-400 dark:hover:text-white"
               >
                 登录
               </Link>
@@ -172,59 +186,39 @@ export function FloatingNav() {
           </div>
         </div>
 
-        {/* 移动端菜单 */}
+        {/* 移动端菜单下拉 */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
-              className="md:hidden absolute top-full left-0 right-0 mt-2 glass-card rounded-2xl p-4 overflow-hidden"
+              className="md:hidden absolute top-full left-0 right-0 mt-4 mx-4 p-4 rounded-2xl
+                         bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-xl"
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {navItems.map((item) => (
                   <Link
                     key={item.name}
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${location.pathname === item.path
-                        ? "bg-primary-start/20 text-primary-start"
-                        : "hover:bg-white/20 text-slate-700 dark:text-slate-200"
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${location.pathname === item.path
+                      ? "bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white"
+                      : "hover:bg-white/40 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400"
                       }`}
                   >
-                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-2xl">{item.icon}</span>
                     <span className="text-xs font-medium">{item.name}</span>
                   </Link>
                 ))}
-                {user ? (
-                  <Link
-                    to="/user/dashboard"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-white/20 text-slate-700 dark:text-slate-200"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-primary-start flex items-center justify-center text-white text-xs">
-                      {user.username?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                    <span className="text-xs font-medium">我的</span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-white/20 text-slate-700 dark:text-slate-200"
-                  >
-                    <span className="text-xl">👤</span>
-                    <span className="text-xs font-medium">登录</span>
-                  </Link>
-                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.nav>
 
-      {/* 用户下拉菜单 - 完全独立，使用 fixed 定位 */}
+      {/* 用户下拉菜单 (保持原有逻辑) */}
       <AnimatePresence>
         {isUserMenuOpen && user && (
           <motion.div
@@ -233,7 +227,8 @@ export function FloatingNav() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="w-80 glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/20 dark:border-slate-700/50"
+            className="w-80 rounded-2xl overflow-hidden shadow-2xl border border-white/20 dark:border-slate-700/50
+                       bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl"
             style={dropdownStyle}
           >
             {/* Header */}

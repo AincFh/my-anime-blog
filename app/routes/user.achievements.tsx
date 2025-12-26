@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { HexagonBadge } from "~/components/gamification/HexagonBadge";
+import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLayout";
+import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
+import { NavMenu } from "~/components/dashboard/game/NavMenu";
+import { ClientOnly } from "~/components/common/ClientOnly";
+import { getSessionToken, verifySession } from "~/services/auth.server";
+import { getUserCoins } from "~/services/membership/coins.server";
 import type { Route } from "./+types/user.achievements";
 
 // Mock Achievement Data (Should be shared with AchievementSystem.tsx ideally)
@@ -56,106 +62,154 @@ const ALL_ACHIEVEMENTS = [
     },
 ];
 
-export async function loader({ context }: Route.LoaderArgs) {
-    // Mock user ID for now, in real app get from session
-    const userId = 1;
+export async function loader({ request, context }: Route.LoaderArgs) {
+    const { anime_db } = context.cloudflare.env;
+    const token = getSessionToken(request);
+    const { valid, user } = await verifySession(token, anime_db);
 
-    try {
-        const { anime_db } = (context as any).cloudflare.env;
-        const user = await anime_db
-            .prepare("SELECT achievements, username, avatar_url, level FROM users WHERE id = ?")
-            .bind(userId)
-            .first<{ achievements: string | null, username: string, avatar_url: string, level: number }>();
-
-        if (!user) {
-            return { unlockedIds: [], user: null };
-        }
-
-        const unlockedIds: string[] = user.achievements ? JSON.parse(user.achievements) : [];
-        return { unlockedIds, user };
-    } catch (error) {
-        console.error("Failed to load achievements:", error);
-        return { unlockedIds: [], user: null };
+    if (!valid || !user) {
+        return { loggedIn: false, unlockedIds: [], user: null, stats: { coins: 0 } };
     }
+
+    const coins = await getUserCoins(anime_db, user.id);
+    const unlockedIds: string[] = user.achievements ? JSON.parse(user.achievements) : [];
+
+    return {
+        loggedIn: true,
+        unlockedIds,
+        user: {
+            ...user,
+            avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+        },
+        stats: {
+            coins,
+            level: user.level || 1,
+            exp: user.exp || 0,
+            maxExp: (user.level || 1) * 100,
+        }
+    };
 }
 
 export default function UserAchievements({ loaderData }: Route.ComponentProps) {
-    const { unlockedIds, user } = loaderData;
+    const { loggedIn, unlockedIds, user, stats } = loaderData;
+    const navigate = useNavigate();
+
+    if (!loggedIn) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold mb-4">ACCESS DENIED</h1>
+                    <button onClick={() => navigate("/login")} className="mt-4 px-6 py-2 bg-primary-500 rounded-full">登录</button>
+                </div>
+            </div>
+        );
+    }
 
     // Calculate stats
     const total = ALL_ACHIEVEMENTS.length;
     const unlocked = unlockedIds.length;
     const progress = Math.round((unlocked / total) * 100);
 
+    const userData = {
+        avatar: user?.avatar_url,
+        uid: user ? `UID-${user.id.toString().padStart(6, '0')}` : "UID-000000",
+        level: stats.level,
+        name: user?.username || "Traveler",
+        exp: stats.exp,
+        maxExp: stats.maxExp,
+    };
+
     return (
-        <div className="min-h-screen pb-12 px-4 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-[url('/patterns/hex-grid.svg')] opacity-5 pointer-events-none" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-at-purple/10 blur-[120px] rounded-full pointer-events-none" />
+        <>
+            <ClientOnly>
+                {() => <StatusHUD user={userData} stats={{ coins: stats.coins }} />}
+            </ClientOnly>
+            <NavMenu />
 
-            <div className="container mx-auto max-w-5xl relative z-10">
-                {/* Header */}
-                <div className="text-center mb-16">
-                    <motion.h1
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-6xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-at-orange via-at-red to-at-purple mb-4"
-                    >
-                        TROPHY ROOM
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-slate-500 font-display tracking-widest uppercase"
-                    >
-                        Sync Rate: {progress}% // Level {user?.level || 1}
-                    </motion.p>
-                </div>
-
-                {/* Honeycomb Grid */}
-                <div className="flex flex-wrap justify-center gap-4 md:gap-8 max-w-4xl mx-auto">
-                    {ALL_ACHIEVEMENTS.map((achievement, index) => (
-                        <motion.div
-                            key={achievement.id}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.1 }}
-                            className={index % 2 === 1 ? "md:mt-16" : ""} // Staggered layout for honeycomb effect
+            <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
+                <div className="w-full h-full max-w-6xl pointer-events-auto overflow-y-auto custom-scrollbar flex flex-col items-center">
+                    {/* Header */}
+                    <div className="text-center mb-12 w-full">
+                        <motion.h1
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-4xl md:text-6xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-4 drop-shadow-lg"
                         >
-                            <HexagonBadge
-                                {...achievement}
-                                isUnlocked={unlockedIds.includes(achievement.id)}
-                                size="md"
-                            />
-                        </motion.div>
-                    ))}
-                </div>
+                            TROPHY ROOM
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-white/60 font-display tracking-widest uppercase"
+                        >
+                            Sync Rate: {progress}% // Level {user?.level || 1}
+                        </motion.p>
+                    </div>
 
-                {/* Footer Stats */}
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-20 glass-card p-8 max-w-2xl mx-auto text-center"
-                >
-                    <div className="grid grid-cols-3 gap-8">
-                        <div>
-                            <div className="text-3xl font-display font-bold text-at-orange">{unlocked}</div>
-                            <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">Unlocked</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-display font-bold text-at-purple">{total}</div>
-                            <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">Total</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-display font-bold text-at-red">
-                                {unlockedIds.filter(id => ALL_ACHIEVEMENTS.find(a => a.id === id)?.category === 'hidden').length}
-                            </div>
-                            <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">Secrets Found</div>
+                    {/* Honeycomb Grid Container */}
+                    <div className="flex-1 w-full flex items-center justify-center min-h-[400px]">
+                        <div className="flex flex-wrap justify-center gap-4 md:gap-8 max-w-5xl mx-auto pb-12 px-4">
+                            {ALL_ACHIEVEMENTS.map((achievement, index) => (
+                                <motion.div
+                                    key={achievement.id}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className={index % 2 === 1 ? "md:mt-16" : ""} // Staggered layout for honeycomb effect
+                                >
+                                    <HexagonBadge
+                                        {...achievement}
+                                        isUnlocked={unlockedIds.includes(achievement.id)}
+                                        size="md"
+                                    />
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
-                </motion.div>
+
+                    {/* Footer Stats */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                        className="glass-card p-8 max-w-2xl w-full mx-auto text-center bg-black/40 border border-white/10 backdrop-blur-md rounded-2xl mt-8"
+                    >
+                        <div className="grid grid-cols-3 gap-8">
+                            <div>
+                                <div className="text-3xl font-display font-bold text-yellow-500">{unlocked}</div>
+                                <div className="text-xs text-white/50 uppercase tracking-wider mt-1">Unlocked</div>
+                            </div>
+                            <div>
+                                <div className="text-3xl font-display font-bold text-purple-500">{total}</div>
+                                <div className="text-xs text-white/50 uppercase tracking-wider mt-1">Total</div>
+                            </div>
+                            <div>
+                                <div className="text-3xl font-display font-bold text-red-500">
+                                    {unlockedIds.filter(id => ALL_ACHIEVEMENTS.find(a => a.id === id)?.category === 'hidden').length}
+                                </div>
+                                <div className="text-xs text-white/50 uppercase tracking-wider mt-1">Secrets Found</div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+        </>
+    );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+            <div className="text-center p-8 bg-red-900/20 border border-red-500/50 rounded-2xl max-w-md">
+                <h1 className="text-2xl font-bold mb-4 text-red-500">SYSTEM ERROR</h1>
+                <p className="text-white/80 mb-4">无法加载成就数据。</p>
+                <div className="bg-black/50 p-4 rounded text-left text-xs font-mono text-red-300 overflow-auto max-h-32 mb-6">
+                    {error instanceof Error ? error.message : "Unknown Error"}
+                </div>
+                <a href="/user/dashboard" className="px-6 py-2 bg-white text-slate-900 rounded-full font-bold hover:bg-slate-200 transition-colors">
+                    返回指挥中心
+                </a>
             </div>
         </div>
     );

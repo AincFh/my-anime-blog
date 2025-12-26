@@ -1,10 +1,10 @@
-import { PublicLayout } from "~/components/layouts/PublicLayout";
+// PublicLayout is already provided by root.tsx
 import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
 
 export default function PrivacyPolicy() {
     return (
-        <PublicLayout>
-            <ResponsiveContainer maxWidth="lg" className="py-20">
+        <>
+            <ResponsiveContainer maxWidth="lg" className="pt-8 pb-20">
                 <div className="glass-card p-8 md:p-12">
                     <h1 className="text-3xl md:text-4xl font-bold mb-8 text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-4">隐私政策</h1>
 
@@ -96,6 +96,6 @@ export default function PrivacyPolicy() {
                     </div>
                 </div>
             </ResponsiveContainer>
-        </PublicLayout>
+        </>
     );
 }

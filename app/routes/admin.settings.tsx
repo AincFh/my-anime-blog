@@ -6,7 +6,8 @@ import { requireAdmin } from "~/utils/auth";
 import type { SystemSettings } from "~/contexts/SettingsContext";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const db = (context as any).cloudflare.env.anime_db;
+  const { getDB } = await import("~/utils/db");
+  const db = getDB(context);
 
   // 验证管理员权限
   const session = await requireAdmin(request, db);
@@ -14,11 +15,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect("/admin/login");
   }
 
-  const { anime_db } = (context as any).cloudflare.env;
-
   try {
     // 从数据库读取配置JSON
-    const result = await anime_db
+    const result = await db
       .prepare("SELECT config_json FROM system_config WHERE id = 1")
       .first<{ config_json: string }>();
 
@@ -34,7 +33,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const db = (context as any).cloudflare.env.anime_db;
+  const { getDB } = await import("~/utils/db");
+  const db = getDB(context);
 
   // 验证管理员权限
   const session = await requireAdmin(request, db);
@@ -42,13 +42,12 @@ export async function action({ request, context }: Route.ActionArgs) {
     throw redirect("/admin/login");
   }
 
-  const { anime_db } = (context as any).cloudflare.env;
   const formData = await request.formData();
   const configJson = formData.get("config_json") as string;
 
   try {
     // 更新或插入配置
-    await anime_db
+    await db
       .prepare(
         `INSERT INTO system_config (id, config_json) 
          VALUES (1, ?) 
@@ -261,8 +260,8 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as SettingsTab)}
                   className={`w-full px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.key
-                      ? "bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 shadow-sm border border-pink-200"
-                      : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 shadow-sm border border-pink-200"
+                    : "text-gray-600 hover:bg-gray-50"
                     }`}
                   whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.98 }}
@@ -522,8 +521,8 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                                 theme: { ...settings.theme, primary_color: color.value }
                               })}
                               className={`relative px-4 py-2 rounded-lg border-2 transition-all ${settings.theme.primary_color === color.value
-                                  ? "border-gray-800 scale-105 shadow-lg"
-                                  : "border-gray-300 hover:border-gray-400"
+                                ? "border-gray-800 scale-105 shadow-lg"
+                                : "border-gray-300 hover:border-gray-400"
                                 }`}
                               style={{ backgroundColor: color.value }}
                               whileHover={{ scale: 1.05 }}
@@ -591,8 +590,8 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                               theme: { ...settings.theme, radius: option.value as any }
                             })}
                             className={`px-4 py-3 border-2 rounded-xl transition-all ${settings.theme.radius === option.value
-                                ? "border-pink-500 bg-pink-50 text-pink-700"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                              ? "border-pink-500 bg-pink-50 text-pink-700"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                               }`}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -1389,12 +1388,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           {showToast && (
             <motion.div
               className={`fixed top-20 right-8 z-[200] rounded-xl shadow-xl p-4 border min-w-[300px] ${toastType === "success"
-                  ? "bg-green-500 text-white border-green-600"
-                  : toastType === "error"
-                    ? "bg-red-500 text-white border-red-600"
-                    : toastType === "warning"
-                      ? "bg-yellow-500 text-white border-yellow-600"
-                      : "bg-blue-500 text-white border-blue-600"
+                ? "bg-green-500 text-white border-green-600"
+                : toastType === "error"
+                  ? "bg-red-500 text-white border-red-600"
+                  : toastType === "warning"
+                    ? "bg-yellow-500 text-white border-yellow-600"
+                    : "bg-blue-500 text-white border-blue-600"
                 }`}
               initial={{ opacity: 0, y: -20, x: 100 }}
               animate={{ opacity: 1, y: 0, x: 0 }}

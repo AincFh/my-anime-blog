@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "framer-motion";
-import { PublicLayout } from "~/components/layouts/PublicLayout";
+// PublicLayout is already provided by root.tsx
 import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
 import { ForgotPasswordForm } from "~/components/forms/ForgotPasswordForm";
 
@@ -57,8 +57,8 @@ export default function ForgotPassword() {
     };
 
     return (
-        <PublicLayout>
-            <ResponsiveContainer maxWidth="sm" className="py-20">
+        <>
+            <ResponsiveContainer maxWidth="sm" className="pt-16 pb-20">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -91,6 +91,6 @@ export default function ForgotPassword() {
                     </div>
                 </motion.div>
             </ResponsiveContainer>
-        </PublicLayout>
+        </>
     );
 }

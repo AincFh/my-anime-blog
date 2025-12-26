@@ -61,37 +61,7 @@ export function AmbientSound({ scene, volume = 0.15 }: AmbientSoundProps) {
 
   const currentScene = scene || detectScene();
 
-  return (
-    <motion.div
-      className="fixed bottom-24 right-4 z-40 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.1 }}
-    >
-      <motion.button
-        onClick={() => setIsEnabled(!isEnabled)}
-        className="w-10 h-10 rounded-full flex items-center justify-center"
-        animate={{
-          rotate: isEnabled ? [0, 360] : 0,
-        }}
-        transition={{
-          rotate: {
-            duration: 2,
-            repeat: isEnabled ? Infinity : 0,
-            ease: "linear",
-          },
-        }}
-        title={isEnabled ? "关闭环境音" : "开启环境音"}
-      >
-        {isEnabled ? (
-          <span className="text-2xl">
-            {currentScene === "rainy" ? "🌧️" : currentScene === "summer" ? "☀️" : currentScene === "night" ? "🌙" : "🎵"}
-          </span>
-        ) : (
-          <span className="text-2xl">🔇</span>
-        )}
-      </motion.button>
-    </motion.div>
-  );
+  // 不显示任何 UI，环境音在后台播放
+  return null;
 }
 

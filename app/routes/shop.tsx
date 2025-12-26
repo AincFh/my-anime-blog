@@ -1,401 +1,459 @@
-/**
- * 积分商城页面
- * 用户可以使用积分兑换各种虚拟商品
- */
-
-import { useState } from "react";
-import { useLoaderData, useFetcher, Link } from "react-router";
-import type { Route } from "./+types/shop";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Sparkles, Gift, Star, Check, AlertCircle, Package } from "lucide-react";
+import { ShoppingBag, CreditCard, Crown, Star, Shield, Zap, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useLoaderData, useFetcher, useSearchParams, Form } from "react-router";
+import { NavMenu } from "~/components/dashboard/game/NavMenu";
+import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
+import { ClientOnly } from "~/components/common/ClientOnly";
+import { MockPaymentModal } from "~/components/payment/MockPaymentModal";
+import { useUser } from "~/hooks/useUser";
+import { getSessionToken, verifySession } from "~/services/auth.server";
+import { getUserCoins } from "~/services/membership/coins.server";
+import { getAllTiers } from "~/services/membership/tier.server";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-    const { verifySession, getSessionToken } = await import("~/services/auth.server");
-    const { getUserCoins } = await import("~/services/membership/coins.server");
-
-    const db = context.cloudflare.env.anime_db;
+// Loader: Fetch Shop Data
+export async function loader({ request, context }: { request: Request; context: any }) {
+    const { anime_db } = context.cloudflare.env;
     const token = getSessionToken(request);
-    const { valid, user } = await verifySession(token, db);
-
-    // 获取商城商品
-    const itemsResult = await db
-        .prepare(`
-            SELECT * FROM shop_items 
-            WHERE is_active = 1 
-            ORDER BY sort_order, price_coins
-        `)
-        .all();
-
-    // 获取用户积分和购买记录
-    let userCoins = 0;
-    let userPurchases: number[] = [];
-
-    if (valid && user) {
-        userCoins = await getUserCoins(db, user.id);
-
-        const purchasesResult = await db
-            .prepare(`SELECT item_id FROM user_purchases WHERE user_id = ?`)
-            .bind(user.id)
-            .all();
-
-        userPurchases = (purchasesResult.results || []).map((p: any) => p.item_id);
-    }
-
-    return {
-        user: valid ? user : null,
-        coins: userCoins,
-        items: itemsResult.results || [],
-        userPurchases,
-    };
-}
-
-export async function action({ request, context }: Route.ActionArgs) {
-    const { verifySession, getSessionToken } = await import("~/services/auth.server");
-    const { getUserCoins, spendCoins } = await import("~/services/membership/coins.server");
-
-    const db = context.cloudflare.env.anime_db;
-    const token = getSessionToken(request);
-    const { valid, user } = await verifySession(token, db);
+    const { valid, user } = await verifySession(token, anime_db);
 
     if (!valid || !user) {
-        return { success: false, error: "请先登录" };
+        return { loggedIn: false, user: null, stats: { coins: 0 }, shopItems: [], tiers: [], rechargePackages: [] };
     }
 
-    const formData = await request.formData();
-    const itemId = Number(formData.get("itemId"));
+    const [coins, shopItems, tiers] = await Promise.all([
+        getUserCoins(anime_db, user.id),
+        anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY sort_order").all(),
+        getAllTiers(anime_db)
+    ]);
 
-    if (!itemId) {
-        return { success: false, error: "商品不存在" };
-    }
+    // Mock Recharge Packages
+    const rechargePackages = [
+        { id: 'pkg_6', coins: 60, price: 600, bonus: 0, label: '6元' },
+        { id: 'pkg_30', coins: 350, price: 3000, bonus: 50, label: '30元' },
+        { id: 'pkg_68', coins: 800, price: 6800, bonus: 120, label: '68元' },
+        { id: 'pkg_128', coins: 1600, price: 12800, bonus: 300, label: '128元' },
+        { id: 'pkg_328', coins: 4200, price: 32800, bonus: 900, label: '328元' },
+        { id: 'pkg_648', coins: 8800, price: 64800, bonus: 2000, label: '648元' },
+    ];
 
-    // 获取商品信息
-    const item = await db
-        .prepare(`SELECT * FROM shop_items WHERE id = ? AND is_active = 1`)
-        .bind(itemId)
-        .first();
-
-    if (!item) {
-        return { success: false, error: "商品不存在或已下架" };
-    }
-
-    // 检查是否已拥有（一次性商品）
-    if (item.type === 'badge' || item.type === 'theme' || item.type === 'effect') {
-        const existing = await db
-            .prepare(`SELECT id FROM user_purchases WHERE user_id = ? AND item_id = ?`)
-            .bind(user.id, itemId)
-            .first();
-
-        if (existing) {
-            return { success: false, error: "你已经拥有此商品" };
-        }
-    }
-
-    // 检查积分是否足够
-    const userCoins = await getUserCoins(db, user.id);
-    if (userCoins < item.price_coins) {
-        return { success: false, error: `积分不足，需要 ${item.price_coins} 积分` };
-    }
-
-    // 扣除积分
-    const consumeResult = await spendCoins(
-        db,
-        user.id,
-        item.price_coins,
-        'purchase',
-        `购买商品: ${item.name}`
-    );
-
-    if (!consumeResult.success) {
-        return { success: false, error: consumeResult.error };
-    }
-
-    // 记录购买
-    await db
-        .prepare(`
-            INSERT INTO user_purchases (user_id, item_id, price_paid, created_at)
-            VALUES (?, ?, ?, ?)
-        `)
-        .bind(user.id, itemId, item.price_coins, Math.floor(Date.now() / 1000))
-        .run();
-
-    // 更新商品库存（如果有限制）
-    if (item.stock !== null && item.stock > 0) {
-        await db
-            .prepare(`UPDATE shop_items SET stock = stock - 1 WHERE id = ?`)
-            .bind(itemId)
-            .run();
-    }
-
-    return { success: true, message: `成功兑换「${item.name}」！` };
+    return {
+        loggedIn: true,
+        user: { ...user, avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}` },
+        stats: { coins },
+        shopItems: shopItems.results,
+        tiers,
+        rechargePackages
+    };
 }
 
 export default function ShopPage() {
-    const { user, coins, items, userPurchases } = useLoaderData<typeof loader>();
+    const loaderData = useLoaderData<typeof loader>();
+    const { user: clientUser } = useUser();
+    const [searchParams] = useSearchParams();
     const fetcher = useFetcher();
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-    const categories = [
-        { key: 'all', label: '全部', icon: '🛒' },
-        { key: 'badge', label: '徽章', icon: '🏅' },
-        { key: 'theme', label: '主题', icon: '🎨' },
-        { key: 'effect', label: '特效', icon: '✨' },
-        { key: 'consumable', label: '消耗品', icon: '🎁' },
-    ];
+    const user = loaderData.user || clientUser;
+    const stats = {
+        coins: loaderData.stats.coins, // Use server data for accuracy
+        level: user?.level || 1,
+        exp: user?.exp || 0,
+        maxExp: (user?.level || 1) * 100,
+    };
 
-    const filteredItems = selectedCategory === 'all'
-        ? items
-        : items.filter((item: any) => item.type === selectedCategory);
+    const [activeTab, setActiveTab] = useState<"goods" | "recharge" | "membership">(() => {
+        const tabParam = searchParams.get("tab");
+        if (tabParam === "recharge" || tabParam === "membership") return tabParam;
+        return "goods";
+    });
+    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
+    const [payUrl, setPayUrl] = useState("");
+    const [orderNo, setOrderNo] = useState("");
+    const [orderAmount, setOrderAmount] = useState(0);
+    const [orderProductName, setOrderProductName] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const lastFetcherData = useRef<any>(null);
 
-    const getTypeColor = (type: string) => {
-        switch (type) {
-            case 'badge': return 'from-amber-500 to-orange-500';
-            case 'theme': return 'from-purple-500 to-pink-500';
-            case 'effect': return 'from-blue-500 to-cyan-500';
-            case 'consumable': return 'from-green-500 to-emerald-500';
-            default: return 'from-gray-500 to-slate-500';
+    // Handle Payment/Purchase
+    const handlePurchase = (item: any, type: "goods" | "recharge" | "membership") => {
+        // Check if user is logged in
+        if (!loaderData.loggedIn) {
+            if (confirm("您需要登录才能进行购买。是否前往登录页面？")) {
+                window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+            }
+            return;
+        }
+
+        setSelectedItem({ ...item, type });
+
+        if (type === "goods") {
+            // For goods, show the old confirmation modal (payment with coins)
+            setPaymentStep("confirm");
+            setPaymentModalOpen(true);
+        } else if (type === "recharge") {
+            // For recharge, directly call API to get order and payUrl
+            fetcher.submit(
+                { packageId: item.id },
+                { method: "post", action: "/api/wallet/recharge" }
+            );
+        } else if (type === "membership") {
+            // For membership, directly call API to get order and payUrl
+            fetcher.submit(
+                { action: "subscribe", tierId: item.id, period: "monthly" },
+                { method: "post", action: "/api/subscription" }
+            );
         }
     };
 
-    const getTypeLabel = (type: string) => {
-        switch (type) {
-            case 'badge': return '徽章';
-            case 'theme': return '主题';
-            case 'effect': return '特效';
-            case 'consumable': return '消耗品';
-            default: return '其他';
+    const confirmPayment = () => {
+        setPaymentStep("processing");
+
+        if (selectedItem.type === "goods") {
+            // Direct purchase with coins
+            fetcher.submit(
+                { itemId: selectedItem.id },
+                { method: "post", action: "/api/shop/purchase" }
+            );
         }
+        // Note: recharge and membership are handled directly in handlePurchase now
     };
+
+    // Watch for fetcher response
+    useEffect(() => {
+        // Only process if fetcher is idle and data is new
+        if (fetcher.state === "idle" && fetcher.data && fetcher.data !== lastFetcherData.current) {
+            lastFetcherData.current = fetcher.data;
+            setIsSubmitting(false);
+
+            if (fetcher.data.success) {
+                if (selectedItem?.type === "goods") {
+                    setPaymentStep("success");
+                    setTimeout(() => {
+                        setPaymentModalOpen(false);
+                        window.location.reload(); // Refresh to update coin balance
+                    }, 2000);
+                } else if (fetcher.data.payUrl && fetcher.data.order) {
+                    // Store order info and show MockPaymentModal
+                    setPayUrl(fetcher.data.payUrl);
+                    setOrderNo(fetcher.data.order.order_no);
+                    setOrderAmount(fetcher.data.order.amount);
+                    setOrderProductName(fetcher.data.order.product_name);
+                    setPaymentModalOpen(true);
+                    setPaymentStep("confirm");
+                }
+            } else if (fetcher.data.error) {
+                alert(fetcher.data.error);
+                setPaymentModalOpen(false);
+            }
+        }
+    }, [fetcher.state, fetcher.data, selectedItem?.type]);
+
+    // Success Message from Redirect
+    const showSuccess = searchParams.get("status") === "success";
 
     return (
-        <div className="min-h-screen pt-20 pb-12 px-4">
-            <div className="max-w-6xl mx-auto space-y-8">
-                {/* 顶部信息栏 */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-card p-6 rounded-2xl"
-                >
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
-                                <ShoppingBag className="w-8 h-8 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">积分商城</h1>
-                                <p className="text-slate-500 dark:text-slate-400">使用积分兑换专属好礼</p>
-                            </div>
-                        </div>
+        <>
+            <ClientOnly>
+                {() => <StatusHUD user={{
+                    avatar: user?.avatar_url,
+                    uid: user ? `UID-${user.id.toString().padStart(6, '0')}` : "UID-000000",
+                    level: stats.level,
+                    name: user?.username || "Traveler",
+                    exp: stats.exp,
+                    maxExp: stats.maxExp,
+                }} stats={{ coins: stats.coins }} />}
+            </ClientOnly>
+            <NavMenu />
 
-                        <div className="flex items-center gap-4">
-                            {user ? (
-                                <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20">
-                                    <Sparkles className="w-5 h-5 text-amber-500" />
-                                    <span className="text-2xl font-bold text-amber-500">{coins.toLocaleString()}</span>
-                                    <span className="text-sm text-slate-500 dark:text-slate-400">积分</span>
-                                </div>
-                            ) : (
-                                <Link
-                                    to="/login"
-                                    className="px-6 py-3 bg-primary-start hover:bg-primary-end text-white rounded-xl font-medium transition-colors"
+            <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
+                <div className="w-full h-full max-w-6xl pointer-events-auto flex flex-col gap-6">
+
+                    {/* Header & Tabs */}
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-3xl font-bold text-white font-display tracking-wider flex items-center gap-3">
+                            <ShoppingBag className="text-yellow-500" />
+                            SUPPLY DEPOT
+                        </h1>
+                        <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-1 border border-white/10">
+                            {[
+                                { id: "goods", label: "道具商店", icon: Star },
+                                { id: "recharge", label: "星尘充值", icon: Zap },
+                                { id: "membership", label: "会员订阅", icon: Crown },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    className={`
+                                        flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all
+                                        ${activeTab === tab.id
+                                            ? "bg-white text-slate-900 shadow-lg"
+                                            : "text-white/60 hover:text-white hover:bg-white/10"
+                                        }
+                                    `}
                                 >
-                                    登录查看积分
-                                </Link>
-                            )}
+                                    <tab.icon size={16} />
+                                    {tab.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                </motion.div>
 
-                {/* 分类标签 */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex flex-wrap gap-2"
-                >
-                    {categories.map((cat) => (
-                        <button
-                            key={cat.key}
-                            onClick={() => setSelectedCategory(cat.key)}
-                            className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 ${selectedCategory === cat.key
-                                ? 'bg-primary-start text-white shadow-lg'
-                                : 'bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                                }`}
-                        >
-                            <span>{cat.icon}</span>
-                            <span>{cat.label}</span>
-                        </button>
-                    ))}
-                </motion.div>
+                    {/* Success Notification */}
+                    <AnimatePresence>
+                        {showSuccess && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl flex items-center gap-3 font-bold"
+                            >
+                                <CheckCircle size={20} />
+                                支付成功！物品已发放至您的账户。
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                {/* 商品列表 */}
-                {filteredItems.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredItems.map((item: any, index: number) => {
-                            const isOwned = userPurchases.includes(item.id);
-                            const canAfford = coins >= item.price_coins;
-                            const isOutOfStock = item.stock !== null && item.stock <= 0;
+                    {/* Content Area */}
+                    <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 overflow-y-auto custom-scrollbar">
+                        <AnimatePresence mode="wait">
 
-                            return (
+                            {/* GOODS TAB */}
+                            {activeTab === "goods" && (
                                 <motion.div
-                                    key={item.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 + index * 0.05 }}
-                                    whileHover={{ y: -5 }}
-                                    className={`glass-card rounded-2xl overflow-hidden relative ${isOwned ? 'ring-2 ring-green-500/50' : ''
-                                        }`}
+                                    key="goods"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="grid grid-cols-2 md:grid-cols-4 gap-6"
                                 >
-                                    {/* 类型标签 */}
-                                    <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTypeColor(item.type)}`}>
-                                        {getTypeLabel(item.type)}
-                                    </div>
-
-                                    {/* 已拥有标记 */}
-                                    {isOwned && (
-                                        <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                                            <Check className="w-5 h-5 text-white" />
-                                        </div>
-                                    )}
-
-                                    {/* 商品图片 */}
-                                    <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                                        {item.image_url ? (
-                                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="text-6xl opacity-50">
-                                                {item.type === 'badge' && '🏅'}
-                                                {item.type === 'theme' && '🎨'}
-                                                {item.type === 'effect' && '✨'}
-                                                {item.type === 'consumable' && '🎁'}
+                                    {loaderData.shopItems.map((item: any) => (
+                                        <div key={item.id} className="group bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all hover:border-white/30 flex flex-col">
+                                            <div className="aspect-square rounded-xl bg-black/20 mb-4 flex items-center justify-center p-4 relative overflow-hidden">
+                                                <img src={item.image_url} alt={item.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                                                {item.is_featured === 1 && (
+                                                    <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">HOT</div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-
-                                    {/* 商品信息 */}
-                                    <div className="p-4">
-                                        <h3 className="font-bold text-slate-800 dark:text-white mb-1">{item.name}</h3>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
-                                            {item.description || '暂无描述'}
-                                        </p>
-
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-1">
-                                                <Star className="w-4 h-4 text-amber-500" />
-                                                <span className="font-bold text-amber-500">{item.price_coins}</span>
-                                                <span className="text-xs text-slate-400">积分</span>
-                                            </div>
-
-                                            {item.stock !== null && (
-                                                <span className="text-xs text-slate-400">
-                                                    库存: {item.stock}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* 兑换按钮 */}
-                                        {user ? (
-                                            <fetcher.Form method="post" className="mt-3">
-                                                <input type="hidden" name="itemId" value={item.id} />
-                                                <button
-                                                    type="submit"
-                                                    disabled={isOwned || !canAfford || isOutOfStock || fetcher.state !== 'idle'}
-                                                    className={`w-full py-2.5 rounded-xl font-medium transition-all ${isOwned
-                                                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 cursor-not-allowed'
-                                                        : isOutOfStock
-                                                            ? 'bg-slate-100 text-slate-400 dark:bg-slate-700 cursor-not-allowed'
-                                                            : !canAfford
-                                                                ? 'bg-slate-100 text-slate-400 dark:bg-slate-700 cursor-not-allowed'
-                                                                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25'
-                                                        }`}
-                                                >
-                                                    {fetcher.state !== 'idle' ? (
-                                                        '处理中...'
-                                                    ) : isOwned ? (
-                                                        <span className="flex items-center justify-center gap-1">
-                                                            <Check className="w-4 h-4" /> 已拥有
-                                                        </span>
-                                                    ) : isOutOfStock ? (
-                                                        '已售罄'
-                                                    ) : !canAfford ? (
-                                                        '积分不足'
-                                                    ) : (
-                                                        '立即兑换'
-                                                    )}
-                                                </button>
-                                            </fetcher.Form>
-                                        ) : (
-                                            <Link
-                                                to="/login"
-                                                className="block mt-3 py-2.5 text-center bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                            <h3 className="font-bold text-white mb-1">{item.name}</h3>
+                                            <p className="text-xs text-white/50 mb-4 line-clamp-2 flex-1">{item.description}</p>
+                                            <button
+                                                onClick={() => handlePurchase(item, "goods")}
+                                                className="w-full py-2 bg-white/10 hover:bg-white text-white hover:text-black rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
                                             >
-                                                登录后兑换
-                                            </Link>
-                                        )}
-                                    </div>
+                                                <span>{item.price_coins}</span>
+                                                <Star size={12} className="fill-current" />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </motion.div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="glass-card p-12 rounded-2xl text-center"
-                    >
-                        <Package className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">暂无商品</h3>
-                        <p className="text-slate-500 dark:text-slate-400">
-                            商城正在补货中，请稍后再来看看~
-                        </p>
-                    </motion.div>
-                )}
+                            )}
 
-                {/* 底部说明 */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-center text-sm text-slate-500 dark:text-slate-400 space-y-2"
-                >
-                    <p>💡 积分可通过每日登录、完成任务等方式获得</p>
-                    <div className="flex justify-center gap-4">
-                        <Link to="/user/membership" className="hover:text-primary-start transition-colors">
-                            会员中心
-                        </Link>
-                        <span>·</span>
-                        <Link to="/legal/sponsor" className="hover:text-primary-start transition-colors">
-                            赞助条款
-                        </Link>
+                            {/* RECHARGE TAB */}
+                            {activeTab === "recharge" && (
+                                <motion.div
+                                    key="recharge"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="grid grid-cols-2 md:grid-cols-3 gap-6"
+                                >
+                                    {loaderData.rechargePackages.map((pkg: any) => (
+                                        <div key={pkg.id} className="group bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border border-yellow-500/20 rounded-2xl p-6 hover:border-yellow-500/50 transition-all flex flex-col items-center text-center relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-400 group-hover:scale-110 transition-transform">
+                                                <Zap size={32} />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-white mb-1 font-mono">{pkg.coins}</h3>
+                                            <p className="text-xs text-yellow-500/80 mb-6 font-bold">+ {pkg.bonus} BONUS</p>
+                                            <button
+                                                onClick={() => handlePurchase(pkg, "recharge")}
+                                                className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold transition-colors"
+                                            >
+                                                ¥ {(pkg.price / 100).toFixed(0)}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </motion.div>
+                            )}
+
+                            {/* MEMBERSHIP TAB */}
+                            {activeTab === "membership" && (
+                                <motion.div
+                                    key="membership"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="grid grid-cols-1 md:grid-cols-3 gap-8"
+                                >
+                                    {loaderData.tiers.filter((t: any) => t.name !== 'free').map((tier: any) => (
+                                        <div key={tier.id} className={`
+                                            relative rounded-3xl p-8 border flex flex-col
+                                            ${tier.name === 'svip'
+                                                ? "bg-gradient-to-b from-slate-900 to-black border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.1)]"
+                                                : "bg-black/40 border-white/10"
+                                            }
+                                        `}>
+                                            {tier.name === 'svip' && (
+                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg flex items-center gap-1">
+                                                    <Crown size={12} /> MOST POPULAR
+                                                </div>
+                                            )}
+
+                                            <div className="text-center mb-8">
+                                                <h3 className={`text-2xl font-bold mb-2 ${tier.name === 'svip' ? "text-yellow-400" : "text-white"}`}>
+                                                    {tier.display_name}
+                                                </h3>
+                                                <div className="text-3xl font-bold text-white font-mono">
+                                                    ¥{(tier.price_monthly / 100).toFixed(0)}<span className="text-sm text-white/40 font-normal">/mo</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4 flex-1 mb-8">
+                                                {/* Parse privileges JSON if needed, or hardcode for demo */}
+                                                <div className="flex items-center gap-3 text-sm text-white/80">
+                                                    <CheckCircle size={16} className="text-green-400" />
+                                                    <span>{tier.name === 'svip' ? "无限" : "50次"} AI 对话</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-sm text-white/80">
+                                                    <CheckCircle size={16} className="text-green-400" />
+                                                    <span>{tier.name === 'svip' ? "2.0x" : "1.5x"} 积分倍率</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-sm text-white/80">
+                                                    <CheckCircle size={16} className="text-green-400" />
+                                                    <span>专属身份徽章</span>
+                                                </div>
+                                                {tier.name === 'svip' && (
+                                                    <div className="flex items-center gap-3 text-sm text-white/80">
+                                                        <CheckCircle size={16} className="text-green-400" />
+                                                        <span>优先技术支持</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <button
+                                                onClick={() => handlePurchase(tier, "membership")}
+                                                className={`
+                                                    w-full py-4 rounded-xl font-bold transition-all
+                                                    ${tier.name === 'svip'
+                                                        ? "bg-gradient-to-r from-yellow-600 to-yellow-400 text-black hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]"
+                                                        : "bg-white text-black hover:bg-white/90"
+                                                    }
+                                                `}
+                                            >
+                                                立即开通
+                                            </button>
+                                        </div>
+                                    ))}
+                                </motion.div>
+                            )}
+
+                        </AnimatePresence>
                     </div>
-                </motion.div>
+                </div>
             </div>
 
-            {/* 操作反馈 Toast */}
+            {/* Payment Confirmation Modal - Only for GOODS purchases with coins */}
             <AnimatePresence>
-                {fetcher.data && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 50 }}
-                        className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 ${fetcher.data.success
-                            ? 'bg-green-500 text-white'
-                            : 'bg-red-500 text-white'
-                            }`}
-                    >
-                        {fetcher.data.success ? (
-                            <>
-                                <Gift className="w-5 h-5" />
-                                {fetcher.data.message}
-                            </>
-                        ) : (
-                            <>
-                                <AlertCircle className="w-5 h-5" />
-                                {fetcher.data.error}
-                            </>
-                        )}
-                    </motion.div>
+                {paymentModalOpen && selectedItem?.type === "goods" && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setPaymentModalOpen(false)}
+                        />
+                        <motion.div
+                            className="bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-md relative z-10 shadow-2xl"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                        >
+                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                                <CreditCard className="text-blue-400" />
+                                {paymentStep === "confirm" ? "确认订单" : paymentStep === "processing" ? "处理中..." : "支付成功"}
+                            </h2>
+
+                            {paymentStep === "confirm" && selectedItem && (
+                                <div className="space-y-6">
+                                    <div className="bg-white/5 rounded-xl p-4 flex items-center gap-4">
+                                        <div className="w-16 h-16 bg-black/40 rounded-lg flex items-center justify-center">
+                                            {selectedItem.image_url ? (
+                                                <img src={selectedItem.image_url} className="w-10 h-10" />
+                                            ) : (
+                                                <Zap className="text-yellow-500" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-white">{selectedItem.name || selectedItem.display_name || `充值 ${selectedItem.coins} 星尘`}</div>
+                                            <div className="text-sm text-white/60">{selectedItem.description || "即时到账"}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-sm text-white/60 py-4 border-y border-white/10">
+                                        <span>应付金额</span>
+                                        <span className="text-xl font-bold text-white">
+                                            {selectedItem.type === "goods"
+                                                ? `${selectedItem.price_coins} 积分`
+                                                : `¥ ${(selectedItem.price || selectedItem.price_monthly) / 100}`
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => setPaymentModalOpen(false)}
+                                            className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+                                        >
+                                            取消
+                                        </button>
+                                        <button
+                                            onClick={confirmPayment}
+                                            className="py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold transition-colors shadow-lg shadow-blue-500/20"
+                                        >
+                                            确认支付
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {paymentStep === "processing" && (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <Loader2 size={48} className="text-blue-500 animate-spin mb-4" />
+                                    <p className="text-white/60">正在连接支付网关...</p>
+                                </div>
+                            )}
+
+                            {paymentStep === "success" && (
+                                <div className="flex flex-col items-center justify-center py-8">
+                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 mb-4">
+                                        <CheckCircle size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">购买成功!</h3>
+                                    <p className="text-white/60 text-center mb-6">物品已发送至您的账户</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
-        </div>
+
+            {/* Mock Payment Modal for Recharge/Membership */}
+            {payUrl && (
+                <MockPaymentModal
+                    isOpen={paymentModalOpen && (selectedItem?.type === "recharge" || selectedItem?.type === "membership")}
+                    onClose={() => {
+                        setPaymentModalOpen(false);
+                        setPayUrl("");
+                    }}
+                    orderNo={orderNo}
+                    amount={orderAmount}
+                    productName={orderProductName}
+                    payUrl={payUrl}
+                />
+            )}
+        </>
     );
 }

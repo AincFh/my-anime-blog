@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { PublicLayout } from "~/components/layouts/PublicLayout";
+// PublicLayout is already provided by root.tsx, no need to import
 import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
 import { CheckCircle } from "lucide-react";
 import { LoginForm } from "~/components/forms/LoginForm";
@@ -57,8 +57,8 @@ export default function Login() {
     };
 
     return (
-        <PublicLayout>
-            <ResponsiveContainer maxWidth="sm" className="py-20">
+        <>
+            <ResponsiveContainer maxWidth="sm" className="pt-16 pb-20">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -141,6 +141,6 @@ export default function Login() {
                     </div>
                 </motion.div>
             </ResponsiveContainer>
-        </PublicLayout>
+        </>
     );
 }

@@ -138,17 +138,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
           </motion.div>
-          {/* Floating Elements */}
-          <motion.div
-            className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-primary-start/30 blur-xl"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0.9, 0.7] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          />
-          <motion.div
-            className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-primary-end/20 blur-xl"
-            animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.8, 0.6] }}
-            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-          />
         </motion.div>
       </motion.div>
 

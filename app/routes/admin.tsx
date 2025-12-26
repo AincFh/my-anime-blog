@@ -11,15 +11,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
   const { anime_db } = (context as any).cloudflare.env;
 
-  if (!sessionId) throw redirect("/admin/login");
+  if (!sessionId) throw redirect("/panel/login");
 
   try {
     const session = await anime_db.prepare(
-      "SELECT * FROM sessions WHERE token = ? AND expires_at > unixepoch()"
+      "SELECT * FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
     ).bind(sessionId).first();
-    if (!session) throw redirect("/admin/login");
+    if (!session) throw redirect("/panel/login");
   } catch (e) {
-    throw redirect("/admin/login");
+    if (e instanceof Response) throw e;
+    throw redirect("/panel/login");
   }
 
   let stats = { pv: 0, uv: 0, articles: 0, comments: 0, likes: 0, storage: 0 };

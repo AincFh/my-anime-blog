@@ -1,20 +1,23 @@
 import type { Route } from "./+types/sitemap[.]xml";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-    const { anime_db } = (context as any).cloudflare.env;
+    const { getDBSafe } = await import("~/utils/db");
+    const anime_db = getDBSafe(context);
     const baseUrl = new URL(request.url).origin;
 
     // 1. 获取所有公开文章
     let articles: any[] = [];
-    try {
-        const result = await anime_db
-            .prepare("SELECT slug, updated_at FROM articles WHERE status = 'published' ORDER BY created_at DESC")
-            .all();
-        if (result.results) {
-            articles = result.results;
+    if (anime_db) {
+        try {
+            const result = await anime_db
+                .prepare("SELECT slug, updated_at FROM articles WHERE status = 'published' ORDER BY created_at DESC")
+                .all();
+            if (result.results) {
+                articles = result.results;
+            }
+        } catch (error) {
+            console.error("Failed to fetch articles for sitemap:", error);
         }
-    } catch (error) {
-        console.error("Failed to fetch articles for sitemap:", error);
     }
 
     // 2. 定义静态页面

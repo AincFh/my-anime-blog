@@ -19,11 +19,13 @@ export function DynamicBackground({ images }: DynamicBackgroundProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const preloadRef = useRef<HTMLImageElement>(null);
 
-  // 默认壁纸库（实际使用时应该从R2获取）
+  // 用户上传到 R2 的背景图
   const defaultImages = [
-    'https://images.unsplash.com/photo-1616486339569-9c4050911745?q=80&w=2070&auto=format&fit=crop', // 夕阳
-    'https://images.unsplash.com/photo-1577056922428-a79963db266d?q=80&w=2070&auto=format&fit=crop', // 樱花
-    'https://images.unsplash.com/photo-1542596594-649edbc13630?q=80&w=1974&auto=format&fit=crop', // 天空
+    '/api/r2/4E25849C7602C73FCEBC47293779ECD3.jpg',
+    '/api/r2/7D81F12940CEAB9A92E7EF65E23B1E19.jpg',
+    '/api/r2/88CC4558DE49F0B15C825CDA2904296D.jpg',
+    '/api/r2/8E6DB054D0490AAD703E7DFEA7F5D0FB.jpg',
+    '/api/r2/DEEDE6C26CA8E6E8BE3D1F44DF4A1A78.jpg',
   ];
 
   const imageList = images && images.length > 0 ? images : defaultImages;
@@ -109,28 +111,6 @@ export function DynamicBackground({ images }: DynamicBackgroundProps) {
           }}
         />
       )}
-
-      {/* 手动切换按钮（可选，放在右上角） */}
-      <button
-        onClick={switchBackground}
-        className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all flex items-center justify-center text-white/80 hover:text-white shadow-lg"
-        title="切换背景"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          />
-        </svg>
-      </button>
     </div>
   );
 }

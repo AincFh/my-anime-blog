@@ -4,8 +4,8 @@
 
 import { Link } from "react-router";
 import { motion } from "framer-motion";
-import { 
-    Shield, FileText, AlertTriangle, Scale, User, 
+import {
+    Shield, FileText, AlertTriangle, Scale, User,
     Server, Brain, Lock, RefreshCw, Mail, ArrowLeft
 } from "lucide-react";
 
@@ -18,12 +18,12 @@ interface SectionProps {
 }
 
 function Section({ icon, title, children, delay = 0, variant = 'default' }: SectionProps) {
-    const bgColor = variant === 'warning' 
-        ? 'from-amber-500 to-orange-600' 
+    const bgColor = variant === 'warning'
+        ? 'from-amber-500 to-orange-600'
         : variant === 'info'
             ? 'from-blue-500 to-cyan-600'
             : 'from-amber-500 to-orange-600';
-    
+
     return (
         <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -46,7 +46,7 @@ function Section({ icon, title, children, delay = 0, variant = 'default' }: Sect
 
 export default function Disclaimer() {
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4">
+        <div className="min-h-screen pt-4 pb-12 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* 返回按钮 */}
                 <Link
@@ -176,7 +176,7 @@ export default function Disclaimer() {
                                 </div>
                             ))}
                         </div>
-                        
+
                         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
                             <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2">📊 关于个性化推荐</h3>
                             <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-200">
@@ -269,7 +269,7 @@ export default function Disclaimer() {
                             <h2 className="text-xl font-bold text-slate-800 dark:text-white">联系我们</h2>
                         </div>
                         <p className="text-slate-600 dark:text-slate-300 mb-4">如有疑问，请通过邮件联系：</p>
-                        <a 
+                        <a
                             href="mailto:fhainc@hotmail.com"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
                         >
@@ -286,14 +286,14 @@ export default function Disclaimer() {
                     transition={{ delay: 0.65 }}
                     className="mt-8 flex justify-center gap-4"
                 >
-                    <Link 
-                        to="/" 
+                    <Link
+                        to="/"
                         className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                     >
                         返回首页
                     </Link>
-                    <Link 
-                        to="/legal/privacy" 
+                    <Link
+                        to="/legal/privacy"
                         className="px-6 py-2 bg-primary-start text-white rounded-xl hover:bg-primary-end transition-colors"
                     >
                         查看隐私政策

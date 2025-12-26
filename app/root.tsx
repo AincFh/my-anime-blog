@@ -8,26 +8,28 @@ import {
   useLocation,
 } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
+import { lazy, Suspense } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { PublicLayout } from "./components/layouts/PublicLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { CustomCursor } from "./components/animations/CustomCursor";
-import { MusicPlayer } from "./components/media/MusicPlayer";
-import { Live2D } from "./components/media/Live2D";
-import { InstantSearch } from "./components/system/InstantSearch";
-import { EyeCatch } from "./components/special/EyeCatch";
-import { TheatricalMode } from "./components/special/TheatricalMode";
-import { AmbientSound } from "./components/media/AmbientSound";
-import { OmniCommand } from "./components/system/OmniCommand";
-import { KonamiCode } from "./components/animations/KonamiCode";
-import { TitleChanger } from "./components/ui/special/TitleChanger";
-import { CustomScrollbar } from "./components/animations/CustomScrollbar";
-import { CopyAttribution } from "./components/common/CopyAttribution";
-import { AchievementSystem } from "./components/system/AchievementSystem";
-import { HiddenPixelButton } from "./components/interactive/HiddenPixelButton";
 import { ThemeProviderWrapper } from "./components/ThemeProviderWrapper";
+
+// 懒加载非关键组件 - 提升首屏加载速度
+const CustomCursor = lazy(() => import("./components/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
+const MusicPlayer = lazy(() => import("./components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const Live2D = lazy(() => import("./components/media/Live2D").then(m => ({ default: m.Live2D })));
+const EyeCatch = lazy(() => import("./components/special/EyeCatch").then(m => ({ default: m.EyeCatch })));
+const TheatricalMode = lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
+const AmbientSound = lazy(() => import("./components/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
+const OmniCommand = lazy(() => import("./components/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
+const KonamiCode = lazy(() => import("./components/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
+const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
+// CustomScrollbar 已移除 - 那个✨圆点没有实际功能
+const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
+const AchievementSystem = lazy(() => import("./components/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
+const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -91,38 +93,34 @@ export default function App() {
 
   return (
     <ThemeProviderWrapper specifiedTheme="light" themeAction="/action/set-theme">
-      {!isAdmin && <CustomCursor />}
-      {!isAdmin && <MusicPlayer />}
-      {/* InstantSearch 已被 OmniCommand 替代 */}
-      {!isAdmin && <Live2D />}
-      {!isAdmin && <EyeCatch />}
-      {!isAdmin && <TheatricalMode />}
-      {!isAdmin && <AmbientSound scene="default" />}
-      {!isAdmin && <OmniCommand />}
-      {!isAdmin && <KonamiCode />}
-      {!isAdmin && <TitleChanger />}
-      {!isAdmin && <CustomScrollbar />}
-      {!isAdmin && <CopyAttribution />}
-      {!isAdmin && <AchievementSystem />}
-      {!isAdmin && <HiddenPixelButton />}
+      {/* 懒加载组件 - 使用 Suspense 包裹，无需 fallback UI（这些是增强功能） */}
+      {!isAdmin && (
+        <Suspense fallback={null}>
+          <CustomCursor />
+          <MusicPlayer />
+          <Live2D />
+          <EyeCatch />
+          <TheatricalMode />
+          <AmbientSound scene="default" />
+          <OmniCommand />
+          <KonamiCode />
+          <TitleChanger />
+          <CopyAttribution />
+          <AchievementSystem />
+          <HiddenPixelButton />
+        </Suspense>
+      )}
       {isAdmin ? (
         <AdminLayout>
           <Outlet />
         </AdminLayout>
+      ) : ["/user/dashboard", "/user/inventory", "/user/achievements", "/settings"].some(path => location.pathname.startsWith(path)) ? (
+        <PublicLayout>
+          <Outlet />
+        </PublicLayout>
       ) : (
         <PublicLayout>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </PublicLayout>
       )}
     </ThemeProviderWrapper>

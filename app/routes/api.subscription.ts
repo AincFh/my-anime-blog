@@ -98,11 +98,19 @@ export async function action({ request, context }: { request: Request; context: 
                 metadata: { tierId, period, amount },
             });
 
+            // Generate secure pay URL with HMAC signature
+            const { generateSecurePayUrl } = await import('~/services/payment/signature.server');
+            const payUrl = await generateSecurePayUrl(
+                '/api/payment/mock-complete',
+                orderResult.order!.order_no,
+                amount,
+                user.id
+            );
+
             return Response.json({
                 success: true,
                 order: orderResult.order,
-                // Mock 模式直接返回支付成功页面
-                payUrl: `/api/payment/mock-complete?orderNo=${orderResult.order!.order_no}`,
+                payUrl,
             });
         }
 

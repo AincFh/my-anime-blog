@@ -34,7 +34,8 @@ const getDescription = (content: string): string => {
 };
 
 export async function loader({ context }: Route.LoaderArgs) {
-    const db = context.cloudflare.env.anime_db;
+    const { getDB } = await import("~/utils/db");
+    const db = getDB(context);
 
     const result = await db
         .prepare(`
@@ -84,20 +85,18 @@ export default function ArticlesPage() {
     };
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4">
+        <div className="container mx-auto px-4 py-20">
             <div className="max-w-6xl mx-auto">
-                {/* 标题区域 */}
+                {/* 标题区域 - 统一风格 */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-12"
+                    className="text-center mb-16"
                 >
-                    <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">
+                    <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-cyan-500 to-teal-500 bg-clip-text text-transparent">
                         文章归档
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-                        记录技术探索、动漫感想和生活随笔
-                    </p>
+                    <p className="text-slate-600 dark:text-slate-400 text-lg">记录技术探索、动漫感想和生活随笔</p>
                 </motion.div>
 
                 {/* 搜索和筛选 */}

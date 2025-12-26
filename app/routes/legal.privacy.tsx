@@ -39,7 +39,7 @@ function Section({ icon, title, children, delay = 0 }: SectionProps) {
 
 export default function PrivacyPolicyPage() {
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4">
+        <div className="min-h-screen pt-4 pb-12 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* 返回按钮 */}
                 <Link

@@ -1,19 +1,27 @@
 /**
  * Mock 支付完成页面
  * 用于测试环境模拟支付成功
+ * 需要验证 HMAC 签名以防止伪造请求
  */
 
 import { getOrder, updateOrderStatus } from '~/services/payment/gateway.server';
 import { createSubscription } from '~/services/membership/subscription.server';
 import { addCoins } from '~/services/membership/coins.server';
 import { logAudit } from '~/services/security/audit-log.server';
+import { verifyPaymentSignature } from '~/services/payment/signature.server';
 import { redirect } from 'react-router';
 
 export async function loader({ request, context }: { request: Request; context: any }) {
     const { anime_db } = context.cloudflare.env;
     const url = new URL(request.url);
-    const orderNo = url.searchParams.get('orderNo');
 
+    // Extract parameters
+    const orderNo = url.searchParams.get('orderNo');
+    const nonce = url.searchParams.get('nonce');
+    const timestamp = url.searchParams.get('ts');
+    const signature = url.searchParams.get('sig');
+
+    // Validate required parameters
     if (!orderNo) {
         return new Response('订单号缺失', { status: 400 });
     }
@@ -24,9 +32,35 @@ export async function loader({ request, context }: { request: Request; context: 
         return new Response('订单不存在', { status: 404 });
     }
 
+    // Verify signature (if provided - for backward compatibility)
+    if (nonce && timestamp && signature) {
+        const verification = await verifyPaymentSignature(
+            orderNo,
+            order.amount,
+            order.user_id,
+            nonce,
+            parseInt(timestamp),
+            signature
+        );
+
+        if (!verification.valid) {
+            await logAudit(anime_db, {
+                userId: order.user_id,
+                action: 'payment_failed',
+                targetType: 'order',
+                targetId: orderNo,
+                metadata: { error: verification.error, type: 'invalid_signature' },
+            });
+            return new Response(`安全验证失败: ${verification.error}`, { status: 403 });
+        }
+    } else {
+        // Log unsigned access attempt (for monitoring)
+        console.warn(`Unsigned payment completion attempt for order ${orderNo}`);
+    }
+
     if (order.status !== 'pending') {
         // 订单已处理，直接跳转
-        return redirect('/user/membership?status=already_processed');
+        return redirect('/shop?status=already_processed');
     }
 
     // 模拟支付成功
@@ -66,9 +100,10 @@ export async function loader({ request, context }: { request: Request; context: 
             productType: product_type,
             productId: product_id,
             mock: true,
+            signatureVerified: !!(nonce && timestamp && signature),
         },
     });
 
-    // 跳转到会员中心
-    return redirect('/user/membership?status=success');
+    // 跳转到商店页面
+    return redirect('/shop?status=success');
 }

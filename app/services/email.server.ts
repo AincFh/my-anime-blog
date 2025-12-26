@@ -16,7 +16,7 @@ export interface EmailOptions {
  */
 export async function sendEmailViaMailChannels(
   options: EmailOptions,
-  fromEmail: string = 'noreply@aincfh.dpdns.org',
+  fromEmail: string = 'mail@aincfh.dpdns.org',
   fromName: string = 'A.T. Field'
 ): Promise<boolean> {
   try {
@@ -45,11 +45,11 @@ export async function sendEmailViaMailChannels(
           },
           ...(options.text
             ? [
-                {
-                  type: 'text/plain',
-                  value: options.text,
-                },
-              ]
+              {
+                type: 'text/plain',
+                value: options.text,
+              },
+            ]
             : []),
         ],
       }),
@@ -69,7 +69,7 @@ export async function sendEmailViaMailChannels(
 export async function sendEmailViaResend(
   options: EmailOptions,
   apiKey: string,
-  fromEmail: string = 'noreply@aincfh.dpdns.org'
+  fromEmail: string = 'mail@aincfh.dpdns.org'
 ): Promise<boolean> {
   try {
     const response = await fetch('https://api.resend.com/emails', {

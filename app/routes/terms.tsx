@@ -44,7 +44,7 @@ function Section({ icon, title, children, delay = 0, variant = 'default' }: Sect
 
 export default function TermsOfService() {
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4">
+        <div className="min-h-screen pt-4 pb-12 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* 返回按钮 */}
                 <Link
@@ -161,8 +161,8 @@ export default function TermsOfService() {
                                 <span
                                     key={i}
                                     className={`px-3 py-1.5 rounded-full text-sm font-medium ${item.severity === 'low' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                                            item.severity === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                        item.severity === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                                         }`}
                                 >
                                     {item.text}
