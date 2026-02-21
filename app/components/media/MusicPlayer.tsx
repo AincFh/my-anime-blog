@@ -133,7 +133,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   const currentSong = songs[currentIndex];
 
   return (
-    <div className="relative w-full">
+    <div className="fixed bottom-6 left-6 z-[100] w-72 group/player pointer-events-auto">
       {songs.length > 0 && currentSong && (
         <audio
           ref={audioRef}
@@ -142,8 +142,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
         />
       )}
 
-      {/* 迷你控制条形态 - 常驻 Sidebar 底部 */}
-      <div className="w-full bg-[#1e293b]/50 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:bg-[#1e293b]/70 hover:border-violet-500/30">
+      {/* 迷你控制条形态 - 胶囊悬浮形态 */}
+      <div className="w-full bg-[#1e293b]/80 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 hover:ring-2 hover:ring-primary-start/30">
 
         {/* 顶部进度条 */}
         <div className="w-full h-1 bg-black/20 group relative cursor-pointer">
