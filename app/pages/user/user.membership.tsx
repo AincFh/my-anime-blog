@@ -14,17 +14,21 @@ import { getAllTiers } from "~/services/membership/tier.server";
 
 export async function loader({ request, context }: { request: Request; context: any }) {
     const { anime_db } = context.cloudflare.env;
+
+    // 会员等级对所有人可见
+    const tiers = await getAllTiers(anime_db);
+
+    // 登录态 — 额外获取订阅状态和支付历史
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
 
     if (!valid || !user) {
-        return { loggedIn: false, user: null, stats: { coins: 0 }, subscription: null, tiers: [], paymentHistory: [] };
+        return { loggedIn: false, user: null, stats: { coins: 0 }, subscription: null, tiers, paymentHistory: [] };
     }
 
-    const [coins, subscription, tiers, paymentHistoryResult] = await Promise.all([
+    const [coins, subscription, paymentHistoryResult] = await Promise.all([
         getUserCoins(anime_db, user.id),
         getUserSubscription(anime_db, user.id),
-        getAllTiers(anime_db),
         anime_db.prepare(`
             SELECT order_no, amount, product_name, status, paid_at, created_at 
             FROM payment_orders 
