@@ -56,6 +56,7 @@ export default [
     route("settings", "pages/user/settings.tsx"),
     route("shop", "pages/user/shop.tsx"),
     route("user/membership", "pages/user/user.membership.tsx"),
+    route("wallet", "pages/user/wallet.tsx"),
   ]),
 
   // ---------------- 纯后端接口层 (Backend API Layer) ----------------

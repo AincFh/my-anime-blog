@@ -36,6 +36,8 @@ const KonamiCode = lazy(() => import("./components/animations/KonamiCode").then(
 const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
 const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
 const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
+const IdleTimeEasterEgg = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
+const KonamiCodeEasterEggV2 = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.KonamiCodeEasterEgg })));
 
 // ==================== 延迟加载封装 ====================
 /**
@@ -184,6 +186,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <TitleChanger />
             <CopyAttribution />
             <HiddenPixelButton />
+            <IdleTimeEasterEgg />
+            <KonamiCodeEasterEggV2 />
           </DelayedSuspense>
         </>
       )}
