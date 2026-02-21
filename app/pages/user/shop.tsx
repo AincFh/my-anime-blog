@@ -61,7 +61,23 @@ export default function ShopPage() {
         if (tabParam === "recharge" || tabParam === "membership") return tabParam;
         return "goods";
     });
+    const [filterCategory, setFilterCategory] = useState("all");
     const [selectedItem, setSelectedItem] = useState<any>(null);
+
+    const CATEGORY_MAP: Record<string, string> = {
+        all: "全部",
+        avatar_frame: "头像框",
+        theme: "主题皮肤",
+        emoji: "表情包",
+        badge: "徽章",
+        prop: "功能道具",
+        effect: "入场特效",
+        coupon: "兑换券",
+    };
+
+    const filteredItems = filterCategory === "all"
+        ? loaderData.shopItems
+        : loaderData.shopItems.filter((item: any) => item.type === filterCategory);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
     const [payUrl, setPayUrl] = useState("");
@@ -221,32 +237,77 @@ export default function ShopPage() {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    className="grid grid-cols-2 md:grid-cols-4 gap-6"
+                                    className="space-y-6"
                                 >
-                                    {loaderData.shopItems.map((item: any) => (
-                                        <div key={item.id} className="group bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all hover:border-white/30 flex flex-col">
-                                            <div className="aspect-square rounded-xl bg-black/20 mb-4 flex items-center justify-center relative overflow-hidden">
-                                                <OptimizedImage
-                                                    src={item.image_url}
-                                                    alt={item.name}
-                                                    aspectRatio="square"
-                                                    className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                                                />
-                                                {item.is_featured === 1 && (
-                                                    <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full z-10">HOT</div>
-                                                )}
-                                            </div>
-                                            <h3 className="font-bold text-white mb-1">{item.name}</h3>
-                                            <p className="text-xs text-white/70 mb-4 line-clamp-2 flex-1">{item.description}</p>
+                                    {/* 分类筛选标签 */}
+                                    <div className="flex gap-2 flex-wrap">
+                                        {Object.entries(CATEGORY_MAP).map(([key, label]) => (
                                             <button
-                                                onClick={() => handlePurchase(item, "goods")}
-                                                className="w-full py-2 bg-white/10 hover:bg-white text-white hover:text-black rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                                                key={key}
+                                                onClick={() => setFilterCategory(key)}
+                                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${filterCategory === key
+                                                    ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white shadow-lg shadow-pink-500/20"
+                                                    : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                                                    }`}
                                             >
-                                                <span>{item.price_coins}</span>
-                                                <Star size={12} className="fill-current" />
+                                                {label}
                                             </button>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
+
+                                    {/* 商品网格 */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                                        {filteredItems.map((item: any) => (
+                                            <motion.div
+                                                key={item.id}
+                                                layout
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="group bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all hover:border-white/30 flex flex-col relative"
+                                            >
+                                                {/* HOT 标签 */}
+                                                {item.is_featured === 1 && (
+                                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full z-10 shadow-lg">HOT</div>
+                                                )}
+                                                {/* 折扣标签 */}
+                                                {item.original_price && item.original_price > item.price_coins && (
+                                                    <div className="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                                                        {Math.round((1 - item.price_coins / item.original_price) * 100)}% OFF
+                                                    </div>
+                                                )}
+
+                                                <div className="aspect-square rounded-xl bg-black/20 mb-3 flex items-center justify-center overflow-hidden">
+                                                    <OptimizedImage
+                                                        src={item.image_url}
+                                                        alt={item.name}
+                                                        aspectRatio="square"
+                                                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 p-4"
+                                                    />
+                                                </div>
+
+                                                {/* 分类小标签 */}
+                                                <div className="mb-2">
+                                                    <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                                                        {CATEGORY_MAP[item.type] || item.type}
+                                                    </span>
+                                                </div>
+
+                                                <h3 className="font-bold text-white text-sm mb-1 line-clamp-1">{item.name}</h3>
+                                                <p className="text-[11px] text-white/50 mb-3 line-clamp-2 flex-1">{item.description}</p>
+
+                                                <button
+                                                    onClick={() => handlePurchase(item, "goods")}
+                                                    className="w-full py-2 bg-white/10 hover:bg-gradient-to-r hover:from-pink-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    {item.original_price && item.original_price > item.price_coins && (
+                                                        <span className="line-through text-white/30 text-xs">{item.original_price}</span>
+                                                    )}
+                                                    <span>{item.price_coins}</span>
+                                                    <Star size={12} className="fill-current text-yellow-400" />
+                                                </button>
+                                            </motion.div>
+                                        ))}
+                                    </div>
                                 </motion.div>
                             )}
 
@@ -257,21 +318,35 @@ export default function ShopPage() {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    className="grid grid-cols-2 md:grid-cols-3 gap-6"
+                                    className="grid grid-cols-3 md:grid-cols-3 gap-5"
                                 >
                                     {loaderData.rechargePackages.map((pkg: any) => (
                                         <div key={pkg.id} className="group bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border border-yellow-500/20 rounded-2xl p-6 hover:border-yellow-500/50 transition-all flex flex-col items-center text-center relative overflow-hidden">
                                             <div className="absolute inset-0 bg-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-400 group-hover:scale-110 transition-transform">
-                                                <Zap size={32} />
+                                            {/* Tag 标签 */}
+                                            {pkg.tag && (
+                                                <div className={`absolute top-2 right-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full z-10 ${pkg.tag === '至尊' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black'
+                                                        : pkg.tag === '巨量' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
+                                                            : pkg.tag === '超值' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
+                                                                : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
+                                                    }`}>
+                                                    {pkg.tag}
+                                                </div>
+                                            )}
+                                            <div className="w-14 h-14 rounded-full bg-yellow-500/20 flex items-center justify-center mb-3 text-yellow-400 group-hover:scale-110 transition-transform relative z-10">
+                                                <Zap size={28} />
                                             </div>
-                                            <h3 className="text-2xl font-bold text-white mb-1 font-mono">{pkg.coins}</h3>
-                                            <p className="text-xs text-yellow-500/80 mb-6 font-bold">+ {pkg.bonus} BONUS</p>
+                                            <h3 className="text-2xl font-bold text-white mb-0.5 font-mono relative z-10">{pkg.coins}</h3>
+                                            {pkg.bonus > 0 ? (
+                                                <p className="text-xs text-yellow-500/80 mb-4 font-bold relative z-10">+ {pkg.bonus} 赠送</p>
+                                            ) : (
+                                                <p className="text-xs text-white/30 mb-4 relative z-10">基础包</p>
+                                            )}
                                             <button
                                                 onClick={() => handlePurchase(pkg, "recharge")}
-                                                className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold transition-colors"
+                                                className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold transition-colors relative z-10"
                                             >
-                                                ¥ {(pkg.price / 100).toFixed(0)}
+                                                {pkg.label}
                                             </button>
                                         </div>
                                     ))}

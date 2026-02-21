@@ -3,16 +3,17 @@
  * 集中管理常量，避免代码重复
  */
 
-// 充值档位
+// 充值档位 — 从微额到超大额全覆盖
 export const RECHARGE_PACKAGES = [
-    { id: 'pkg_6', coins: 60, price: 600, bonus: 0, label: '6元' },
-    { id: 'pkg_12', coins: 130, price: 1200, bonus: 10, label: '12元' },
-    { id: 'pkg_30', coins: 350, price: 3000, bonus: 50, label: '30元' },
-    { id: 'pkg_61', coins: 810, price: 6100, bonus: 120, label: '61元' }, // 调整
-    { id: 'pkg_68', coins: 880, price: 6800, bonus: 120, label: '68元' },
-    { id: 'pkg_128', coins: 1680, price: 12800, bonus: 300, label: '128元' },
-    { id: 'pkg_328', coins: 4280, price: 32800, bonus: 900, label: '328元' },
-    { id: 'pkg_648', coins: 8880, price: 64800, bonus: 2000, label: '648元' },
+    { id: 'pkg_1', coins: 10, price: 100, bonus: 0, label: '¥1', tag: '' },
+    { id: 'pkg_6', coins: 60, price: 600, bonus: 0, label: '¥6', tag: '' },
+    { id: 'pkg_12', coins: 130, price: 1200, bonus: 10, label: '¥12', tag: '' },
+    { id: 'pkg_30', coins: 350, price: 3000, bonus: 50, label: '¥30', tag: '热门' },
+    { id: 'pkg_68', coins: 880, price: 6800, bonus: 200, label: '¥68', tag: '' },
+    { id: 'pkg_128', coins: 1680, price: 12800, bonus: 520, label: '¥128', tag: '超值' },
+    { id: 'pkg_328', coins: 4280, price: 32800, bonus: 1600, label: '¥328', tag: '' },
+    { id: 'pkg_648', coins: 8880, price: 64800, bonus: 3520, label: '¥648', tag: '巨量' },
+    { id: 'pkg_998', coins: 14800, price: 99800, bonus: 6200, label: '¥998', tag: '至尊' },
 ];
 
 // AI 功能限额 (Feature Limits)
