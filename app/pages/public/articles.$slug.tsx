@@ -8,6 +8,7 @@ import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock } from "lucide-reac
 import type { Route } from "./+types/articles.$slug";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { getCategoryColor } from "~/utils/categoryColor";
+import { toast } from "~/components/ui/Toast";
 
 interface Article {
     id: number;
@@ -215,7 +216,7 @@ export default function ArticleDetailPage() {
                     <button
                         onClick={() => {
                             navigator.clipboard.writeText(window.location.href);
-                            alert('链接已复制！');
+                            toast.success('链接已复制到剪贴板！');
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                     >

@@ -156,7 +156,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           />
           <div
-            className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 pointer-events-none transition-all duration-100 group-hover:from-violet-400 group-hover:to-fuchsia-400"
+            className="h-full bg-gradient-to-r from-primary-start to-primary-end pointer-events-none transition-all duration-100 group-hover:from-primary-start group-hover:to-primary-end"
             style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
           />
         </div>
@@ -193,10 +193,10 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
               {/* 控制组 */}
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={togglePlay} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/80 hover:bg-violet-500/20 hover:text-violet-400 transition-colors">
+                <button onClick={togglePlay} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/80 hover:bg-primary-start/20 hover:text-primary-start transition-colors">
                   {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />}
                 </button>
-                <button onClick={() => setShowList(!showList)} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${showList ? 'bg-violet-500/20 text-violet-400' : 'bg-transparent text-white/50 hover:bg-white/5 hover:text-white/80'}`}>
+                <button onClick={() => setShowList(!showList)} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${showList ? 'bg-primary-start/20 text-primary-start' : 'bg-transparent text-white/50 hover:bg-white/5 hover:text-white/80'}`}>
                   {showList ? <X size={14} /> : <ListMusic size={14} />}
                 </button>
               </div>
@@ -234,15 +234,15 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   }}
                   className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left group
                     ${currentIndex === idx
-                      ? 'bg-violet-500/15 border border-violet-500/20'
+                      ? 'bg-primary-start/15 border border-primary-start/20'
                       : 'hover:bg-white/5 border border-transparent'}`}
                 >
-                  <img src={song.pic} alt="" className={`w-8 h-8 rounded-lg object-cover flex-shrink-0 transition-transform ${currentIndex === idx && isPlaying ? 'scale-110 shadow-[0_0_10px_rgba(139,92,246,0.5)]' : 'group-hover:scale-105'}`} crossOrigin="anonymous" />
+                  <img src={song.pic} alt="" className={`w-8 h-8 rounded-lg object-cover flex-shrink-0 transition-transform ${currentIndex === idx && isPlaying ? 'scale-110 shadow-[0_0_10px_rgba(255,159,67,0.5)]' : 'group-hover:scale-105'}`} crossOrigin="anonymous" />
                   <div className="flex-1 min-w-0">
-                    <div className={`text-xs truncate ${currentIndex === idx ? 'font-bold text-violet-300' : 'font-medium text-white/80'}`}>
+                    <div className={`text-xs truncate ${currentIndex === idx ? 'font-bold text-primary-start' : 'font-medium text-white/80'}`}>
                       {song.title}
                     </div>
-                    <div className={`text-[10px] truncate ${currentIndex === idx ? 'text-violet-400/70' : 'text-white/40'}`}>
+                    <div className={`text-[10px] truncate ${currentIndex === idx ? 'text-primary-start/70' : 'text-white/40'}`}>
                       {song.author}
                     </div>
                   </div>
@@ -262,11 +262,11 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(139, 92, 246, 0.2);
+          background: rgba(255, 159, 67, 0.2);
           border-radius: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(139, 92, 246, 0.5);
+          background: rgba(255, 159, 67, 0.5);
         }
       `}} />
     </div>

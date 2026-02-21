@@ -12,6 +12,8 @@ import { getUserCoins } from "~/services/membership/coins.server";
 import { getAllTiers } from "~/services/membership/tier.server";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { RECHARGE_PACKAGES } from "~/config/game";
+import { confirmModal } from "~/components/ui/Modal";
+import { toast } from "~/components/ui/Toast";
 
 // Loader: Fetch Shop Data
 export async function loader({ request, context }: { request: Request; context: any }) {
@@ -101,9 +103,16 @@ export default function ShopPage() {
     const handlePurchase = (item: any, type: "goods" | "recharge" | "membership") => {
         // Check if user is logged in
         if (!loaderData.loggedIn) {
-            if (confirm("您需要登录才能进行购买。是否前往登录页面？")) {
-                window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-            }
+            confirmModal({
+                title: "需要登录",
+                message: "您需要登录才能进行购买。是否前往登录页面？",
+                confirmText: "去登录",
+                cancelText: "再看看"
+            }).then(confirmed => {
+                if (confirmed) {
+                    window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                }
+            });
             return;
         }
 
@@ -165,7 +174,7 @@ export default function ShopPage() {
                     setPaymentStep("confirm");
                 }
             } else if (fetcher.data.error) {
-                alert(fetcher.data.error);
+                toast.error(fetcher.data.error);
                 setPaymentModalOpen(false);
             }
         }

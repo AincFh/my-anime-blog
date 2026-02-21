@@ -18,11 +18,13 @@ import { PublicLayout } from "./components/layout/PublicLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { ThemeProviderWrapper } from "./components/ThemeProviderWrapper";
 import { AppError } from "~/errors";
+import { ToastContainer } from "./components/ui/Toast";
+import { ModalContainer } from "./components/ui/Modal";
 
 // ==================== 懒加载组件定义 ====================
 // 高优先级：影响用户交互的核心组件
 const CustomCursor = lazy(() => import("./components/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
-const MusicPlayer = lazy(() => import("./components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const MusicPlayer = lazy(() => import("./components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
 
 // 中优先级：增强体验但非必需的组件
 const Live2D = lazy(() => import("./components/media/Live2D").then(m => ({ default: m.Live2D })));
@@ -162,6 +164,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
 
   return (
     <ThemeProviderWrapper specifiedTheme={theme} themeAction="/action/set-theme">
+      <ToastContainer />
+      <ModalContainer />
       {/* 懒加载组件 - 按优先级分批加载，避免网络拥塞 */}
       {!isAdmin && (
         <>

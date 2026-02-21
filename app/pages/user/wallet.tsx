@@ -9,6 +9,7 @@ import { Wallet, Sparkles, ArrowUp, ArrowDown, Clock, Gift, ChevronRight, Zap } 
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { RECHARGE_PACKAGES } from "~/config/game";
+import { toast } from "~/components/ui/Toast";
 
 // ==================== 数据加载 ====================
 
@@ -120,10 +121,10 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
             if (data.success && data.payUrl) {
                 window.location.href = data.payUrl;
             } else {
-                alert(data.error || "充值失败，请稍后再试");
+                toast.error(data.error || "充值失败，请稍后再试");
             }
         } catch {
-            alert("网络错误，请稍后再试");
+            toast.error("网络错误，请稍后再试");
         } finally {
             setIsSubmitting(false);
         }

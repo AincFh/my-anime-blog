@@ -11,6 +11,7 @@ import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import { getUserSubscription } from "~/services/membership/subscription.server";
 import { getAllTiers } from "~/services/membership/tier.server";
+import { confirmModal } from "~/components/ui/Modal";
 
 export async function loader({ request, context }: { request: Request; context: any }) {
     const { anime_db } = context.cloudflare.env;
@@ -76,8 +77,14 @@ export default function MembershipPage() {
         : 0;
 
     // Handle cancel
-    const handleCancelAutoRenew = () => {
-        if (!confirm("确定要取消自动续费吗？您的会员权益将在到期后失效。")) return;
+    const handleCancelAutoRenew = async () => {
+        const confirmed = await confirmModal({
+            title: "取消续费",
+            message: "确定要取消自动续费吗？您的会员权益将在到期后失效。",
+            confirmText: "坚持取消",
+            cancelText: "再想想"
+        });
+        if (!confirmed) return;
         fetcher.submit(
             { action: "cancel", reason: "用户主动取消" },
             { method: "post", action: "/api/subscription" }
