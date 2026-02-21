@@ -1,7 +1,6 @@
 import { createRequestHandler } from "react-router";
 
 const requestHandler = createRequestHandler(
-    // @ts-expect-error - virtual module provided by React Router at build time
     () => import("virtual:react-router/server-build"),
     import.meta.env.MODE
 );
@@ -9,7 +8,7 @@ const requestHandler = createRequestHandler(
 export default {
     fetch(request: Request, env: Env, ctx: ExecutionContext) {
         return requestHandler(request, {
-            cloudflare: { env, ctx },
+            cloudflare: { env: env as any, cf: request.cf as any, ctx },
         });
     },
 } satisfies ExportedHandler<Env>;

@@ -19,16 +19,16 @@ export function DynamicBackground({ images }: DynamicBackgroundProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const preloadRef = useRef<HTMLImageElement>(null);
 
-  // 用户上传到 R2 的背景图
-  const defaultImages = [
-    '/api/r2/4E25849C7602C73FCEBC47293779ECD3.jpg',
-    '/api/r2/7D81F12940CEAB9A92E7EF65E23B1E19.jpg',
-    '/api/r2/88CC4558DE49F0B15C825CDA2904296D.jpg',
-    '/api/r2/8E6DB054D0490AAD703E7DFEA7F5D0FB.jpg',
-    '/api/r2/DEEDE6C26CA8E6E8BE3D1F44DF4A1A78.jpg',
+  // Unsplash 高清动漫/风景壁纸作为默认背景
+  const backgrounds = [
+    'https://api.yimian.xyz/img?id=234',
+    'https://api.yimian.xyz/img?id=145',
+    'https://api.yimian.xyz/img?id=567',
+    'https://api.yimian.xyz/img?id=890',
+    'https://api.yimian.xyz/img?id=345',
   ];
 
-  const imageList = images && images.length > 0 ? images : defaultImages;
+  const imageList = images && images.length > 0 ? images : backgrounds;
 
   // 时间感知：获取当前时间，晚上10点后使用暗色调壁纸
   const getTimeBasedImages = () => {

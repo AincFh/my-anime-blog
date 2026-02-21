@@ -21,6 +21,7 @@ export type AuditAction =
     | 'payment_create'
     | 'payment_success'
     | 'payment_failed'
+    | 'item_acquired'
     | 'payment_refund'
     | 'coins_earn'
     | 'coins_spend'

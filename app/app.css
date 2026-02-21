@@ -260,6 +260,86 @@
   color: #9ca3af !important;
 }
 
+/* ============================================
+   无障碍优化 - Accessibility Enhancement
+   ============================================ */
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(0, 0, 0, 0.3);
+  }
+
+  .dark {
+    --glass-bg: rgba(15, 23, 42, 0.98);
+    --glass-border: rgba(255, 255, 255, 0.4);
+  }
+
+  .glass-card,
+  .glass-panel {
+    background: var(--glass-bg) !important;
+    border-color: var(--glass-border) !important;
+  }
+
+  /* 提升文字对比度 */
+  .text-slate-500,
+  .text-slate-400,
+  .text-gray-500,
+  .text-gray-400 {
+    color: #1e293b !important;
+    /* slate-800 */
+  }
+
+  .dark .text-slate-500,
+  .dark .text-slate-400,
+  .dark .text-gray-500,
+  .dark .text-gray-400 {
+    color: #e2e8f0 !important;
+    /* slate-200 */
+  }
+}
+
+/* ============================================
+   暗色模式深度优化 - Dark Mode Enhancement
+   ============================================ */
+
+/* 暗色模式下的玻璃卡片 - 添加橙色微光 */
+.dark .glass-card {
+  background: linear-gradient(135deg,
+      rgba(30, 41, 59, 0.92),
+      rgba(255, 159, 67, 0.03)) !important;
+  border-color: rgba(255, 159, 67, 0.15) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(255, 159, 67, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark .glass-card:hover {
+  border-color: rgba(255, 159, 67, 0.35) !important;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(255, 159, 67, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 暗色模式下的玻璃面板 */
+.dark .glass-panel {
+  background: linear-gradient(135deg,
+      rgba(15, 23, 42, 0.9),
+      rgba(255, 159, 67, 0.02)) !important;
+  border-color: rgba(255, 159, 67, 0.12) !important;
+}
+
+/* 暗色模式下的导航栏增强 */
+.dark nav .bg-slate-900\/60,
+.dark .dark\:bg-slate-900\/60 {
+  background: linear-gradient(135deg,
+      rgba(15, 23, 42, 0.75),
+      rgba(255, 159, 67, 0.02)) !important;
+}
+
 @layer base {
 
   html,
@@ -301,17 +381,46 @@
     scrollbar-color: rgba(255, 159, 67, 0.3) transparent;
   }
 
-  /* Custom Cursor Hide Default */
+  /* Custom Cursor Hide Default - 仅对非辅助技术用户 */
   body.custom-cursor {
     cursor: none;
   }
 
-  a,
-  button,
-  input,
-  textarea {
+  body.custom-cursor a,
+  body.custom-cursor button,
+  body.custom-cursor [role="button"] {
     cursor: none;
-    /* We will use custom cursor */
+  }
+
+  /* 焦点环样式 - 确保键盘导航可见性 */
+  :focus-visible {
+    outline: 2px solid var(--color-at-orange, #FF9F43);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* 按钮和链接的焦点环优化 */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid var(--color-at-orange, #FF9F43);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(255, 159, 67, 0.2);
+  }
+
+  /* 输入框焦点状态 */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--color-at-orange, #FF9F43);
+    outline-offset: 0;
+    box-shadow: 0 0 0 3px rgba(255, 159, 67, 0.15);
+  }
+
+  /* 暗色模式焦点环适配 */
+  .dark :focus-visible {
+    outline-color: #FF9F43;
+    box-shadow: 0 0 0 4px rgba(255, 159, 67, 0.3);
   }
 }
 

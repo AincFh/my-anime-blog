@@ -15,7 +15,17 @@
 		"binding": "ASSETS"
 	},
 	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
+		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+		// 支付系统安全配置
+		// ⚠️ 生产环境必须替换为强随机密钥（推荐 64 字符）
+		"PAYMENT_SECRET": "REPLACE_WITH_STRONG_SECRET_KEY_IN_PRODUCTION",
+		"CSRF_SECRET": "REPLACE_WITH_STRONG_CSRF_SECRET_IN_PRODUCTION",
+		"SESSION_SECRET": "REPLACE_WITH_STRONG_SESSION_SECRET_IN_PRODUCTION",
+		// 环境标识
+		"ENVIRONMENT": "development",
+		// 支付回调 IP 白名单（逗号分隔）
+		// 生产环境添加: 支付宝/微信官方回调 IP
+		"PAYMENT_CALLBACK_IPS": "127.0.0.1,::1"
 	},
 	"observability": {
 		"enabled": true

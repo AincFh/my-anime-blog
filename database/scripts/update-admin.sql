@@ -1,0 +1,1 @@
+UPDATE users SET password_hash='43f7b95a82cce8abc80560889f130b4e:28cc5ff2e2998eb21d2951a8671e050ec79a429d43be2da66dee16894fe80b53' WHERE email='admin@admin.com';

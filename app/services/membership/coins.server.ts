@@ -44,7 +44,7 @@ export async function getUserCoins(db: any, userId: number): Promise<number> {
 }
 
 /**
- * 增加积分
+ * 增加积分（原子操作）
  */
 export async function addCoins(
     db: any,
@@ -61,17 +61,19 @@ export async function addCoins(
     }
 
     try {
-        // 获取当前余额
+        // 获取当前余额（用于记录交易）
         const currentBalance = await getUserCoins(db, userId);
-        const newBalance = currentBalance + amount;
 
-        // 更新用户余额
+        // ⚠️ 使用原子更新，避免并发问题
         await execute(
             db,
-            'UPDATE users SET coins = ? WHERE id = ?',
-            newBalance,
+            'UPDATE users SET coins = coins + ? WHERE id = ?',
+            amount,
             userId
         );
+
+        // 查询更新后的余额
+        const newBalance = await getUserCoins(db, userId);
 
         // 记录交易
         await execute(
@@ -100,7 +102,7 @@ export async function addCoins(
 }
 
 /**
- * 消费积分
+ * 消费积分（原子操作）
  */
 export async function spendCoins(
     db: any,
@@ -123,15 +125,23 @@ export async function spendCoins(
             return { success: false, newBalance: currentBalance, error: '积分不足' };
         }
 
-        const newBalance = currentBalance - amount;
-
-        // 更新用户余额
-        await execute(
+        // ⚠️ 使用原子更新 + 条件检查，防止并发时透支
+        // coins >= amount 确保不会扣成负数
+        const updateResult = await execute(
             db,
-            'UPDATE users SET coins = ? WHERE id = ?',
-            newBalance,
-            userId
+            'UPDATE users SET coins = coins - ? WHERE id = ? AND coins >= ?',
+            amount,
+            userId,
+            amount
         );
+
+        // 检查是否更新成功（如果没有更新行，说明余额不足）
+        if (!updateResult.meta?.changes || updateResult.meta.changes === 0) {
+            return { success: false, newBalance: currentBalance, error: '积分不足或并发冲突' };
+        }
+
+        // 查询更新后的余额
+        const newBalance = await getUserCoins(db, userId);
 
         // 记录交易
         await execute(

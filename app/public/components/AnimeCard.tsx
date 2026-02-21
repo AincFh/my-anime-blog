@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "../ui/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 
 interface AnimeCardProps {
     id: number;

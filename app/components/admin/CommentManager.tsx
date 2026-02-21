@@ -43,18 +43,8 @@ export function CommentManager({ initialComments }: CommentManagerProps) {
   const unreadCount = comments.length;
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          {unreadCount > 0 && (
-            <span className="px-2 py-0.5 bg-red-500/80 text-white text-xs font-bold rounded border border-red-400/50 shadow-[0_0_10px_rgba(239,68,68,0.4)]">
-              {unreadCount}条待审
-            </span>
-          )}
-        </h2>
-      </div>
-
-      <div className="space-y-3">
+    <div className="w-full flex-1 flex flex-col pt-2">
+      <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
         <AnimatePresence mode="popLayout">
           {comments.length === 0 ? (
             <motion.div

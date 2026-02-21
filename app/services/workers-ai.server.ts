@@ -42,7 +42,9 @@ export async function generateText(
         return response.response || '';
     } catch (error) {
         console.error('Workers AI error:', error);
-        throw new Error('AI 生成失败');
+        // 保留原始错误信息，便于调试
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`AI 生成失败: ${message}`, { cause: error });
     }
 }
 

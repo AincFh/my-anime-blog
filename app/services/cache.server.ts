@@ -41,11 +41,13 @@ export async function getWithCache<T>(
     // 缓存未命中，执行 fetcher
     const data = await fetcher();
 
-    // 异步写入缓存，不阻塞响应
+    // 写入缓存并等待，避免 Cloudflare Worker 在请求结束后直接杀死异步 Promise 导致 intermittent 503
     if (kv && data) {
-        kv.put(key, JSON.stringify(data), { expirationTtl: ttl }).catch(e => {
+        try {
+            await kv.put(key, JSON.stringify(data), { expirationTtl: ttl });
+        } catch (e) {
             console.error('Cache write error:', e);
-        });
+        }
     }
 
     return data;
@@ -90,5 +92,6 @@ export const CacheKeys = {
     RECHARGE_PACKAGES: 'recharge:packages',
     SHOP_ITEMS: 'shop:items',
     SYSTEM_CONFIG: 'system:config',
+    HOME_DATA: 'home:data',
     USER_PROFILE: (userId: number) => `user:${userId}:profile`,
 } as const;

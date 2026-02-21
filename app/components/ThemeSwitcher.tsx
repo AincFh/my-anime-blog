@@ -20,7 +20,7 @@ const themes: Theme[] = [
     primaryColor: '#ff6b6b',
     secondaryColor: '#4ecdc4',
     backgroundColor: '#1a1a2e',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop)',
+    backgroundImage: 'url(https://api.yimian.xyz/img?id=201)',
   },
   {
     id: 'miku',
@@ -28,7 +28,7 @@ const themes: Theme[] = [
     primaryColor: '#00bfff',
     secondaryColor: '#9932cc',
     backgroundColor: '#1a1a2e',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2070&auto=format&fit=crop)',
+    backgroundImage: 'url(https://api.yimian.xyz/img?id=202)',
   },
   {
     id: 'asuka',
@@ -36,7 +36,7 @@ const themes: Theme[] = [
     primaryColor: '#ff69b4',
     secondaryColor: '#ff8c00',
     backgroundColor: '#1a1a2e',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1533090161767-e6ffed986c88?q=80&w=2070&auto=format&fit=crop)',
+    backgroundImage: 'url(https://api.yimian.xyz/img?id=203)',
   },
   {
     id: 'evangelion',
@@ -44,7 +44,7 @@ const themes: Theme[] = [
     primaryColor: '#ff0000',
     secondaryColor: '#ffffff',
     backgroundColor: '#000000',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=2070&auto=format&fit=crop)',
+    backgroundImage: 'url(https://api.yimian.xyz/img?id=204)',
   },
   {
     id: 'totoro',
@@ -52,7 +52,7 @@ const themes: Theme[] = [
     primaryColor: '#4a9e6d',
     secondaryColor: '#ff9a8b',
     backgroundColor: '#e8f5e9',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?q=80&w=2070&auto=format&fit=crop)',
+    backgroundImage: 'url(https://api.yimian.xyz/img?id=205)',
   },
   {
     id: 'sailormoon',
@@ -60,7 +60,7 @@ const themes: Theme[] = [
     primaryColor: '#ff1493',
     secondaryColor: '#00bfff',
     backgroundColor: '#f0f8ff',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1551651631-75567d970885?q=80&w=2070&auto=format&fit=crop)',
+    backgroundImage: 'url(https://api.yimian.xyz/img?id=206)',
   },
 ];
 
@@ -86,26 +86,26 @@ export function ThemeSwitcher() {
   useEffect(() => {
     const root = document.documentElement;
     const bgElement = document.querySelector('.fullscreen-bg') as HTMLElement | null;
-    
+
     // 更新CSS变量
     root.style.setProperty('--primary-color', currentTheme.primaryColor);
     root.style.setProperty('--secondary-color', currentTheme.secondaryColor);
     root.style.setProperty('--background-color', currentTheme.backgroundColor);
     root.style.setProperty('--background-image', currentTheme.backgroundImage);
-    
+
     // 直接更新背景图
     if (bgElement) {
       bgElement.style.backgroundImage = currentTheme.backgroundImage;
       bgElement.style.backgroundColor = currentTheme.backgroundColor;
     }
-    
+
     // 更新鼠标光标（如果有）
     if (currentTheme.cursorStyle) {
       root.style.cursor = currentTheme.cursorStyle;
     } else {
       root.style.cursor = 'default';
     }
-    
+
     // 检查是否在浏览器环境中，只在客户端保存主题
     if (typeof window !== 'undefined') {
       localStorage.setItem('theme', currentTheme.id);
@@ -113,7 +113,7 @@ export function ThemeSwitcher() {
   }, [currentTheme]);
 
   return (
-    <motion.div 
+    <motion.div
       className="glass-effect rounded-full p-2 fixed top-4 right-4 z-50 md:top-6 md:right-6"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}

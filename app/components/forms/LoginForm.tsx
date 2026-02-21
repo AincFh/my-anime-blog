@@ -43,17 +43,17 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             </div>
 
             {/* 密码输入 */}
-            <div className="space-y-2">
+            <div className="space-y-2 relative z-20">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">密码</label>
-                <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="relative group isolate">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                         <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
                     </div>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
+                        className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
                         placeholder="请输入密码"
                         required
                     />

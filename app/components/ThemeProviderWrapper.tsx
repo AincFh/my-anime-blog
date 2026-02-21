@@ -2,6 +2,7 @@ import {
     PreventFlashOnWrongTheme,
     ThemeProvider,
     useTheme,
+    type Theme
 } from "remix-themes";
 // Note: ThemeProvider from remix-themes handles theme resolver internally
 
@@ -11,7 +12,7 @@ export function ThemeProviderWrapper({
     themeAction,
 }: {
     children: React.ReactNode;
-    specifiedTheme: string | null;
+    specifiedTheme: Theme | null;
     themeAction: string;
 }) {
     return (

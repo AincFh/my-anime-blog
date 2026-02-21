@@ -14,6 +14,7 @@ export interface AICompletionOptions {
     temperature?: number;
     maxTokens?: number;
     stream?: boolean;
+    jsonMode?: boolean;
 }
 
 export interface AICompletionResult {

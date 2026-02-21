@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "my-anime-blog" generated at 2026-02-21T05:29:57.698Z.

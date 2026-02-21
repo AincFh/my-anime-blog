@@ -5,6 +5,7 @@
 
 export interface Database {
   prepare(query: string): D1PreparedStatement;
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
 }
 
 /**
@@ -65,7 +66,7 @@ export async function executeBatch(
     const stmt = db.prepare(sql);
     return params && params.length > 0 ? stmt.bind(...params) : stmt;
   });
-  
+
   // D1 支持批量执行
   const batch = db.batch(prepared);
   return await batch;

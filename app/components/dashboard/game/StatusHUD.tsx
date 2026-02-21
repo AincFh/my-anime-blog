@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Coins, Sparkles, Plus, Crown } from "lucide-react";
 import { Link } from "react-router";
+import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 interface StatusHUDProps {
     user: {
@@ -31,10 +32,11 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
             >
                 {/* 头像框 (六边形或圆形) */}
                 <div className="relative group">
-                    <div className="w-16 h-16 rounded-full border-2 border-white/50 overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] transition-shadow duration-300">
-                        <img
+                    <div className="w-16 h-16 rounded-full border-2 border-white/50 overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] transition-shadow duration-300 relative">
+                        <OptimizedImage
                             src={user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Traveler"}
                             alt="Avatar"
+                            aspectRatio="square"
                             className="w-full h-full object-cover"
                         />
                     </div>

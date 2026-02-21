@@ -1,14 +1,20 @@
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import { MobileNav } from "~/components/layout/MobileNav";
 
 interface GameDashboardLayoutProps {
-    children: ReactNode;
+    children: React.ReactNode;
+    title?: string;
     backgroundImage?: string;
 }
 
-export function GameDashboardLayout({ children, backgroundImage }: GameDashboardLayoutProps) {
+export function GameDashboardLayout({
+    children,
+    title = "游戏中心",
+    backgroundImage
+}: GameDashboardLayoutProps) {
     // 默认背景图 (二次元风景/角色)
-    const bgImage = backgroundImage || "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1920";
+    const bgImage = backgroundImage || "https://api.yimian.xyz/img?id=444";
 
     return (
         <div className="fixed inset-0 w-full h-full overflow-hidden bg-slate-900 text-white font-sans">
@@ -62,6 +68,9 @@ export function GameDashboardLayout({ children, backgroundImage }: GameDashboard
             <div className="relative z-10 w-full h-full flex flex-col">
                 {children}
             </div>
+
+            {/* 4. 移动端全局导航 */}
+            <MobileNav />
         </div>
     );
 }

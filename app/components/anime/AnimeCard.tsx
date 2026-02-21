@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { GlassCard } from "../layout/GlassCard";
+import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 interface AnimeCardProps {
     id: number;
@@ -32,7 +33,7 @@ export function AnimeCard({ title, cover_url, status, progress, rating, review }
                 {/* 封面图片 */}
                 <div className="relative h-64 bg-gradient-to-br from-purple-900/30 to-pink-900/30 overflow-hidden">
                     {cover_url ? (
-                        <img
+                        <OptimizedImage
                             src={cover_url}
                             alt={title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

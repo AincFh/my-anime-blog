@@ -17,8 +17,12 @@ export function GachaEntryCard({ onOpen }: GachaEntryCardProps) {
             whileTap={{ scale: 0.98 }}
         >
             {/* 动态背景 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-600" />
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=400')] bg-cover bg-center opacity-30 mix-blend-overlay group-hover:scale-110 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-black/60 z-0" />
+            {/* 装饰性背景 */}
+            <div className="absolute inset-0">
+                <div className="absolute inset-0 bg-[url('https://api.yimian.xyz/img?id=333')] bg-cover bg-center opacity-30 mix-blend-overlay group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+            </div>
 
             {/* 浮动粒子效果 (CSS 动画) */}
             <div className="absolute inset-0 overflow-hidden">

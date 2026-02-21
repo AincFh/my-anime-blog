@@ -1,5 +1,5 @@
-import React, { memo, lazy, Suspense, ComponentType } from 'react';
-import { motion, MotionProps } from 'framer-motion';
+import React, { memo, lazy, Suspense, type ComponentType } from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { useDeviceType, usePerformanceConfig, usePrefersReducedMotion } from '~/utils/responsive';
 
 interface ResponsiveContainerProps {
@@ -73,11 +73,11 @@ export const ResponsiveGrid = memo(function ResponsiveGrid({
     );
 });
 
-interface PerformanceAwareAnimationProps extends MotionProps {
+interface PerformanceAwareAnimationProps extends HTMLMotionProps<"div"> {
     children: React.ReactNode;
     className?: string;
     // 低性能设备的降级动画
-    lowPerformanceFallback?: MotionProps;
+    lowPerformanceFallback?: HTMLMotionProps<"div">;
 }
 
 /**

@@ -41,21 +41,28 @@ export function DailyQuests() {
   }, []);
 
   return (
-    <div className="glass-card-deep p-6 tech-border">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2 font-orbitron">
-          <span className="text-violet-400">📅</span> 每日任务
-        </h2>
-        <span className="text-sm text-white/50 font-mono">
-          {completedCount}/{totalCount} 完成
-        </span>
+    <div className="w-full h-full flex flex-col bg-[#1e293b]/30 p-6 rounded-3xl border border-white/5 shadow-inner">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-sm font-bold text-white/80 tracking-widest uppercase flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_#eab308]"></span>
+          Daily Quests
+        </h3>
+        <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+          <span className="text-yellow-400">⚡</span>
+          <span className="text-xs text-white/70 font-mono font-bold">
+            {completedCount}/{totalCount}
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar mb-6">
         {quests.map((quest, index) => (
           <motion.div
             key={quest.id}
-            className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
+            className={`flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer group
+              ${quest.completed
+                ? 'bg-yellow-500/10 border-yellow-500/20'
+                : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'}`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
@@ -95,27 +102,27 @@ export function DailyQuests() {
         ))}
       </div>
 
-      <div className="pt-4 border-t border-white/10">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-white/60">今日获得经验</span>
-          <span className="text-lg font-bold text-yellow-400 font-mono text-neon" style={{ textShadow: "0 0 10px rgba(250, 204, 21, 0.5)" }}>{totalExp} EXP</span>
+      <div className="pt-6 border-t border-white/10">
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-xs font-bold text-white/50 uppercase tracking-widest pl-1">Earned EXP</span>
+          <span className="text-2xl font-black text-yellow-400 font-orbitron drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]">+{totalExp}</span>
         </div>
 
         {/* 成就徽章 */}
-        <div className="mt-4">
-          <h3 className="text-sm font-medium text-white/60 mb-3 tracking-wider">🏆 成就徽章</h3>
-          <div className="flex gap-2">
+        <div className="mt-2">
+          <h3 className="text-[10px] font-bold text-white/40 mb-3 tracking-widest uppercase pl-1">Achievements</h3>
+          <div className="grid grid-cols-3 gap-3">
             {achievements.map((achievement) => (
               <motion.div
                 key={achievement.id}
-                className={`flex flex-col items-center p-2 rounded-lg border ${achievement.unlocked
-                    ? "bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.1)]"
-                    : "bg-white/5 border-white/10 opacity-50 grayscale"
+                className={`flex flex-col items-center justify-center py-4 px-2 rounded-2xl border transition-all ${achievement.unlocked
+                  ? "bg-gradient-to-b from-yellow-500/20 to-orange-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(250,204,21,0.15)] bg-yellow-500/5 hover:bg-yellow-500/10"
+                  : "bg-white/5 border-white/5 opacity-50 grayscale hover:opacity-70"
                   }`}
                 whileHover={{ scale: 1.05 }}
               >
-                <span className="text-2xl mb-1 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">{achievement.icon}</span>
-                <p className={`text-xs font-bold ${achievement.unlocked ? "text-yellow-300" : "text-white/40"}`}>{achievement.name}</p>
+                <div className="text-3xl mb-2 filter drop-shadow-[0_2px_10px_rgba(255,255,255,0.4)]">{achievement.icon}</div>
+                <p className={`text-[10px] font-bold text-center leading-tight ${achievement.unlocked ? "text-yellow-300" : "text-white/40"}`}>{achievement.name}</p>
               </motion.div>
             ))}
           </div>

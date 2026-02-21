@@ -31,24 +31,15 @@ export function MemoPad() {
   };
 
   return (
-    <motion.div
-      className="glass-card-deep p-6 tech-border relative overflow-hidden group"
-      initial={{ opacity: 0, rotate: -2 }}
-      animate={{ opacity: 1, rotate: 0 }}
-    >
-      {/* 背景装饰：全息网格 */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
-
-      {/* 顶部发光条 */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/50 via-orange-500/50 to-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
-
+    <div className="w-full flex-1 flex flex-col relative z-10 min-h-[300px]">
       <div className="flex items-center justify-between mb-4 relative z-10">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2 font-orbitron">
-          <span className="text-yellow-400">📝</span> 灵感便签
-        </h2>
+        <div className="flex items-center gap-2 text-yellow-400">
+          <span>📝</span>
+          <span className="text-xs font-mono uppercase tracking-wider text-white/40">灵感便签</span>
+        </div>
         <motion.button
           onClick={handleSave}
-          className="px-4 py-1.5 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 text-sm font-medium rounded hover:bg-yellow-500/30 transition-all shadow-[0_0_10px_rgba(234,179,8,0.2)]"
+          className="px-4 py-1.5 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 text-xs font-bold rounded hover:bg-yellow-500/30 transition-all shadow-[0_0_10px_rgba(234,179,8,0.2)]"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -66,6 +57,6 @@ export function MemoPad() {
       <p className="text-xs text-white/40 mt-2 font-mono relative z-10">
         <span className="text-yellow-500/70">TIP:</span> Ctrl+Enter to save
       </p>
-    </motion.div>
+    </div>
   );
 }

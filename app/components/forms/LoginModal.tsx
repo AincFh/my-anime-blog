@@ -31,7 +31,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       body: formData,
     });
 
-    const result = await response.json();
+    const result = await response.json() as { success: boolean };
     if (result.success) {
       setStep("verify");
       setCountdown(60);

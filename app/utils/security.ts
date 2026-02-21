@@ -21,7 +21,7 @@ export function getSecurityHeaders(): SecurityHeaders {
     'X-Content-Type-Options': 'nosniff',
     'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-src https://challenges.cloudflare.com;",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; media-src 'self' https: data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.i-meto.com https://cdn.jsdelivr.net; frame-src https://challenges.cloudflare.com;",
   };
 }
 
@@ -85,4 +85,36 @@ export function isSpamComment(content: string): boolean {
   ];
 
   return spamPatterns.some(pattern => pattern.test(content));
+}
+
+// ==================== CSRF 相关 ====================
+
+/**
+ * CSRF Token 表单字段名
+ */
+export const CSRF_TOKEN_FIELD = '_csrf';
+
+/**
+ * CSRF Token 请求头名
+ */
+export const CSRF_TOKEN_HEADER = 'X-CSRF-Token';
+
+/**
+ * 创建包含 CSRF Token 的隐藏表单字段 HTML
+ * 用于服务端渲染时注入表单
+ */
+export function createCSRFInputHTML(token: string): string {
+  return `<input type="hidden" name="${CSRF_TOKEN_FIELD}" value="${escapeHtml(token)}" />`;
+}
+
+/**
+ * HTML 转义防止 XSS
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

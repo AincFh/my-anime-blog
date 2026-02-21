@@ -89,29 +89,6 @@ export function getClientIP(request: Request): string {
 /**
  * 预定义的速率限制配置
  */
-export const RATE_LIMITS = {
-  // 发送验证码：1次/60秒, 5次/小时
-  SEND_CODE: {
-    maxRequests: 1,
-    windowSeconds: 60,
-    keyPrefix: 'ratelimit:send_code',
-  },
-  SEND_CODE_HOUR: {
-    maxRequests: 5,
-    windowSeconds: 3600,
-    keyPrefix: 'ratelimit:send_code_hour',
-  },
-  // 评论：1次/10秒
-  COMMENT: {
-    maxRequests: 1,
-    windowSeconds: 10,
-    keyPrefix: 'ratelimit:comment',
-  },
-  // 登录：5次错误/10分钟
-  LOGIN_FAIL: {
-    maxRequests: 5,
-    windowSeconds: 600,
-    keyPrefix: 'ratelimit:login_fail',
-  },
-} as const;
+// 速率限制配置已迁移至 app/config/index.ts
+export { RATE_LIMITS } from '~/config';
 

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Backpack, Trophy, Settings, LogOut, LucideIcon } from "lucide-react";
+import { Home, Backpack, Trophy, Settings, LogOut, type LucideIcon } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 interface NavItem {

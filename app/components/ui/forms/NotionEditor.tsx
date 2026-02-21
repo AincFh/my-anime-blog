@@ -117,7 +117,7 @@ export function NotionEditor({ value, onChange, placeholder, onSave }: NotionEdi
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.success && data.url) {
         // 替换占位符为真实链接

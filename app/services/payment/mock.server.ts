@@ -1,6 +1,8 @@
 /**
  * 模拟支付服务
  * 用于开发测试，模拟真实支付流程
+ * 
+ * ⚠️ 安全警告：此服务仅限开发环境使用
  */
 
 import {
@@ -25,12 +27,26 @@ const MOCK_CONFIG = {
 };
 
 /**
+ * 检查是否允许使用 Mock 支付
+ */
+function assertMockAllowed(environment: string): void {
+    if (environment === 'production') {
+        throw new Error('Mock 支付服务在生产环境被禁用');
+    }
+}
+
+/**
  * 创建模拟支付订单
+ * @param environment - 从 context.cloudflare.env.ENVIRONMENT 传入
  */
 export async function createMockPayment(
     db: any,
-    params: Omit<CreateOrderParams, 'paymentMethod'>
+    params: Omit<CreateOrderParams, 'paymentMethod'>,
+    environment: string = 'development'
 ): Promise<PaymentResult> {
+    // ⚠️ 生产环境禁止使用 Mock 支付
+    assertMockAllowed(environment);
+
     // 创建订单
     const result = await createPaymentOrder(db, {
         ...params,
@@ -54,12 +70,17 @@ export async function createMockPayment(
 /**
  * 模拟支付执行
  * 用于开发环境测试
+ * @param environment - 从 context.cloudflare.env.ENVIRONMENT 传入
  */
 export async function executeMockPayment(
     db: any,
     orderNo: string,
-    simulate: 'success' | 'fail' | 'random' = 'success'
+    simulate: 'success' | 'fail' | 'random' = 'success',
+    environment: string = 'development'
 ): Promise<{ success: boolean; message: string }> {
+    // ⚠️ 生产环境禁止使用 Mock 支付
+    assertMockAllowed(environment);
+
     const order = await getOrder(db, orderNo);
 
     if (!order) {

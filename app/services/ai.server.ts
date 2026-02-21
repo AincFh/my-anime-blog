@@ -35,19 +35,8 @@ const DEFAULT_MODEL = 'deepseek-chat';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
-// 每日调用限制（可在 system_settings 中配置）
-export const DEFAULT_DAILY_LIMITS: Record<AIFeature, number> = {
-    summary: 100,
-    search: 200,
-    writing: 50,
-    chat: 500,
-    recommend: 300,
-    moderate: 1000,
-    seo: 100,
-    image_suggest: 50,
-    tags: 100,
-    translate: 100,
-};
+import { AI_DAILY_LIMITS } from '~/config/game';
+export const DEFAULT_DAILY_LIMITS = AI_DAILY_LIMITS;
 
 // ============ 核心函数 ============
 
@@ -56,7 +45,7 @@ export const DEFAULT_DAILY_LIMITS: Record<AIFeature, number> = {
  */
 export async function callDeepseek(
     apiKey: string,
-    options: AICompletionOptions
+    options: AICompletionOptions & { aiBinding?: any }
 ): Promise<AICompletionResult> {
     const {
         model = DEFAULT_MODEL,
@@ -64,6 +53,7 @@ export async function callDeepseek(
         temperature = 0.7,
         maxTokens = 2000,
         stream = false,
+        aiBinding,
     } = options;
 
     let lastError: Error | null = null;
@@ -82,6 +72,8 @@ export async function callDeepseek(
                     temperature,
                     max_tokens: maxTokens,
                     stream,
+                    // 只有明确开启 jsonMode 时才添加 response_format
+                    ...(options.jsonMode ? { response_format: { type: 'json_object' } } : {}),
                 }),
             });
 
@@ -115,9 +107,37 @@ export async function callDeepseek(
         }
     }
 
+    // Circuit Breaker: 尝试降级到 Workers AI
+    if (aiBinding) {
+        try {
+            console.warn('Deepseek API exhausted, falling back to Workers AI...');
+            // 动态导入以避免循环依赖风险
+            const { generateText } = await import('./workers-ai.server');
+
+            // 转换 model 参数 (Workers AI 使用不同的模型 ID)
+            // Llama 3 8B 是一个不错的通用 fallback
+            const fallbackModel = '@cf/meta/llama-3-8b-instruct';
+
+            const fallbackContent = await generateText(
+                aiBinding,
+                messages,
+                fallbackModel
+            );
+
+            return {
+                success: true,
+                content: fallbackContent,
+                tokensUsed: 0, // Workers AI 通常按不同方式计费，这里暂计为0
+                cached: false,
+            };
+        } catch (fallbackError) {
+            console.error('Workers AI Fallback failed:', fallbackError);
+        }
+    }
+
     return {
         success: false,
-        error: lastError?.message || '调用 AI 服务失败',
+        error: lastError?.message || '调用 AI 服务失败 (Fallback also failed)',
     };
 }
 
@@ -128,7 +148,7 @@ export async function callDeepseekWithCache(
     apiKey: string,
     kv: KVNamespace | null,
     cacheKey: string,
-    options: AICompletionOptions,
+    options: AICompletionOptions & { aiBinding?: any },
     cacheTTL: number = 3600 // 默认缓存 1 小时
 ): Promise<AICompletionResult> {
     // 尝试从缓存获取
@@ -196,7 +216,7 @@ export async function checkDailyLimit(
     customLimits?: Record<AIFeature, number>
 ): Promise<{ allowed: boolean; remaining: number; limit: number }> {
     const limits = customLimits || DEFAULT_DAILY_LIMITS;
-    const limit = limits[feature] || 100;
+    const limit = (limits as Record<AIFeature, number>)[feature] || 100;
 
     // 使用 KV 快速检查（避免频繁查询数据库）
     const today = new Date().toISOString().split('T')[0];

@@ -142,7 +142,7 @@ export function Live2D() {
 
         // 监听滚动
         window.addEventListener('scroll', handleScroll, { passive: true });
-        
+
         // 监听用户活动
         window.addEventListener('mousemove', handleActivity, { passive: true });
         window.addEventListener('click', handleActivity, { passive: true });
@@ -176,9 +176,8 @@ export function Live2D() {
                             className="w-32 h-48"
                         >
                             {!isLoaded && (
-                                <div className="w-full h-full flex items-center justify-center text-center">
-                                    <div className="text-4xl mb-2 animate-bounce">🎀</div>
-                                    <p className="text-xs text-gray-400">加载中...</p>
+                                <div className="w-full h-full flex items-center justify-center opacity-50">
+                                    <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
                                 </div>
                             )}
                         </div>
@@ -213,19 +212,7 @@ export function Live2D() {
                 )}
             </AnimatePresence>
 
-            {/* 显示按钮 */}
-            {!isVisible && (
-                <motion.button
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => setIsVisible(true)}
-                    className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500
-                   rounded-full flex items-center justify-center text-2xl
-                   hover:scale-110 transition-transform shadow-lg"
-                >
-                    🎀
-                </motion.button>
-            )}
+            {/* 显示按钮已被移除 */}
         </div>
     );
 }

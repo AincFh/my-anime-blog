@@ -1,33 +1,26 @@
-import { createThemeSessionResolver, ThemeProvider } from "remix-themes";
-
-const isServer = typeof window === "undefined";
-
-// 1. Create the theme session resolver
-// In a real app, you'd use a cookie session storage here.
-// For now, we'll use a simple client-side only approach if we don't want to setup full session storage yet,
-// BUT remix-themes requires a session resolver.
-// Given the user wants performance and no FOUC, we should use a cookie.
-
-// However, setting up the whole session storage might be complex if not already present.
-// Let's check if we have a session storage utility.
-// If not, I will create a simple one.
-
-// Wait, I should probably check if `app/sessions.ts` exists.
-// If not, I'll create a simple cookie session storage.
-
+import { createThemeAction, createThemeSessionResolver, ThemeProvider } from "remix-themes";
 import { createCookieSessionStorage } from "react-router";
 
-const sessionStorage = createCookieSessionStorage({
-    cookie: {
-        name: "__theme",
-        path: "/",
-        httpOnly: true,
-        sameSite: "lax",
-        secrets: ["s3cr3t"], // Replace with env var in production
-        // secure: true, // Enable in production
-    },
-});
+// Theme storage needs to be dynamic based on env, but for now we export a factory
+export function getThemeSession(secret: string, isProd: boolean) {
+    return createCookieSessionStorage({
+        cookie: {
+            name: "theme",
+            secure: isProd,
+            secrets: [secret],
+            sameSite: "lax",
+            path: "/",
+            httpOnly: true,
+        },
+    });
+}
 
-export const themeSessionResolver = createThemeSessionResolver(sessionStorage);
+// The themeSessionResolver needs to be created with a SessionStorage instance.
+// Since the secret is dynamic, consumers will need to call getThemeSession
+// and then pass the result to createThemeSessionResolver.
+// For now, we export a function that can create the resolver.
+export function createDynamicThemeSessionResolver(secret: string, isProd: boolean) {
+    return createThemeSessionResolver(getThemeSession(secret, isProd));
+}
 
 export { ThemeProvider };

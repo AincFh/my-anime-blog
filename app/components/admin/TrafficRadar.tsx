@@ -39,27 +39,39 @@ export function TrafficRadar() {
   const totalReferrers = referrers.reduce((sum, r) => sum + r.count, 0);
 
   return (
-    <div className="glass-card-deep p-6 tech-border">
-      <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 font-orbitron">
-        <span className="text-violet-400">📊</span> 流量分析雷达
-      </h2>
-
-      <div className="space-y-6">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-1 space-y-8">
         {/* 访问趋势图 */}
-        <div>
-          <h3 className="text-sm font-medium text-white/60 mb-4 tracking-wider">最近7天访问趋势</h3>
-          <div className="relative h-48">
-            <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
-              {/* 网格线 */}
-              {[0, 1, 2, 3, 4].map((i) => (
+        <div className="bg-[#1e293b]/30 p-6 flex-1 rounded-3xl border border-white/5 shadow-inner">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-sm font-bold text-white/80 tracking-widest uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_8px_#8b5cf6]"></span>
+              Traffic Trends
+            </h3>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 text-xs text-white/60 font-mono">
+                <div className="w-3 h-1 bg-gradient-to-r from-blue-500 to-violet-500 rounded-full shadow-[0_0_8px_#8b5cf6]"></div>
+                PV
+              </div>
+              <div className="flex items-center gap-2 text-xs text-white/60 font-mono">
+                <div className="w-3 h-1 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
+                UV
+              </div>
+            </div>
+          </div>
+          <div className="relative h-56 w-full">
+            <svg className="w-full h-full overflow-visible" viewBox="0 0 400 150" preserveAspectRatio="none">
+              {/* 极简辅助线 (仅保留底部和中间) */}
+              {[1, 2].map((i) => (
                 <line
                   key={i}
                   x1="0"
-                  y1={30 + i * 30}
+                  y1={i * 75}
                   x2="400"
-                  y2={30 + i * 30}
-                  stroke="rgba(255,255,255,0.1)"
+                  y2={i * 75}
+                  stroke="rgba(255,255,255,0.03)"
                   strokeWidth="1"
+                  strokeDasharray="4,4"
                 />
               ))}
 
@@ -149,38 +161,48 @@ export function TrafficRadar() {
           </div>
         </div>
 
-        {/* 热点文章榜 */}
-        <div>
-          <h3 className="text-sm font-medium text-white/60 mb-4 tracking-wider">热点文章榜</h3>
-          <div className="space-y-2">
-            {topArticles.map((article, index) => (
-              <motion.div
-                key={article.rank}
-                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${article.rank === 1
+        {/* 辅助数据展示区 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 热点文章榜 */}
+          <div className="bg-[#1e293b]/30 p-6 rounded-3xl border border-white/5 shadow-inner">
+            <h3 className="text-sm font-bold text-white/80 mb-6 tracking-widest uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]"></span>
+              Top Articles
+            </h3>
+            <div className="space-y-3">
+              {topArticles.map((article, index) => (
+                <motion.div
+                  key={article.rank}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${article.rank === 1
                     ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-[0_0_10px_rgba(234,179,8,0.5)]"
                     : "bg-white/10 text-white/70"
-                  }`}>
-                  {article.rank === 1 ? "👑" : article.rank}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-white/90">{article.title}</p>
-                  <p className="text-xs text-white/40 font-mono">{article.views} 次阅读</p>
-                </div>
-              </motion.div>
-            ))}
+                    }`}>
+                    {article.rank === 1 ? "👑" : article.rank}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white/90">{article.title}</p>
+                    <p className="text-xs text-white/40 font-mono">{article.views} 次阅读</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* 访客来源 */}
-        <div>
-          <h3 className="text-sm font-medium text-white/60 mb-4 tracking-wider">访客来源</h3>
-          <div className="flex items-center justify-center">
-            <svg width="200" height="200" viewBox="0 0 200 200">
+        <div className="bg-[#1e293b]/30 p-6 rounded-3xl border border-white/5 shadow-inner flex flex-col items-center justify-center relative overflow-hidden">
+
+          <h3 className="text-sm font-bold text-white/80 mb-2 w-full text-left tracking-widest uppercase flex items-center gap-2 z-10">
+            <span className="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span>
+            Sources
+          </h3>
+          <div className="flex-1 flex items-center justify-center w-full relative z-10 scale-110">
+            <svg width="200" height="200" viewBox="0 0 200 200" className="drop-shadow-2xl">
               <circle
                 cx="100"
                 cy="100"
@@ -214,22 +236,31 @@ export function TrafficRadar() {
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     transition={{ duration: 1, delay: index * 0.2 }}
-                    stroke="rgba(15, 23, 42, 0.5)"
-                    strokeWidth="2"
+                    stroke="#0f1629"
+                    strokeWidth="3"
                   />
                 );
               })}
             </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <div className="w-24 h-24 bg-[#0f1629] rounded-full border-[6px] border-[#1e293b]/50 shadow-inner flex flex-col items-center justify-center">
+                <span className="text-2xl font-black font-orbitron text-white">{totalReferrers}</span>
+                <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">Total</span>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
+
+          <div className="grid grid-cols-2 w-full gap-3 mt-4 z-10 bg-black/20 p-4 rounded-2xl border border-white/5">
             {referrers.map((ref) => (
-              <div key={ref.source} className="flex items-center gap-2 text-sm">
-                <div
-                  className="w-3 h-3 rounded-full shadow-[0_0_5px_currentColor]"
-                  style={{ backgroundColor: ref.color, color: ref.color }}
-                ></div>
-                <span className="text-white/70">{ref.source}</span>
-                <span className="text-white/40 ml-auto font-mono">{ref.count}%</span>
+              <div key={ref.source} className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-xs font-semibold">
+                  <div
+                    className="w-1.5 h-3 rounded-sm shadow-[0_0_5px_currentColor]"
+                    style={{ backgroundColor: ref.color, color: ref.color }}
+                  ></div>
+                  <span className="text-white/80 truncate pr-1">{ref.source}</span>
+                </div>
+                <span className="text-white/40 font-mono text-xl font-bold ml-3">{ref.count}%</span>
               </div>
             ))}
           </div>
@@ -238,4 +269,3 @@ export function TrafficRadar() {
     </div>
   );
 }
-

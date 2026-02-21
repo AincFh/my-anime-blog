@@ -72,7 +72,7 @@ export function AchievementSystem() {
   // 检查时间系成就
   useEffect(() => {
     const hour = new Date().getHours();
-    
+
     if (hour >= 2 && hour < 4) {
       checkAndUnlock("night_owl");
     } else if (hour >= 5 && hour < 7) {
@@ -95,7 +95,7 @@ export function AchievementSystem() {
         body: formData,
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       if (result.success) {
         const achievement = achievements.find((a) => a.id === achievementId);
         if (achievement) {

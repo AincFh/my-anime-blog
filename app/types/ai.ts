@@ -36,6 +36,10 @@ export interface AIConfig {
         search: boolean;
         recommend: boolean;
     };
+    limits?: {
+        dailyTotal: number;
+        perFeature: Record<string, number>;
+    };
     chatbot: {
         name: string;
         welcomeMessage: string;

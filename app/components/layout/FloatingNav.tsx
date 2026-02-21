@@ -2,26 +2,42 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Link, useLocation } from "react-router";
 import { useState, useRef, useEffect } from "react";
 import { ThemeToggle } from "../ui/ThemeToggle";
-import { Menu, X, LogOut, Settings, LayoutDashboard, Package } from "lucide-react";
+import { LogOut, Settings, LayoutDashboard, Package, Home, Book, Archive, Tv, ShoppingBag, ImageIcon } from "lucide-react";
+import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
+import { OnboardingTooltip } from "../ui/OnboardingTooltip";
 import { useUser } from "~/hooks/useUser";
 import { UserHUD } from "../ui/system/UserHUD";
 
 interface NavItem {
   name: string;
   path: string;
-  icon: string;
+  icon: React.ElementType;
 }
+
+const navItems: NavItem[] = [
+  { name: "首页", path: "/", icon: Home },
+  { name: "文章", path: "/articles", icon: Book },
+  { name: "归档", path: "/archive", icon: Archive },
+  { name: "图库", path: "/gallery", icon: ImageIcon },
+  { name: "番剧", path: "/bangumi", icon: Tv },
+  { name: "商城", path: "/shop", icon: ShoppingBag },
+];
 
 export function FloatingNav() {
   const { scrollY } = useScroll();
   const location = useLocation();
   // 调整滚动时的变换效果
   const y = useTransform(scrollY, [0, 100], [0, -10]); // 稍微上移一点
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const { user, loading } = useUser();
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 计算下拉菜单位置
   const calculateDropdownPosition = () => {
@@ -77,13 +93,7 @@ export function FloatingNav() {
 
   const closeDropdown = () => setIsUserMenuOpen(false);
 
-  const navItems: NavItem[] = [
-    { name: "首页", path: "/", icon: "🏠" },
-    { name: "文章", path: "/articles", icon: "📚" },
-    { name: "归档", path: "/archive", icon: "📅" },
-    { name: "图库", path: "/gallery", icon: "🖼️" },
-    { name: "番剧", path: "/bangumi", icon: "🎬" },
-  ];
+  // ... (moved out)
 
   return (
     <>
@@ -93,7 +103,7 @@ export function FloatingNav() {
         style={{ y }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "out" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <div
           className="
@@ -115,26 +125,37 @@ export function FloatingNav() {
                 <Link
                   key={item.name}
                   to={item.path}
+                  prefetch="intent"
                   style={{ WebkitTapHighlightColor: "transparent" }}
                   className={`
-                    relative px-5 py-2 text-[15px] font-medium transition-colors duration-300 rounded-full z-10
+                    group relative block px-5 py-2 text-[15px] font-medium transition-colors duration-200 rounded-full z-10
                     /* 文字颜色逻辑 */
-                    ${isActive ? "text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"}
+                    ${isActive ? "text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"}
                   `}
                 >
-                  {/* 文字层 */}
-                  <span className="relative z-20">{item.name}</span>
+                  <div id={item.path === "/shop" ? "nav-item-shop" : undefined} className="relative z-20 flex items-center gap-1.5 transition-transform duration-200 active:scale-95">
+                    {(() => {
+                      const Icon = item.icon as any;
+                      return <Icon
+                        size={16}
+                        strokeWidth={isActive ? 2.5 : 2}
+                        className={isActive ? "" : "group-hover:scale-110 transition-transform duration-200"}
+                      />;
+                    })()}
+                    <span>{item.name}</span>
+                  </div>
 
-                  {/* --- 液体切换背景层 --- */}
+                  {/* --- 极简流体小圆点指示器 --- */}
                   {isActive && (
                     <motion.div
-                      layoutId="active-pill-glass"
+                      layoutId="active-nav-indicator"
                       transition={{
                         type: "spring",
-                        stiffness: 350,
-                        damping: 30,
+                        stiffness: 400,
+                        damping: 40,
+                        mass: 0.8
                       }}
-                      className="absolute inset-0 z-10 bg-white dark:bg-slate-800 rounded-full shadow-sm"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-800 dark:bg-white rounded-full shadow-sm"
                     />
                   )}
                 </Link>
@@ -142,26 +163,14 @@ export function FloatingNav() {
             })}
           </div>
 
-          {/* 移动端导航 (简化版) */}
-          <div className="flex md:hidden items-center gap-1 px-2">
-            <Link to="/" className="p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10">
-              <span className="text-xl">🏠</span>
-            </Link>
-            <motion.button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200"
-              whileTap={{ scale: 0.9 }}
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </motion.button>
-          </div>
-
           {/* 分割线 */}
           <div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-3 hidden md:block"></div>
 
           {/* 右侧区域 (用户 & 主题) */}
           <div className="flex items-center gap-2 pr-2">
-            {loading ? (
+            {!isMounted ? (
+              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            ) : loading ? (
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
             ) : user ? (
               <motion.button
@@ -186,36 +195,15 @@ export function FloatingNav() {
           </div>
         </div>
 
-        {/* 移动端菜单下拉 */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              className="md:hidden absolute top-full left-0 right-0 mt-4 mx-4 p-4 rounded-2xl
-                         bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-xl"
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="grid grid-cols-3 gap-3">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${location.pathname === item.path
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white"
-                      : "hover:bg-white/40 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400"
-                      }`}
-                  >
-                    <span className="text-2xl">{item.icon}</span>
-                    <span className="text-xs font-medium">{item.name}</span>
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* 新用户引导提示 - 仅在客户端渲染且用户未点击过时显示 */}
+        {isMounted && (
+          <OnboardingTooltip
+            stepKey="shop_nav"
+            targetId="nav-item-shop"
+            content="欢迎光临星尘商店！签到获得的积分可以在这里兑换头像框和主题哦 ✨"
+            position="bottom"
+          />
+        )}
       </motion.nav>
 
       {/* 用户下拉菜单 (保持原有逻辑) */}
@@ -238,7 +226,12 @@ export function FloatingNav() {
                 <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-br from-at-orange to-at-red shadow-lg">
                   <div className="w-full h-full rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
                     {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                      <OptimizedImage
+                        src={user.avatar_url}
+                        alt={user.username}
+                        aspectRatio="square"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <span className="text-at-orange font-bold text-2xl">
                         {user.username?.charAt(0).toUpperCase() || "U"}

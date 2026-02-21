@@ -7,66 +7,32 @@ import { queryFirst } from './db.server';
 
 // ============ 类型定义 ============
 
-export interface AIConfig {
-    enabled: boolean;
-    features: {
-        summary: boolean;
-        search: boolean;
-        writing: boolean;
-        chat: boolean;
-        recommend: boolean;
-        moderate: boolean;
-        seo: boolean;
-        imageSuggest: boolean;
-        tags: boolean;
-        translate: boolean;
-    };
-    limits: {
-        dailyTotal: number;
-        perFeature: Record<string, number>;
-    };
-    chatbot: {
-        name: string;
-        personality: string;
-        welcomeMessage: string;
-    };
-}
+import { type AIConfig } from '~/types/ai';
 
 const DEFAULT_AI_CONFIG: AIConfig = {
     enabled: true,
     features: {
-        summary: true,
-        search: true,
-        writing: true,
         chat: true,
-        recommend: true,
+        summary: true,
+        writing: true,
         moderate: true,
         seo: true,
-        imageSuggest: true,
         tags: true,
-        translate: true,
-    },
-    limits: {
-        dailyTotal: 1000,
-        perFeature: {
-            summary: 100,
-            search: 200,
-            writing: 50,
-            chat: 500,
-            recommend: 300,
-            moderate: 1000,
-            seo: 100,
-            imageSuggest: 50,
-            tags: 100,
-            translate: 100,
-        },
+        search: true,
+        recommend: true,
     },
     chatbot: {
-        name: '小绫',
-        personality: '活泼可爱、热情、略带傲娇',
-        welcomeMessage: '你好呀～我是小绫，有什么想问的尽管说！(◕‿◕)',
+        name: 'MAGI',
+        welcomeMessage: 'Need some anime recommendations?',
+        placeholder: 'Ask me anything...',
+    },
+    limits: {
+        dailyTotal: 100,
+        perFeature: {},
     },
 };
+
+export type { AIConfig };
 
 // ============ 配置读取 ============
 
@@ -95,9 +61,9 @@ export async function getAIConfig(db: any): Promise<AIConfig> {
                 ...aiConfig.features,
             },
             limits: {
-                dailyTotal: aiConfig.limits?.dailyTotal ?? DEFAULT_AI_CONFIG.limits.dailyTotal,
+                dailyTotal: aiConfig.limits?.dailyTotal ?? DEFAULT_AI_CONFIG.limits!.dailyTotal,
                 perFeature: {
-                    ...DEFAULT_AI_CONFIG.limits.perFeature,
+                    ...DEFAULT_AI_CONFIG.limits!.perFeature,
                     ...aiConfig.limits?.perFeature,
                 },
             },

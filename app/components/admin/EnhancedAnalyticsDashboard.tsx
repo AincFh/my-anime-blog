@@ -6,10 +6,10 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { 
-  LineChart, Line, AreaChart, Area, BarChart, Bar, 
-  PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, 
-  Tooltip, Legend, ResponsiveContainer 
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 
 interface AnalyticsData {
@@ -68,7 +68,7 @@ export function EnhancedAnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      
+
       // 并行获取所有分析数据
       const [overview, content, user] = await Promise.all([
         fetch(`/api/admin/analytics?type=overview&range=${selectedTimeRange}`).then(r => r.json()),
@@ -76,7 +76,11 @@ export function EnhancedAnalyticsDashboard() {
         fetch(`/api/admin/analytics?type=user&range=${selectedTimeRange}`).then(r => r.json())
       ]);
 
-      setData({ overview, content, user });
+      setData({
+        overview: overview as AnalyticsData["overview"],
+        content: content as AnalyticsData["content"],
+        user: user as AnalyticsData["user"]
+      });
     } catch (error) {
       console.error("Failed to fetch analytics data:", error);
     } finally {
@@ -152,21 +156,21 @@ export function EnhancedAnalyticsDashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="page_views" 
-                  stackId="1" 
-                  stroke="#3B82F6" 
-                  fill="#3B82F6" 
+                <Area
+                  type="monotone"
+                  dataKey="page_views"
+                  stackId="1"
+                  stroke="#3B82F6"
+                  fill="#3B82F6"
                   fillOpacity={0.6}
                   name="页面浏览量"
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="unique_users" 
-                  stackId="2" 
-                  stroke="#10B981" 
-                  fill="#10B981" 
+                <Area
+                  type="monotone"
+                  dataKey="unique_users"
+                  stackId="2"
+                  stroke="#10B981"
+                  fill="#10B981"
                   fillOpacity={0.6}
                   name="独立访客"
                 />
@@ -211,9 +215,7 @@ export function EnhancedAnalyticsDashboard() {
                     data={data.content.categoryStats}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
+                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                     fill="#8884d8"
                     dataKey="total_views"
                   >
@@ -243,10 +245,10 @@ export function EnhancedAnalyticsDashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="new_users" 
-                  stroke="#10B981" 
+                <Line
+                  type="monotone"
+                  dataKey="new_users"
+                  stroke="#10B981"
                   strokeWidth={2}
                   name="新增用户"
                 />
@@ -294,16 +296,16 @@ export function EnhancedAnalyticsDashboard() {
 }
 
 // 统计卡片组件
-function StatCard({ 
-  title, 
-  value, 
-  icon, 
-  color 
-}: { 
-  title: string; 
-  value: number; 
-  icon: string; 
-  color: string; 
+function StatCard({
+  title,
+  value,
+  icon,
+  color
+}: {
+  title: string;
+  value: number;
+  icon: string;
+  color: string;
 }) {
   return (
     <motion.div
@@ -325,16 +327,16 @@ function StatCard({
 }
 
 // 洞察卡片组件
-function InsightCard({ 
-  title, 
-  description, 
-  insights, 
-  color 
-}: { 
-  title: string; 
-  description: string; 
-  insights: string[]; 
-  color: string; 
+function InsightCard({
+  title,
+  description,
+  insights,
+  color
+}: {
+  title: string;
+  description: string;
+  insights: string[];
+  color: string;
 }) {
   const colorMap = {
     blue: "bg-blue-50 border-blue-200 text-blue-800",

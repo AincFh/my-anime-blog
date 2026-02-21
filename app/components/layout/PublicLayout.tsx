@@ -1,11 +1,10 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useScroll, useTransform, motion } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
-import { GlobalParticleEffect } from "~/components/ParticleEffect";
 import { FloatingNav } from "./FloatingNav";
-import { DynamicBackground } from "./DynamicBackground";
-import { SakuraParticles } from "./SakuraParticles";
 import { MobileNav } from "./MobileNav";
-import { MusicPlayerMobile } from "./MusicPlayerMobile";
+import { DynamicBackground } from "../animations/DynamicBackground";
+import { CanvasParticleSystem } from "../animations/CanvasParticleSystem";
+import { MusicPlayerMobile } from "../media/MusicPlayerMobile";
 import { shouldEnableParticles, shouldUseGlassmorphism } from "~/utils/performance";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -14,13 +13,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     const y = useTransform(scrollY, [0, 1000], [0, 200]); // Parallax effect
     const [isClient, setIsClient] = useState(false);
     const [enableParticles, setEnableParticles] = useState(false);
-    const [useGlass, setUseGlass] = useState(true);
 
     useEffect(() => {
         setIsClient(true);
         // 性能检测和降级策略
         setEnableParticles(shouldEnableParticles());
-        setUseGlass(shouldUseGlassmorphism());
     }, []);
 
     return (
@@ -35,44 +32,29 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 </motion.div>
             </div>
 
-            {/* Atmosphere Layer - Bokeh Lights */}
+            {/* Atmosphere Layer - Bokeh Lights (纯 CSS 动画) */}
             <div className="fixed inset-0 z-1 pointer-events-none">
-                {/* Large bokeh circles */}
-                <motion.div
-                    className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary-start/20 blur-3xl"
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.7, 0.9, 0.7] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div
-                    className="absolute bottom-20 -left-20 w-80 h-80 rounded-full bg-primary-end/20 blur-3xl"
-                    animate={{ scale: [1, 1.05, 1], opacity: [0.6, 0.8, 0.6] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                />
-                <motion.div
-                    className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-yellow-300/15 blur-3xl"
-                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.7, 0.5] }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-                />
+                {/* Large bokeh circles - 使用 CSS animation 替代 Framer Motion */}
+                <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary-start/20 blur-3xl animate-bokeh-1" />
+                <div className="absolute bottom-20 -left-20 w-80 h-80 rounded-full bg-primary-end/20 blur-3xl animate-bokeh-2" />
+                <div className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-yellow-300/15 blur-3xl animate-bokeh-3" />
             </div>
 
-            {/* 金色光尘粒子效果 - 性能优化：低性能设备禁用 */}
-            {enableParticles && <GlobalParticleEffect />}
-            
-            {/* 樱花粒子特效 - 性能优化：低性能设备禁用 */}
-            {enableParticles && <SakuraParticles />}
+            {/* Canvas 粒子系统 - 高性能版 */}
+            {enableParticles && <CanvasParticleSystem enableDust={true} enableSakura={true} maxParticles={25} />}
 
-            {/* Floating Navigation */}
+            {/* Floating Navigation - 灵动岛风格，桌面端显示，移动端作为顶部状态栏 */}
             <FloatingNav />
 
-            {/* Content */}
-            <div className="relative z-10 pb-20 md:pb-0">
+            {/* Content - 顶部留出导航空间 */}
+            <div id="main-content" className="relative z-10 pt-20 pb-20 md:pb-0">
                 {children}
             </div>
 
             {/* 移动端底部导航栏 */}
             <MobileNav />
 
-            {/* 移动端音乐播放器（胶囊化） */}
+            {/* 移动端音乐播放器（胶囊化）- 调整位置避免遮挡 */}
             <MusicPlayerMobile />
         </div>
     );

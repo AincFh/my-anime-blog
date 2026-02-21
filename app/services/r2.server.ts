@@ -168,7 +168,7 @@ export function getR2PublicUrl(
   }
 
   // 如果没有配置，返回相对路径（需要配置 Workers 代理或使用自定义域）
-  return `/media/${cleanPath}`;
+  return `/api/r2/${cleanPath}`;
 }
 
 /**
