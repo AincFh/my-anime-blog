@@ -7,6 +7,8 @@ import { SmartCrop } from "~/components/admin/SmartCrop";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { uploadToR2, deleteFromR2, getR2PublicUrl } from "~/services/r2.server";
 import { Search, Filter, Trash2, CheckCircle2, Circle, Copy, Eye, Plus, CloudUpload } from "lucide-react";
+import { confirmModal } from "~/components/ui/Modal";
+import { toast } from "~/components/ui/Toast";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = (context as any).cloudflare.env;
@@ -118,8 +120,11 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  const handleBatchDelete = () => {
-    if (confirm(`确定要永久删除这 ${selectedKeys.length} 张图片吗？`)) {
+  const handleDeleteSelected = async () => {
+    if (selectedKeys.length === 0) return;
+    const res = await confirmModal({ title: "批量删除", message: `确定要永久删除这 ${selectedKeys.length} 张图片吗？` });
+    if (res) {
+      // Create FormData to submit
       const formData = new FormData();
       formData.append("intent", "batchDelete");
       selectedKeys.forEach(key => formData.append("keys", key));
@@ -159,8 +164,9 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  const handleDelete = (key: string) => {
-    if (confirm("确定要删除这张图片吗？")) {
+  const handleDelete = async (key: string) => {
+    const res = await confirmModal({ title: "删除图片", message: "确定要删除这张图片吗？" });
+    if (res) {
       const formData = new FormData();
       formData.append("intent", "delete");
       formData.append("key", key);
@@ -248,7 +254,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                onClick={handleBatchDelete}
+                onClick={handleDeleteSelected}
                 className="px-4 py-3 bg-red-500/20 border border-red-500/30 text-red-400 rounded-2xl text-sm font-black flex items-center gap-2 hover:bg-red-500/30 transition-all shadow-lg"
               >
                 <Trash2 size={16} />
@@ -280,7 +286,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
           <SmartCrop
             onCrop={(file, cropData) => {
               console.log("智能裁切数据:", cropData);
-              alert("裁切参数已生成 (仅预览)");
+              toast.info("裁切参数已生成 (仅预览)");
             }}
           />
         </div>
@@ -353,7 +359,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
                           onClick={(e) => {
                             e.stopPropagation();
                             navigator.clipboard.writeText(image.url);
-                            alert("已复制永久链接！");
+                            toast.success("已复制永久链接！");
                           }}
                           className="p-2 bg-white/10 hover:bg-violet-500/80 backdrop-blur-md rounded-xl text-white transition-all transform hover:scale-110"
                         >
@@ -429,7 +435,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
                         onClick={() => {
                           const url = images.find((img) => img.key === selectedImage)!.url;
                           navigator.clipboard.writeText(url);
-                          alert("已复制永久链接！");
+                          toast.success("已复制永久链接！");
                         }}
                       >
                         <Copy size={16} />

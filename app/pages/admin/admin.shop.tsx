@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useLoaderData, useFetcher } from "react-router";
 import { ShoppingBag, Plus, Trash2, Edit3, Save, X, Package, Tag, Layers, Loader2 } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
+import { confirmModal } from "~/components/ui/Modal";
 
 // --- Types ---
 interface ShopItem {
@@ -130,7 +131,13 @@ export default function AdminShop() {
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onClick={() => setEditingItem(item)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all"><Edit3 size={16} /></button>
-                                <fetcher.Form method="post" onSubmit={(e) => !confirm("确定要下架并销毁此商品吗？") && e.preventDefault()}>
+                                <fetcher.Form method="post" onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const form = e.currentTarget;
+                                    confirmModal({ title: "危险操作", message: "确定要下架并销毁此商品吗？" }).then(res => {
+                                        if (res) fetcher.submit(form);
+                                    });
+                                }}>
                                     <input type="hidden" name="action" value="delete" />
                                     <input type="hidden" name="id" value={item.id} />
                                     <button className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400/50 hover:text-red-400 transition-all"><Trash2 size={16} /></button>
@@ -160,7 +167,7 @@ export default function AdminShop() {
             <AnimatePresence>
                 {(editingItem || isAdding) && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => { setEditingMission(null); setIsAdding(false); }} />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => { setEditingItem(null); setIsAdding(false); }} />
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-2xl bg-[#111827] border border-white/10 rounded-[40px] p-10 relative z-10 shadow-2xl">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">

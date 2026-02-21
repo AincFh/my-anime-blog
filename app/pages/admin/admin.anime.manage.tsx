@@ -1,12 +1,14 @@
-import { Form, redirect } from "react-router";
+import { useLoaderData, Form, useNavigation, useActionData, useSubmit, redirect } from "react-router";
 import type { Route } from "./+types/admin.anime.manage";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSessionId } from "~/utils/auth";
 import { useState, useEffect, useCallback } from "react";
 import { RadarChart } from "~/components/system/RadarChart";
 import { QuickSyncButton } from "~/components/admin/QuickSyncButton";
-import { Search, X, Loader2, Star, Calendar, Film } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, X, Link as LinkIcon, Star, Filter, Heart, PlayCircle, Clock, Loader2, Calendar, Film } from "lucide-react";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
+import { toast } from "~/components/ui/Toast";
+import { confirmModal } from "~/components/ui/Modal";
 
 // Bangumi 搜索结果类型
 interface BangumiResult {
@@ -129,6 +131,8 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
     const [showForm, setShowForm] = useState(false);
     const [selectedAnime, setSelectedAnime] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const actionData = useActionData<{ success?: boolean; error?: string }>();
+    const submit = useSubmit();
 
     // Bangumi 搜索状态
     const [bangumiQuery, setBangumiQuery] = useState("");
@@ -772,11 +776,15 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                     className="px-4 py-2 bg-red-500 text-white rounded-xl font-medium"
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
-                                                    onClick={(e) => {
-                                                        if (!confirm("确定要删除这部番剧吗？")) {
-                                                            e.preventDefault();
-                                                        } else {
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        const res = await confirmModal({ title: "危险操作", message: "确定要删除这部番剧吗？" });
+                                                        if (res) {
                                                             setSelectedAnime(null);
+                                                            const formData = new FormData();
+                                                            formData.append("_action", "delete");
+                                                            formData.append("id", selectedAnime.id.toString());
+                                                            submit(formData, { method: "post" });
                                                         }
                                                     }}
                                                 >

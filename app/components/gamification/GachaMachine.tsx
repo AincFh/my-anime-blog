@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { Sparkles, Coins, Gift } from "lucide-react";
+import { toast } from "~/components/ui/Toast";
 import { useGamification } from "~/contexts/GamificationContext";
 
 const GACHA_COST = 100;
@@ -19,7 +21,7 @@ export function GachaMachine() {
 
     const handleGacha = () => {
         if (stats.coins < GACHA_COST) {
-            alert("金币不足！");
+            toast.error("金币不足！");
             return;
         }
 

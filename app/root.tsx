@@ -134,7 +134,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/admin");
+  const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
   const { theme } = loaderData;
 
   // SPA页面转场动画配置

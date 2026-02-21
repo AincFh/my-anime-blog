@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useLoaderData, useFetcher, Form } from "react-router";
 import { Trophy, Plus, Trash2, Edit3, Save, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
+import { confirmModal } from "~/components/ui/Modal";
 
 // --- Types ---
 interface Mission {
@@ -152,7 +153,13 @@ export default function AdminMissions() {
                             >
                                 <Edit3 size={18} />
                             </button>
-                            <fetcher.Form method="post" onSubmit={(e) => !confirm("确定要废弃此使命吗？") && e.preventDefault()}>
+                            <fetcher.Form method="post" onSubmit={(e) => {
+                                e.preventDefault();
+                                const form = e.currentTarget;
+                                confirmModal({ title: "危险操作", message: "确定要废弃此使命吗？" }).then(res => {
+                                    if (res) fetcher.submit(form);
+                                });
+                            }}>
                                 <input type="hidden" name="action" value="delete" />
                                 <input type="hidden" name="id" value={mission.id} />
                                 <button className="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400/60 hover:text-red-400 transition-all">

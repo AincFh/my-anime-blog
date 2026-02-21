@@ -1,5 +1,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Activity, Server, ShieldCheck, Database, FileText, Globe, Key, Clock, Settings, RefreshCcw, Bell } from "lucide-react";
+import { confirmModal } from "~/components/ui/Modal";
+import { toast } from "~/components/ui/Toast";
 
 /**
  * 系统健康监控
@@ -13,16 +16,15 @@ export function SystemHealth() {
   const d1Latency = 12; // D1延迟（ms）
   const r2Storage = 120; // R2存储（MB）
 
-  const handlePurgeCache = async () => {
-    if (!confirm("确定要清除全站缓存吗？这可能会影响性能。")) {
-      return;
-    }
+  const handleClearCache = async () => {
+    const res = await confirmModal({ title: "清理缓存", message: "确定要清除全站缓存吗？这可能会影响性能。" });
+    if (!res) return;
 
     setIsPurging(true);
     // TODO: 调用实际的API清除缓存
     setTimeout(() => {
       setIsPurging(false);
-      alert("缓存已清除！");
+      toast.success("系统缓存净化完毕！");
     }, 2000);
   };
 
@@ -63,9 +65,8 @@ export function SystemHealth() {
           </div>
           <div className="text-right">
             <p
-              className={`text-lg font-bold ${
-                d1Latency < 20 ? "text-green-600" : d1Latency < 50 ? "text-yellow-600" : "text-red-600"
-              }`}
+              className={`text-lg font-bold ${d1Latency < 20 ? "text-green-600" : d1Latency < 50 ? "text-yellow-600" : "text-red-600"
+                }`}
             >
               {d1Latency}ms
             </p>
@@ -92,7 +93,7 @@ export function SystemHealth() {
 
         {/* 一键净化 */}
         <motion.button
-          onClick={handlePurgeCache}
+          onClick={handleClearCache}
           disabled={isPurging}
           className="w-full px-4 py-3 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           whileHover={{ scale: isPurging ? 1 : 1.02 }}

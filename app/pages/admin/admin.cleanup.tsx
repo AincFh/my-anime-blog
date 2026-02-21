@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Trash2, AlertTriangle, ShieldCheck, Database, RefreshCcw, CheckCircle2, History, XCircle, Search } from "lucide-react";
+import { confirmModal } from "~/components/ui/Modal";
 import { redirect, Form, useActionData, useNavigation, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
 import { getSessionId } from "~/utils/auth";
 import { getArchiveStats, runAllArchives } from "~/services/maintenance/archive.server";
+import { toast } from "~/components/ui/Toast";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
@@ -76,12 +79,14 @@ export default function AssetCleaner() {
   };
 
   const handleCleanup = async () => {
-    if (selectedFiles.size === 0) {
-      alert("请选择要清理的文件");
-      return;
-    }
+    if (selectedFiles.size === 0) return;
 
-    if (!confirm(`确定要删除 ${selectedFiles.size} 个文件吗？此操作不可恢复！`)) {
+    const res = await confirmModal({
+      title: "危险操作",
+      message: `确定要删除 ${selectedFiles.size} 个文件吗？此操作不可恢复！`
+    });
+
+    if (!res) {
       return;
     }
 
@@ -89,7 +94,7 @@ export default function AssetCleaner() {
     // TODO: 调用API删除文件
     setTimeout(() => {
       setIsCleaning(false);
-      alert("清理完成！");
+      toast.success("清理完成！");
       setSelectedFiles(new Set());
     }, 2000);
   };

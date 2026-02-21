@@ -42,6 +42,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     console.error("Failed to fetch stats:", e);
   }
 
+  let musicPlaylistId = "";
   let godMode: any = null;
   let userCount = 0;
   try {
@@ -51,7 +52,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const settingsResult = await anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
     if (settingsResult && (settingsResult as any).config_json) {
       const config = JSON.parse((settingsResult as any).config_json);
-      musicPlaylistId = config.features?.music?.playlist_id;
+      musicPlaylistId = config.features?.music?.playlist_id || "";
 
       if (config.god_mode?.enabled) {
         godMode = config.god_mode;

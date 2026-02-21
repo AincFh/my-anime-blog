@@ -66,6 +66,21 @@ export interface SystemSettings {
   security: {
     maintenance_mode: boolean;
   };
+
+  // 上帝模式
+  god_mode?: {
+    enabled?: boolean;
+    base_pv?: number;
+    base_user_count?: number;
+    base_online_users?: number;
+    global_exp_rate?: number;
+    global_coin_rate?: number;
+    uptime_override_days?: number;
+    fake_total_views_offset?: number;
+    fake_user_count_offset?: number;
+    simulated_online_users_min?: number;
+    simulated_online_users_max?: number;
+  };
 }
 
 const defaultSettings: SystemSettings = {
@@ -117,6 +132,19 @@ const defaultSettings: SystemSettings = {
   security: {
     maintenance_mode: false,
   },
+  god_mode: {
+    enabled: false,
+    base_pv: 10000,
+    base_user_count: 500,
+    base_online_users: 20,
+    global_exp_rate: 1.0,
+    global_coin_rate: 1.0,
+    uptime_override_days: 0,
+    fake_total_views_offset: 0,
+    fake_user_count_offset: 0,
+    simulated_online_users_min: 0,
+    simulated_online_users_max: 0,
+  },
 };
 
 const SettingsContext = createContext<{
@@ -124,12 +152,12 @@ const SettingsContext = createContext<{
   updateSettings: (newSettings: Partial<SystemSettings>) => void;
 }>({
   settings: defaultSettings,
-  updateSettings: () => {},
+  updateSettings: () => { },
 });
 
 export function SettingsProvider({ children, settings }: { children: ReactNode; settings: SystemSettings }) {
   return (
-    <SettingsContext.Provider value={{ settings, updateSettings: () => {} }}>
+    <SettingsContext.Provider value={{ settings, updateSettings: () => { } }}>
       {children}
     </SettingsContext.Provider>
   );

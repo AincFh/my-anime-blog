@@ -5,7 +5,8 @@ import { redirect, useSubmit, useNavigation } from "react-router";
 import { requireAdmin } from "~/utils/auth";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import type { SystemSettings } from "~/contexts/SettingsContext";
-import { Save, RefreshCw, Settings as SettingsIcon, Palette, Box, Link as LinkIcon, Shield, Info, Check } from "lucide-react";
+import { Save, RefreshCw, Settings as SettingsIcon, Palette, Box, Link as LinkIcon, Shield, Info, Check, Server, Zap, Type, Languages, Moon, Volume2, Gamepad2, Coins, ShieldAlert, CheckCircle2, CloudFog, Key, Crown } from "lucide-react";
+import { confirmModal } from "~/components/ui/Modal";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { getDB } = await import("~/utils/db");
@@ -215,8 +216,9 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
     }
   }, [navigation.state, isSaving]);
 
-  const handleReset = () => {
-    if (confirm("确定要重置为上次保存的状态吗？")) {
+  const handleReset = async () => {
+    const res = await confirmModal({ title: "重置设置", message: "确定要重置为上次保存的状态吗？" });
+    if (res) {
       setSettings(loaderData.settings || defaultSettings);
       setHasChanges(false);
     }
@@ -1036,7 +1038,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       <p className="text-xs text-red-600 mb-4">清除缓存后，所有静态资源将重新从源站获取。</p>
                       <button
                         onClick={async () => {
-                          if (!confirm("确定要清除全站CDN缓存吗？")) return;
+                          const res = await confirmModal({ title: "清理缓存", message: "确定要清除全站CDN缓存吗？" });
+                          if (!res) return;
+                          // Mock slow request
+                          // new Promise(resolve => setTimeout(resolve, 2000)), // This line was in the diff but seems misplaced. Assuming it was meant for a toast.promise call.
                           try {
                             const response = await fetch("/api/admin/purge-cache", { method: "POST" });
                             const result = await response.json() as { success: boolean, message?: string, error?: string };

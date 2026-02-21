@@ -1,6 +1,9 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { renderMarkdown } from "~/utils/markdown";
+import { EditorContent } from "@tiptap/react";
+import { cn } from "~/utils/cn";
+import { toast } from "~/components/ui/Toast";
+import { motion } from "framer-motion"; // Keep this import as it's used later
+import { renderMarkdown } from "~/utils/markdown"; // Keep this import as it's used later
 
 /**
  * Notion风格的后台编辑器
@@ -100,7 +103,7 @@ export function NotionEditor({ value, onChange, placeholder, onSave }: NotionEdi
 
     const file = files[0];
     if (!file.type.startsWith("image/")) {
-      alert("请上传图片文件");
+      toast.error("请上传图片文件");
       return;
     }
 
@@ -129,7 +132,7 @@ export function NotionEditor({ value, onChange, placeholder, onSave }: NotionEdi
           onChange(newContent);
         }
       } else {
-        alert("上传失败: " + (data.error || "未知错误"));
+        toast.error("上传失败: " + (data.error || "未知错误"));
         // 移除占位符
         if (textareaRef.current) {
           const newContent = textareaRef.current.value.replace(
@@ -141,7 +144,7 @@ export function NotionEditor({ value, onChange, placeholder, onSave }: NotionEdi
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("上传出错");
+      toast.error("上传出错");
       // 移除占位符
       if (textareaRef.current) {
         const newContent = textareaRef.current.value.replace(

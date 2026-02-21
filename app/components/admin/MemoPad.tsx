@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Save, Plus, Trash2 } from "lucide-react";
+import { toast } from "~/components/ui/Toast";
 
 /**
  * 灵感便签
@@ -19,7 +21,7 @@ export function MemoPad() {
   // 保存到LocalStorage
   const handleSave = () => {
     localStorage.setItem("admin_memo", memo);
-    alert("已保存！");
+    toast.success("备忘录已保存！");
   };
 
   // Ctrl+Enter快速保存
