@@ -133,7 +133,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   const currentSong = songs[currentIndex];
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 w-72 hidden md:block">
+    <div className="relative w-full">
       {songs.length > 0 && currentSong && (
         <audio
           ref={audioRef}
