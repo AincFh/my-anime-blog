@@ -1,4 +1,14 @@
 <p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=8B5CF6&height=260&section=header&text=Project%20::%20A.T.%20Field&fontSize=65&fontAlignY=35&desc=Absolute%20Domain%20Deployed&descAlignY=60&descAlign=50&animation=twinkling" width="100%" />
+</p>
+
+<p align="center" style="margin-top: -10px;">
+  <a href="https://github.com/AincFh">
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=22&pause=1000&color=00FF99&center=true&vCenter=true&width=800&lines=[+SYSTEM_ONLINE+];Cloudflare+Workers+%2B+D1+%2B+R2+%2B+KV;React+Router+v7+%7C+Tailwind+CSS+v4;Glassmorphism+%7C+Dynamic+Backgrounds;%E7%A0%B4%E7%81%AD%E7%9A%84%E5%AE%BF%E5%91%BD%E4%BA%A6%E6%98%AF%E9%87%8D%E7%94%9F%E7%9A%84%E5%96%9C%E6%82%A6;Absolute+Domain:+DEPLOYED." />
+  </a>
+</p>
+
+<p align="center">
   <br/>
   <samp>
     「The fate of destruction is also the joy of rebirth.」
@@ -25,6 +35,7 @@
   <img src="https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square" />
 </p>
 
+<br/>
 <h2 align="center">📑 系统导航 | MAGI Directory</h2>
 <p align="center">
   <a href="#-项目进度"><img src="https://img.shields.io/badge/01-🎯_项目进度-8B5CF6?style=for-the-badge" alt="项目进度" /></a>
@@ -371,11 +382,12 @@ my-anime-blog/
 ## 🧬 技术栈 (Tech Stack)
 
 <p align="center">
+  <br/>
   <a href="https://skillicons.dev">
     <img src="https://skillicons.dev/icons?i=react,cloudflare,sqlite,tailwind,nodejs,ts,js,html,css,git,github,githubactions&perline=12" alt="技术栈图标阵列" />
   </a>
+  <br/><br/>
 </p>
-<br/>
 
 | 类别 | 技术 | 用途 |
 |------|------|------|
@@ -401,4 +413,8 @@ MIT License © 2024-2026 Project A.T. Field (绝对领域)
   <sub>
     Built with ♥ and ☕ on the edge of Cloudflare.
   </sub>
+</p>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=8B5CF6&height=120&section=footer" width="100%" />
 </p>
