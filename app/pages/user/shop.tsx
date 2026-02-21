@@ -16,21 +16,31 @@ import { RECHARGE_PACKAGES } from "~/config/game";
 // Loader: Fetch Shop Data
 export async function loader({ request, context }: { request: Request; context: any }) {
     const { anime_db } = context.cloudflare.env;
-    const token = getSessionToken(request);
-    const { valid, user } = await verifySession(token, anime_db);
 
-    if (!valid || !user) {
-        return { loggedIn: false, user: null, stats: { coins: 0 }, shopItems: [], tiers: [], rechargePackages: [] };
-    }
-
-    const [coins, shopItems, tiers] = await Promise.all([
-        getUserCoins(anime_db, user.id),
+    // 商品和会员档位 — 无论是否登录都加载
+    const [shopItems, tiers] = await Promise.all([
         anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY sort_order").all(),
         getAllTiers(anime_db)
     ]);
 
-    // Mock Recharge Packages
     const rechargePackages = RECHARGE_PACKAGES;
+
+    // 登录态 — 额外获取余额
+    const token = getSessionToken(request);
+    const { valid, user } = await verifySession(token, anime_db);
+
+    if (!valid || !user) {
+        return {
+            loggedIn: false,
+            user: null,
+            stats: { coins: 0 },
+            shopItems: shopItems.results,
+            tiers,
+            rechargePackages,
+        };
+    }
+
+    const coins = await getUserCoins(anime_db, user.id);
 
     return {
         loggedIn: true,
@@ -326,9 +336,9 @@ export default function ShopPage() {
                                             {/* Tag 标签 */}
                                             {pkg.tag && (
                                                 <div className={`absolute top-2 right-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full z-10 ${pkg.tag === '至尊' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black'
-                                                        : pkg.tag === '巨量' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
-                                                            : pkg.tag === '超值' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
-                                                                : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
+                                                    : pkg.tag === '巨量' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
+                                                        : pkg.tag === '超值' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
+                                                            : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
                                                     }`}>
                                                     {pkg.tag}
                                                 </div>
