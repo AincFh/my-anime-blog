@@ -25,6 +25,16 @@
   <img src="https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square" />
 </p>
 
+<h2 align="center">📑 系统导航 | MAGI Directory</h2>
+<p align="center">
+  <a href="#-项目进度"><img src="https://img.shields.io/badge/01-🎯_项目进度-8B5CF6?style=for-the-badge" alt="项目进度" /></a>
+  <a href="#-更新日志-changelog"><img src="https://img.shields.io/badge/02-📅_更新日志-00FF99?style=for-the-badge&labelColor=black" alt="更新日志" /></a>
+  <a href="#-快速开始-quick-start"><img src="https://img.shields.io/badge/03-🚀_快速开始-F38020?style=for-the-badge" alt="快速开始" /></a>
+  <a href="#-项目结构"><img src="https://img.shields.io/badge/04-📂_项目结构-3DDC84?style=for-the-badge&labelColor=black" alt="项目结构" /></a>
+  <a href="#-技术栈-tech-stack"><img src="https://img.shields.io/badge/05-🧬_技术栈-4285F4?style=for-the-badge" alt="技术栈" /></a>
+</p>
+<br/>
+
 ---
 
 ## 🎯 项目进度
@@ -85,7 +95,7 @@
 
 | 等级 | 月费 | 权益 |
 |------|------|------|
-| � 免费用户 | ¥0 | 基础功能全开放 |
+| 🆓 免费用户 | ¥0 | 基础功能全开放 |
 | ⭐ VIP | ¥19.9/月 | 去广告 + AI 100次/天 + 积分 ×2 倍 |
 | 👑 SVIP | ¥39.9/月 | AI 无限次 + 积分 ×3 倍 + 全部专属特权 |
 
@@ -214,7 +224,7 @@
 - 🏗️ **全栈前后端物理解耦**: 将 `app/routes/` 中混杂的 70+ 文件按领域驱动设计拆分为 `app/api/` (后端) 与 `app/pages/` (前端视图) 两大独立域
 - 📂 **后端 API 分域**: `api/auth/`, `api/ai/`, `api/payment/`, `api/admin/`, `api/user/`, `api/bangumi/`, `api/wallet/`, `api/misc/`
 - 📂 **前端视图分域**: `pages/admin/`, `pages/user/`, `pages/public/`, `pages/auth/`, `pages/legal/`, `pages/error/`
-- � **根目录大扫除**: 清除数十个历史构建日志、临时 SQL 脚本、脱机数据快照
+- 🧹 **根目录大扫除**: 清除数十个历史构建日志、临时 SQL 脚本、脱机数据快照
 
 **管理后台:**
 - 🔧 修复 500 白屏崩溃 (CommentManager 幽灵引用导致的 SSR 致命错误)
@@ -278,7 +288,7 @@
 
 ---
 
-## � 快速开始 (Quick Start)
+## 🚀 快速开始 (Quick Start)
 
 ### 1. 环境准备
 
@@ -319,7 +329,7 @@ npm run deploy     # 正式部署
 
 ---
 
-## � 项目结构
+## 📂 项目结构
 
 ```
 my-anime-blog/
@@ -358,7 +368,14 @@ my-anime-blog/
 
 ---
 
-## � 技术栈 (Tech Stack)
+## 🧬 技术栈 (Tech Stack)
+
+<p align="center">
+  <a href="https://skillicons.dev">
+    <img src="https://skillicons.dev/icons?i=react,cloudflare,sqlite,tailwind,nodejs,ts,js,html,css,git,github,githubactions&perline=12" alt="技术栈图标阵列" />
+  </a>
+</p>
+<br/>
 
 | 类别 | 技术 | 用途 |
 |------|------|------|
