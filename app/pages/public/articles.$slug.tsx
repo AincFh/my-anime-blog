@@ -24,7 +24,7 @@ interface Article {
     updated_at: number | null;
 }
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
     const { getDB } = await import("~/utils/db");
     const db = getDB(context);
     const { slug } = params;
@@ -47,6 +47,15 @@ export async function loader({ params, context }: Route.LoaderArgs) {
         .prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
         .bind(article.id)
         .run();
+
+    // 更新任务进度：阅读 (仅对登录用户)
+    const { getSessionToken, verifySession } = await import('~/services/auth.server');
+    const { updateMissionProgress } = await import('~/services/membership/mission.server');
+    const token = getSessionToken(request);
+    const { valid, user } = await verifySession(token, db);
+    if (valid && user) {
+        await updateMissionProgress(db, user.id, 'article_read');
+    }
 
     // 获取相关文章
     const relatedArticles = await db

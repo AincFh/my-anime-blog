@@ -11,6 +11,7 @@ import { useUser } from "~/hooks/useUser";
 import { ClientOnly } from "~/components/common/ClientOnly";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
+import { getUserMissions } from "~/services/membership/mission.server";
 import { MissionBoard } from "~/components/dashboard/widgets/MissionBoard";
 import { ServerStatus } from "~/components/dashboard/widgets/ServerStatus";
 import { ActivityLog } from "~/components/dashboard/widgets/ActivityLog";
@@ -56,23 +57,36 @@ export async function loader({ request, context }: { request: Request; context: 
   // 3. 获取最新积分
   const coins = await getUserCoins(anime_db, user.id);
 
+  // 4. 获取用户使命进度
+  const missions = await getUserMissions(anime_db, user.id);
+
+  // 5. 获取详细会员信息
+  const { getUserMembershipTier } = await import("~/services/membership/tier.server");
+  const { tier, subscription } = await getUserMembershipTier(anime_db, user.id);
+
   return {
     loggedIn: true,
     user: {
       ...user,
-      // 确保头像有默认值
       avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
     },
+    tier: tier ? {
+      name: tier.name,
+      display_name: tier.display_name,
+      badge_color: tier.badge_color,
+      privileges: JSON.parse(tier.privileges || '{}')
+    } : null,
     stats: {
       coins,
       level: user.level || 1,
       exp: user.exp || 0,
-      maxExp: (user.level || 1) * 100, // 简单升级公式
+      maxExp: (user.level || 1) * 100,
     },
     signInStatus: {
       hasSignedIn: !!signInRecord,
       consecutiveDays: (streakResult as any)?.streak || 0,
-    }
+    },
+    missions
   };
 }
 
@@ -135,13 +149,14 @@ function DashboardContent() {
     name: user?.username || "Traveler",
     exp: stats.exp,
     maxExp: stats.maxExp,
+    tier: loaderData.tier
   };
 
   return (
     <>
       {/* 1. 状态 HUD */}
       <ClientOnly>
-        {() => <StatusHUD user={userData} stats={{ coins: stats.coins }} />}
+        {() => <StatusHUD user={{ ...userData, tier: loaderData.tier }} stats={{ coins: stats.coins }} />}
       </ClientOnly>
 
       {/* 2. 导航菜单 */}
@@ -202,7 +217,7 @@ function DashboardContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <MissionBoard />
+            <MissionBoard missions={loaderData.missions} />
           </motion.div>
 
           {/* Top Right: Server Status */}

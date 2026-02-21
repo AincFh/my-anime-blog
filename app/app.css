@@ -532,6 +532,36 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 159, 67, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(255, 159, 67, 0.5);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite linear;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }

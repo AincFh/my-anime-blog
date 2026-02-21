@@ -24,7 +24,7 @@ import { ModalContainer } from "./components/ui/Modal";
 // ==================== 懒加载组件定义 ====================
 // 高优先级：影响用户交互的核心组件
 const CustomCursor = lazy(() => import("./components/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
-const MusicPlayer = lazy(() => import("./components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const MusicPlayer = lazy(() => import("~/components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
 
 // 中优先级：增强体验但非必需的组件
 const Live2D = lazy(() => import("./components/media/Live2D").then(m => ({ default: m.Live2D })));
@@ -168,21 +168,31 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <ModalContainer />
       {/* 懒加载组件 - 按优先级分批加载，避免网络拥塞 */}
       {!isAdmin && (
-        <>
-          {/* 高优先级：立即加载（影响用户交互） */}
-          <Suspense fallback={null}>
-            <CustomCursor />
-            <MusicPlayer />
-          </Suspense>
+        <Suspense fallback={null}>
+          <CustomCursor />
+          <MusicPlayer />
+        </Suspense>
+      )}
+      {isAdmin ? (
+        <AdminLayout>
+          <Outlet />
+        </AdminLayout>
+      ) : (
+        <PublicLayout>
+          <Outlet />
+          {/* 这里可以放置其他需要 Layout 上下文的组件 */}
+        </PublicLayout>
+      )}
 
-          {/* 中优先级：1秒后加载（增强体验） */}
+      {/* 延迟加载的背景组件/系统放在最外层，不影响主布局 */}
+      {!isAdmin && (
+        <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
             <Live2D />
             <OmniCommand />
             <AchievementSystem />
           </DelayedSuspense>
 
-          {/* 低优先级：3秒后加载（彩蛋/装饰性） */}
           <DelayedSuspense delayMs={3000}>
             <TheatricalMode />
             <AmbientSound scene="default" />
@@ -193,16 +203,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <IdleTimeEasterEgg />
             <KonamiCodeEasterEggV2 />
           </DelayedSuspense>
-        </>
-      )}
-      {isAdmin ? (
-        <AdminLayout>
-          <Outlet />
-        </AdminLayout>
-      ) : (
-        <PublicLayout>
-          <Outlet />
-        </PublicLayout>
+        </Suspense>
       )}
     </ThemeProviderWrapper>
   );

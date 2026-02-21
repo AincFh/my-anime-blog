@@ -152,6 +152,10 @@ export async function action({ request, context }: { request: Request; context: 
         `每日签到${bonus > 0 ? ` (连续${streak}天奖励)` : ''}`
     );
 
+    // 更新任务系统进度
+    const { updateMissionProgress } = await import('~/services/membership/mission.server');
+    await updateMissionProgress(anime_db, user.id, 'signin');
+
     const newBalance = await getUserCoins(anime_db, user.id);
 
     const result: SignInResult = {

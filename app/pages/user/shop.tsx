@@ -44,9 +44,19 @@ export async function loader({ request, context }: { request: Request; context: 
 
     const coins = await getUserCoins(anime_db, user.id);
 
+    // 获取详细会员信息
+    const { getUserMembershipTier } = await import("~/services/membership/tier.server");
+    const { tier } = await getUserMembershipTier(anime_db, user.id);
+
     return {
         loggedIn: true,
         user: { ...user, avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}` },
+        tier: tier ? {
+            name: tier.name,
+            display_name: tier.display_name,
+            badge_color: tier.badge_color,
+            privileges: JSON.parse(tier.privileges || '{}')
+        } : null,
         stats: { coins },
         shopItems: shopItems.results,
         tiers,
@@ -193,6 +203,7 @@ export default function ShopPage() {
                     name: user?.username || "Traveler",
                     exp: stats.exp,
                     maxExp: stats.maxExp,
+                    tier: loaderData.tier
                 }} stats={{ coins: stats.coins }} />}
             </ClientOnly>
             <NavMenu />
@@ -295,13 +306,32 @@ export default function ShopPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="aspect-square rounded-xl bg-black/20 mb-3 flex items-center justify-center overflow-hidden">
-                                                    <OptimizedImage
-                                                        src={item.image_url}
-                                                        alt={item.name}
-                                                        aspectRatio="square"
-                                                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 p-4"
-                                                    />
+                                                <div className="aspect-square rounded-xl bg-black/40 mb-3 flex items-center justify-center overflow-hidden relative group/img">
+                                                    {item.image_url ? (
+                                                        <OptimizedImage
+                                                            src={item.image_url}
+                                                            alt={item.name}
+                                                            aspectRatio="square"
+                                                            className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-500 p-4"
+                                                        />
+                                                    ) : (
+                                                        <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br transition-all duration-500
+                                                            ${item.type === 'avatar_frame' ? 'from-purple-500/20 to-pink-500/20' :
+                                                                item.type === 'theme' ? 'from-blue-500/20 to-cyan-500/20' :
+                                                                    'from-yellow-500/20 to-orange-500/20'}
+                                                        `}>
+                                                            <div className="relative">
+                                                                <Star size={40} className="text-white/20 animate-pulse" />
+                                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                                    <span className="text-xl opacity-80">
+                                                                        {item.type === 'avatar_frame' ? '🖼️' : item.type === 'theme' ? '🎨' : '📦'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {/* Shine Effect */}
+                                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover/img:translate-x-full transition-transform duration-1000" />
                                                 </div>
 
                                                 {/* 分类小标签 */}
@@ -390,8 +420,11 @@ export default function ShopPage() {
                                             }
                                         `}>
                                             {tier.name === 'svip' && (
-                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg flex items-center gap-1">
-                                                    <Crown size={12} /> MOST POPULAR
+                                                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-white/5 to-orange-500/10 opacity-30 animate-shimmer pointer-events-none" />
+                                            )}
+                                            {tier.name === 'svip' && (
+                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-black px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.5)] flex items-center gap-1 z-20">
+                                                    <Crown size={12} className="animate-bounce" /> COMMANDER'S CHOICE
                                                 </div>
                                             )}
 

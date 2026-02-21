@@ -136,9 +136,17 @@ const defaultSettings: SystemSettings = {
   security: {
     maintenance_mode: false,
   },
+  god_mode: {
+    enabled: false,
+    fake_total_views_offset: 0,
+    fake_user_count_offset: 0,
+    simulated_online_users_min: 10,
+    simulated_online_users_max: 50,
+    uptime_override_days: 0,
+  },
 };
 
-type SettingsTab = "basic" | "theme" | "features" | "integrations" | "security" | "about";
+type SettingsTab = "basic" | "theme" | "features" | "integrations" | "security" | "god" | "about";
 
 // 深度合并对象，确保不会出现 undefined 属性导致崩溃
 function mergeSettings(defaultObj: any, dbObj: any): SystemSettings {
@@ -220,6 +228,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
     { key: "features", label: "功能模块", icon: <Box size={18} />, description: "功能开关与配置" },
     { key: "integrations", label: "第三方连接", icon: <LinkIcon size={18} />, description: "外部服务集成" },
     { key: "security", label: "安全与备份", icon: <Shield size={18} />, description: "访问控制与数据" },
+    { key: "god", label: "上帝模式", icon: <ShieldAlert size={18} className="text-amber-500" />, description: "原子级统计篡改" },
     { key: "about", label: "关于系统", icon: <Info size={18} />, description: "版本与技术栈" },
   ];
 
@@ -825,6 +834,110 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                           <label className="block text-sm font-semibold text-white/80 mb-2">上传路径前缀</label>
                           <input type="text" value={settings.integrations.r2.upload_path} onChange={(e) => setSettings({ ...settings, integrations: { ...settings.integrations, r2: { ...settings.integrations.r2, upload_path: e.target.value } } })} placeholder="uploads/" className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition-all text-sm" />
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* God Mode Override */}
+              {activeTab === "god" && (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-amber-500/20">
+                    <div>
+                      <h2 className="text-2xl font-black text-white italic tracking-tighter flex items-center gap-3">
+                        <ShieldAlert className="text-amber-500 w-8 h-8" />
+                        GOD MODE: PROTOCOL OVERWRITE
+                      </h2>
+                      <p className="text-amber-500/50 text-xs font-mono mt-1">权限级别: 最高。正在绕过真实数据校验层...</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <ToggleSwitch
+                      enabled={settings.god_mode?.enabled || false}
+                      onChange={(v) => setSettings({
+                        ...settings,
+                        god_mode: { ...(settings.god_mode || defaultSettings.god_mode), enabled: v }
+                      })}
+                      label="激活全局篡改协议"
+                      description="开启后，前台显示的统计数据将应用下方的偏移量方案。"
+                    />
+
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-500 ${settings.god_mode?.enabled ? "opacity-100" : "opacity-30 pointer-events-none grayscale"}`}>
+                      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4">
+                        <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Total Views Injection (PV)</label>
+                        <div className="flex items-center gap-3">
+                          <span className="text-white/20 text-xs font-mono">Real + </span>
+                          <input
+                            type="number"
+                            value={settings.god_mode?.fake_total_views_offset || 0}
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              god_mode: { ...(settings.god_mode || defaultSettings.god_mode), fake_total_views_offset: parseInt(e.target.value) || 0 }
+                            })}
+                            className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-emerald-400 font-mono text-xl"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4">
+                        <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Registration Inflation (Users)</label>
+                        <div className="flex items-center gap-3">
+                          <span className="text-white/20 text-xs font-mono">Real + </span>
+                          <input
+                            type="number"
+                            value={settings.god_mode?.fake_user_count_offset || 0}
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              god_mode: { ...(settings.god_mode || defaultSettings.god_mode), fake_user_count_offset: parseInt(e.target.value) || 0 }
+                            })}
+                            className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-blue-400 font-mono text-xl"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4 md:col-span-2">
+                        <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Online User Simulation (Real-time)</label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <span className="text-[10px] text-white/20">MIN RANGE</span>
+                            <input
+                              type="number"
+                              value={settings.god_mode?.simulated_online_users_min || 0}
+                              onChange={(e) => setSettings({
+                                ...settings,
+                                god_mode: { ...(settings.god_mode || defaultSettings.god_mode), simulated_online_users_min: parseInt(e.target.value) || 0 }
+                              })}
+                              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white font-mono"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <span className="text-[10px] text-white/20">MAX RANGE</span>
+                            <input
+                              type="number"
+                              value={settings.god_mode?.simulated_online_users_max || 0}
+                              onChange={(e) => setSettings({
+                                ...settings,
+                                god_mode: { ...(settings.god_mode || defaultSettings.god_mode), simulated_online_users_max: parseInt(e.target.value) || 0 }
+                              })}
+                              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4">
+                        <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Uptime Override (Days)</label>
+                        <input
+                          type="number"
+                          value={settings.god_mode?.uptime_override_days || 0}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            god_mode: { ...(settings.god_mode || defaultSettings.god_mode), uptime_override_days: parseInt(e.target.value) || 0 }
+                          })}
+                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-amber-400 font-mono text-xl"
+                        />
                       </div>
                     </div>
                   </div>

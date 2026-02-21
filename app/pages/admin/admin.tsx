@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, Outlet, useLocation, redirect } from "react-router";
 import type { Route } from "./+types/admin";
 import { useState, useEffect } from "react";
-import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, LogOut, ChevronRight, BarChart3, Users } from "lucide-react";
+import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, LogOut, ChevronRight, BarChart3, Users, Trophy, ShoppingBag, Crown, ShieldAlert, Zap, Globe } from "lucide-react";
 import { MusicPlayer } from "~/components/media/MusicPlayer";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -42,18 +42,41 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     console.error("Failed to fetch stats:", e);
   }
 
-  let musicPlaylistId = "";
+  let godMode: any = null;
+  let userCount = 0;
   try {
-    const settings = await anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
-    if (settings && (settings as any).config_json) {
-      const config = JSON.parse((settings as any).config_json);
+    const usersCount = await anime_db.prepare("SELECT COUNT(*) as count FROM users").first();
+    userCount = (usersCount as any)?.count || 0;
+
+    const settingsResult = await anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
+    if (settingsResult && (settingsResult as any).config_json) {
+      const config = JSON.parse((settingsResult as any).config_json);
       musicPlaylistId = config.features?.music?.playlist_id;
+
+      if (config.god_mode?.enabled) {
+        godMode = config.god_mode;
+      }
     }
   } catch (e) {
-    console.warn("Music settings not found, using default");
+    console.warn("Settings or user count failed", e);
   }
 
-  return { stats, pendingComments, musicPlaylistId };
+  // 计算实时在线 (上帝模拟)
+  let onlineUsers = Math.floor(Math.random() * 10) + 5;
+  if (godMode?.enabled) {
+    const min = godMode.simulated_online_users_min || 0;
+    const max = godMode.simulated_online_users_max || 10;
+    onlineUsers = Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  return {
+    stats,
+    pendingComments,
+    musicPlaylistId,
+    godMode,
+    userCount,
+    onlineUsers
+  };
 }
 
 const navItems = [
@@ -62,6 +85,9 @@ const navItems = [
   { to: "/admin/comments", label: "评论管理", icon: MessageSquare },
   { to: "/admin/gallery", label: "图库管理", icon: ImageIcon },
   { to: "/admin/users", label: "用户管理", icon: Users },
+  { to: "/admin/missions", label: "使命管理", icon: Trophy },
+  { to: "/admin/shop", label: "商店库管", icon: ShoppingBag },
+  { to: "/admin/membership", label: "会员配置", icon: Crown },
   { to: "/admin/analytics", label: "数据分析", icon: BarChart3 },
   { to: "/admin/settings", label: "系统设置", icon: Settings },
 ];
@@ -114,7 +140,13 @@ function SidebarContent({ pathname, musicPlaylistId }: { pathname: string; music
 export default function Admin({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isRoot = location.pathname === "/admin";
-  const { stats, pendingComments, musicPlaylistId } = loaderData;
+  const { stats, pendingComments, musicPlaylistId, godMode, userCount, onlineUsers } = loaderData;
+
+  const displayStats = {
+    pv: godMode?.enabled ? stats.pv + (godMode.fake_total_views_offset || 0) : stats.pv,
+    users: godMode?.enabled ? userCount + (godMode.fake_user_count_offset || 0) : userCount,
+    online: onlineUsers
+  };
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Close mobile menu on route change
@@ -235,11 +267,43 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
 
                   {/* Top Stats - spans 12 cols, grid of 4 */}
                   <div className="col-span-1 md:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    <StatCard title="总访问量" value={stats.pv} color="bg-blue-500" icon="👁️" trend="+12.5%" trendUp={true} />
-                    <StatCard title="文章数" value={stats.articles} color="bg-purple-500" icon="📄" trend="+2" trendUp={true} />
-                    <StatCard title="评论数" value={stats.comments} color="bg-orange-500" icon="💬" trend="-5.2%" trendUp={false} />
+                    <StatCard title="总访问量" value={displayStats.pv} color="bg-blue-500" icon="👁️" trend={godMode?.enabled ? "GOD ACTIVE" : "+12.5%"} trendUp={true} />
+                    <StatCard title="总用户数" value={displayStats.users} color="bg-purple-500" icon="👤" trend={godMode?.enabled ? "GOD ACTIVE" : "+5"} trendUp={true} />
+                    <StatCard title="实时在线" value={displayStats.online} color="bg-orange-500" icon="⚡" trend="LIVE" trendUp={true} />
                     <StatCard title="点赞数" value={stats.likes} color="bg-pink-500" icon="❤️" trend="+28%" trendUp={true} />
                   </div>
+
+                  {/* God Mode Dashboard Module */}
+                  {godMode?.enabled && (
+                    <div className="col-span-1 md:col-span-12 bg-amber-500/5 border border-amber-500/20 rounded-[40px] p-8 lg:p-10 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[80px] rounded-full pointer-events-none" />
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                        <div className="flex items-center gap-5">
+                          <div className="w-16 h-16 rounded-3xl bg-amber-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/30">
+                            <ShieldAlert size={32} />
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase">God Command Center Active</h2>
+                            <p className="text-amber-500/70 text-sm font-mono mt-0.5">正在执行系统级数据伪造协议 (Data Spoofing Protocols)...</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="px-5 py-3 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center min-w-[120px]">
+                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">PV Injection</span>
+                            <span className="text-xl font-black text-emerald-400 font-mono">+{godMode.fake_total_views_offset}</span>
+                          </div>
+                          <div className="px-5 py-3 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center min-w-[120px]">
+                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">User Inflat</span>
+                            <span className="text-xl font-black text-blue-400 font-mono">+{godMode.fake_user_count_offset}</span>
+                          </div>
+                          <div className="px-5 py-3 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center min-w-[120px]">
+                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Sim Online</span>
+                            <span className="text-xl font-black text-amber-500 font-mono">{godMode.simulated_online_users_min}-{godMode.simulated_online_users_max}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Main Traffic Radar - Large Bento Block */}
                   <div className="col-span-1 md:col-span-12 lg:col-span-8 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-[40px] p-8 lg:p-10 shadow-2xl relative overflow-hidden group">

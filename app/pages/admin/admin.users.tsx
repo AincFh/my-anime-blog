@@ -14,7 +14,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
     try {
         const { results } = await anime_db.prepare(
-            "SELECT id, username, email, avatar_url, role, level, created_at FROM users ORDER BY created_at DESC"
+            "SELECT id, username, email, avatar_url, role, level, exp, coins, created_at FROM users ORDER BY created_at DESC"
         ).all();
 
         const users = (results || []).map((user: any) => ({
@@ -58,6 +58,24 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     const intent = formData.get("intent");
     const userId = formData.get("userId");
+
+    if (intent === "godModeUpdate") {
+        const level = parseInt(formData.get("level") as string);
+        const exp = parseInt(formData.get("exp") as string);
+        const coins = parseInt(formData.get("coins") as string);
+        const newUserId = parseInt(formData.get("id") as string);
+
+        try {
+            await anime_db.prepare(`
+                UPDATE users SET 
+                level = ?, exp = ?, coins = ?, id = ?
+                WHERE id = ?
+            `).bind(level, exp, coins, newUserId, userId).run();
+            return { success: true, message: "上帝指令已下达：用户资产已强行覆盖" };
+        } catch (e: any) {
+            return { success: false, error: "数据修正失败: " + e.message };
+        }
+    }
 
     if (intent === "toggleRole") {
         const currentRole = formData.get("currentRole");
@@ -110,6 +128,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
     const [roleFilter, setRoleFilter] = useState("all");
     const [showAddModal, setShowAddModal] = useState(false);
     const [resetPasswordId, setResetPasswordId] = useState<number | null>(null);
+    const [godModeUser, setGodModeUser] = useState<any | null>(null);
     const fetcher = useFetcher();
 
     // 状态自动清理
@@ -117,6 +136,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
         if (fetcher.state === "idle" && fetcher.data) {
             setShowAddModal(false);
             setResetPasswordId(null);
+            setGodModeUser(null);
         }
     }, [fetcher.state, fetcher.data]);
 
@@ -214,6 +234,46 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                             </fetcher.Form>
                         </Modal>
                     )}
+
+                    {godModeUser && (
+                        <Modal title={`GOD MODE: ${godModeUser.username}`} onClose={() => setGodModeUser(null)}>
+                            <fetcher.Form method="post" className="space-y-6">
+                                <input type="hidden" name="intent" value="godModeUpdate" />
+                                <input type="hidden" name="userId" value={godModeUser.id} />
+                                {loaderData.csrfToken && <input type="hidden" name="_csrf" value={loaderData.csrfToken} />}
+
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] font-black uppercase tracking-tighter">
+                                    WARNING: 你正在直接修改核心数据库中的原子数据，这将绕过所有业务逻辑检查。
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">User ID (Atomic)</label>
+                                        <input name="id" type="number" defaultValue={godModeUser.id} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-xs" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Level</label>
+                                        <input name="level" type="number" defaultValue={godModeUser.level} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-xs" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Coins (Stardust)</label>
+                                        <input name="coins" type="number" defaultValue={godModeUser.coins} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-amber-400 font-mono text-xs" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Exp (Total)</label>
+                                        <input name="exp" type="number" defaultValue={godModeUser.exp} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-blue-400 font-mono text-xs" />
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="w-full py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-xl">
+                                    EXECUTE PROTOCOL OVERWRITE
+                                </button>
+                            </fetcher.Form>
+                        </Modal>
+                    )}
                 </AnimatePresence>
 
                 <div className="flex flex-col lg:flex-row gap-4 mb-8">
@@ -257,7 +317,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                                 <tr className="border-b border-white/5 bg-white/[0.02]">
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">玩家资料</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">权限角色</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">等级 (Level)</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">等级/资产</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">加入时间</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">操作</th>
                                 </tr>
@@ -302,9 +362,15 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_#10b981]" />
-                                                    <span className="text-sm font-mono text-white/60 font-medium">Lv. {user.level}</span>
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_#10b981]" />
+                                                        <span className="text-sm font-mono text-white font-medium">Lv. {user.level}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-[10px] font-bold">
+                                                        <span className="text-amber-400">💰 {user.coins}</span>
+                                                        <span className="text-blue-400">✨ {user.exp}</span>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-xs text-white/30 font-mono">
@@ -312,6 +378,14 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => setGodModeUser(user)}
+                                                        className="p-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/30 transition-all"
+                                                        title="上帝模式: 深度数据干预"
+                                                    >
+                                                        <ShieldAlert size={16} />
+                                                    </button>
+
                                                     <button
                                                         onClick={() => handleAction(user.id, "toggleStatus", { currentRole: user.role })}
                                                         className={`p-2 rounded-xl border transition-all ${user.role === 'banned'

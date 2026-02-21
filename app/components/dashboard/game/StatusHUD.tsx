@@ -11,6 +11,11 @@ interface StatusHUDProps {
         maxExp: number;
         avatar?: string;
         uid: string;
+        tier?: {
+            name: string;
+            display_name: string;
+            badge_color: string | null;
+        } | null;
     };
     stats: {
         coins: number;
@@ -47,8 +52,23 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
 
                 {/* 信息条 */}
                 <div className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold text-white drop-shadow-md font-display tracking-wide">{user.name}</h2>
+                        {user.tier && (
+                            <motion.span
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={`
+                                    px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-lg
+                                    ${user.tier.name === 'svip'
+                                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-pink-500/50 animate-pulse"
+                                        : "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-yellow-500/50"
+                                    }
+                                `}
+                            >
+                                {user.tier.display_name}
+                            </motion.span>
+                        )}
                         <span className="text-xs text-white/60 font-mono">{user.uid}</span>
                     </div>
 

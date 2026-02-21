@@ -32,6 +32,10 @@ export interface TierPrivileges {
     exclusiveEffect: boolean;
     earlyAccess: boolean;
     prioritySupport: boolean;
+    exclusiveBadge: boolean;
+    exclusiveBanner: boolean;
+    missionBonus: number;
+    chatModel: string;
     badge?: string;
 }
 
@@ -48,6 +52,10 @@ const DEFAULT_PRIVILEGES: TierPrivileges = {
     exclusiveEffect: false,
     earlyAccess: false,
     prioritySupport: false,
+    exclusiveBadge: false,
+    exclusiveBanner: false,
+    missionBonus: 0, // 任务奖励加成
+    chatModel: 'gpt-3.5-turbo',
 };
 
 /**
