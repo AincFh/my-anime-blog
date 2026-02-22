@@ -105,15 +105,15 @@ export default function AdminMissions() {
                 <div>
                     <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                         <Trophy className="text-yellow-500" />
-                        使命指令部
+                        任务管理
                     </h1>
-                    <p className="text-white/50 text-sm mt-1">上帝模式：掌管前台所有任务行为与奖励倍率</p>
+                    <p className="text-white/50 text-sm mt-1">管理前端展示的所有任务及其奖励数据</p>
                 </div>
                 <button
                     onClick={() => setIsAdding(true)}
                     className="px-6 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all active:scale-95"
                 >
-                    <Plus size={18} /> 发布新指令
+                    <Plus size={18} /> 新增任务
                 </button>
             </div>
 

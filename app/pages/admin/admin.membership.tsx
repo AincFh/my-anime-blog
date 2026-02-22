@@ -53,9 +53,9 @@ export async function action({ request, context }: any) {
                 WHERE id = ?
             `).bind(display_name, description, price_monthly, price_quarterly, price_yearly, privileges, badge_color, sort_order, id).run();
 
-            return { success: true, message: "会员权益已动态同步" };
+            return { success: true, message: "会员权益更新成功" };
         }
-        return { success: false, error: "未授命的操作" };
+        return { success: false, error: "未知的操作" };
     } catch (e: any) {
         return { success: false, error: e.message };
     }
@@ -82,9 +82,9 @@ export default function AdminMembership() {
                 <div>
                     <h1 className="text-4xl font-black text-white flex items-center gap-4 tracking-tighter">
                         <Crown className="text-yellow-400 w-10 h-10 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
-                        会员特权协议
+                        会员级别配置
                     </h1>
-                    <p className="text-white/40 text-sm mt-2 font-medium">上帝模式：重写会员等级、权益 JSON 及全球定价策略</p>
+                    <p className="text-white/40 text-sm mt-2 font-medium">配置系统中各级别会员的信息、价格与相关权益参数 (JSON)。</p>
                 </div>
             </div>
 
@@ -121,21 +121,21 @@ export default function AdminMembership() {
 
                         <div className="grid grid-cols-3 gap-4 py-4 border-y border-white/5">
                             <div className="text-center">
-                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">Monthly</p>
+                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">月度费用</p>
                                 <p className="text-lg font-bold text-white tracking-tighter">¥{tier.price_monthly}</p>
                             </div>
                             <div className="text-center border-x border-white/5">
-                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">Quarterly</p>
+                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">季度费用</p>
                                 <p className="text-lg font-bold text-white tracking-tighter">¥{tier.price_quarterly}</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">Yearly</p>
+                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">年度费用</p>
                                 <p className="text-lg font-bold text-white tracking-tighter">¥{tier.price_yearly}</p>
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            <p className="text-[10px] text-violet-400 font-black uppercase tracking-[0.2em]">Active Privileges</p>
+                            <p className="text-[10px] text-violet-400 font-black uppercase tracking-[0.2em]">生效特权 (JSON)</p>
                             <div className="flex flex-wrap gap-2">
                                 {Object.entries(JSON.parse(tier.privileges || '{}')).map(([key, val]) => (
                                     <span key={key} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-white/60">
@@ -159,7 +159,7 @@ export default function AdminMembership() {
                             <div className="flex items-center justify-between mb-10">
                                 <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic flex items-center gap-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">
                                     <ShieldCheck className="text-violet-500 w-8 h-8" />
-                                    Protocol Overwrite: {editingTier.display_name}
+                                    编辑等级: {editingTier.display_name}
                                 </h2>
                                 <button onClick={() => setEditingTier(null)} className="p-3 hover:bg-white/10 rounded-full transition-colors group"><X size={24} className="text-white/40 group-hover:text-white" /></button>
                             </div>
@@ -171,11 +171,11 @@ export default function AdminMembership() {
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Display Name</label>
+                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">对外展示名称</label>
                                             <input name="display_name" defaultValue={editingTier.display_name} required className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold focus:border-violet-500/50 outline-none transition-all" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Status Color (Hex)</label>
+                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">身份颜色代码 (HEX)</label>
                                             <div className="flex gap-4">
                                                 <input name="badge_color" defaultValue={editingTier.badge_color} className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-violet-400 font-mono focus:border-violet-500/50 outline-none transition-all" />
                                                 <div className="w-14 h-14 rounded-2xl border border-white/20" style={{ backgroundColor: editingTier.badge_color }} />
@@ -183,27 +183,27 @@ export default function AdminMembership() {
                                         </div>
                                         <div className="grid grid-cols-3 gap-4 pt-2">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] text-white/30 font-bold uppercase truncate">Price Mo</label>
+                                                <label className="text-[10px] text-white/30 font-bold uppercase truncate">月费 (¥)</label>
                                                 <input type="number" step="0.01" name="price_monthly" defaultValue={editingTier.price_monthly} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white font-bold" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] text-white/30 font-bold uppercase truncate">Price Qu</label>
+                                                <label className="text-[10px] text-white/30 font-bold uppercase truncate">季费 (¥)</label>
                                                 <input type="number" step="0.01" name="price_quarterly" defaultValue={editingTier.price_quarterly} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white font-bold" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] text-white/30 font-bold uppercase truncate">Price Yr</label>
+                                                <label className="text-[10px] text-white/30 font-bold uppercase truncate">年费 (¥)</label>
                                                 <input type="number" step="0.01" name="price_yearly" defaultValue={editingTier.price_yearly} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white font-bold" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Sort Order</label>
+                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">排序权重</label>
                                             <input type="number" name="sort_order" defaultValue={editingTier.sort_order} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-violet-500/50 outline-none transition-all" />
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Privileges JSON Map</label>
+                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">权益配置 (JSON 格式)</label>
                                             <textarea
                                                 name="privileges"
                                                 defaultValue={editingTier.privileges}
@@ -215,16 +215,16 @@ export default function AdminMembership() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Tier Description</label>
+                                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">会员等级补充描述</label>
                                     <textarea name="description" defaultValue={editingTier.description} rows={2} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-violet-500/50 outline-none transition-all resize-none italic" />
                                 </div>
 
                                 <button
-                                    className="w-full py-5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-3xl font-black tracking-[0.3em] uppercase hover:shadow-[0_20px_50px_-10px_rgba(139,92,246,0.5)] transition-all flex items-center justify-center gap-4 active:scale-[0.98]"
+                                    className="w-full py-5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-3xl font-black tracking-[0.3em] hover:shadow-[0_20px_50px_-10px_rgba(139,92,246,0.5)] transition-all flex items-center justify-center gap-4 active:scale-[0.98]"
                                     disabled={fetcher.state !== 'idle'}
                                 >
                                     {fetcher.state !== 'idle' ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-                                    Commit High-Level Overwrite
+                                    保存配置
                                 </button>
                             </fetcher.Form>
                         </motion.div>
