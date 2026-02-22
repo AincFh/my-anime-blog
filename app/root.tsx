@@ -127,15 +127,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const themeSessionResolver = createDynamicThemeSessionResolver(secret, isProd);
   const { getTheme } = await themeSessionResolver(request);
 
+  let musicPlaylistId = "13641046209"; // Fallback
+  try {
+    const settingsResult = await env.anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
+    if (settingsResult && (settingsResult as any).config_json) {
+      const config = JSON.parse((settingsResult as any).config_json);
+      if (config.features?.music?.playlist_id) {
+        musicPlaylistId = config.features.music.playlist_id;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
   return {
     theme: getTheme(),
+    musicPlaylistId
   };
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
-  const { theme } = loaderData;
+  const { theme, musicPlaylistId } = loaderData;
 
   // SPA页面转场动画配置
   const pageVariants = {
@@ -170,7 +184,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {!isAdmin && (
         <Suspense fallback={null}>
           <CustomCursor />
-          <MusicPlayer />
+          <MusicPlayer playlistId={musicPlaylistId} />
         </Suspense>
       )}
       {isAdmin ? (

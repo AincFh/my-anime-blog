@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLoaderData, useFetcher } from "react-router";
-import { ShoppingBag, Plus, Trash2, Edit3, Save, X, Package, Tag, Layers, Loader2 } from "lucide-react";
+import { ShoppingBag, Plus, Trash2, Edit3, Save, X, Package, Tag, Layers, Loader2, Upload } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
 import { confirmModal } from "~/components/ui/Modal";
 
@@ -171,7 +171,7 @@ export default function AdminShop() {
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-2xl bg-[#111827] border border-white/10 rounded-[40px] p-10 relative z-10 shadow-2xl">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">
-                                    {isAdding ? "Item Registry" : "Manifest Edit"}
+                                    {isAdding ? "新增商品" : "编辑商品信息"}
                                 </h2>
                                 <button onClick={() => { setEditingItem(null); setIsAdding(false); }} className="p-2 hover:bg-white/5 rounded-full transition-colors"><X size={20} className="text-white/40" /></button>
                             </div>
@@ -202,12 +202,50 @@ export default function AdminShop() {
 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">星尘定价 (Price)</label>
+                                        <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">价格 (Coins)</label>
                                         <input type="number" name="price_coins" defaultValue={editingItem?.price_coins} required className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-amber-400 font-black focus:border-amber-500/50 outline-none transition-all" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">素材链接 (URL)</label>
-                                        <input name="image_url" defaultValue={editingItem?.image_url} placeholder="若无则使用 CSS 渲染" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white/60 focus:border-pink-500/50 outline-none transition-all text-xs" />
+                                        <div className="flex items-center justify-between ml-1">
+                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-widest">素材链接 (URL)</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const input = document.createElement('input');
+                                                    input.type = 'file';
+                                                    input.accept = 'image/*';
+                                                    input.onchange = async (e) => {
+                                                        const file = (e.target as HTMLInputElement).files?.[0];
+                                                        if (!file) return;
+                                                        toast.info("正在上传图片...");
+                                                        const formData = new FormData();
+                                                        formData.append("file", file);
+                                                        try {
+                                                            const res = await fetch("/api/upload", { method: "POST", body: formData });
+                                                            const data = await res.json() as any;
+                                                            if (data.success && data.url) {
+                                                                const urlInput = document.getElementById('image_url_input') as HTMLInputElement;
+                                                                if (urlInput) {
+                                                                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+                                                                    nativeInputValueSetter?.call(urlInput, data.url);
+                                                                    urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                                                }
+                                                                toast.success("上传成功！");
+                                                            } else {
+                                                                toast.error("上传错误: " + data.error);
+                                                            }
+                                                        } catch (err) {
+                                                            toast.error("网络异常，上传失败");
+                                                        }
+                                                    };
+                                                    input.click();
+                                                }}
+                                                className="text-[10px] font-bold text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1 bg-pink-500/10 px-2 py-0.5 rounded-full ring-1 ring-pink-500/30"
+                                            >
+                                                <Upload size={10} /> 直传图床
+                                            </button>
+                                        </div>
+                                        <input id="image_url_input" name="image_url" defaultValue={editingItem?.image_url} placeholder="若无则使用 CSS 渲染" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white/60 focus:border-pink-500/50 outline-none transition-all text-xs" />
                                     </div>
                                 </div>
 
@@ -223,7 +261,7 @@ export default function AdminShop() {
                                     </label>
                                     <button className="flex-[2] py-4 bg-white text-black rounded-2xl font-black tracking-widest uppercase hover:bg-pink-100 transition-all flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_rgba(255,255,255,0.2)]" disabled={fetcher.state !== 'idle'}>
                                         {fetcher.state !== 'idle' ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                                        {isAdding ? "Execute Registry" : "Sync Manifest"}
+                                        {isAdding ? "执行上架申请" : "同步参数修改"}
                                     </button>
                                 </div>
                             </fetcher.Form>

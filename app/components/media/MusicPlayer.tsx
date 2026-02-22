@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+﻿import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, SkipBack, SkipForward, ListMusic, X } from "lucide-react";
 
@@ -143,7 +143,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
       )}
 
       {/* 迷你控制条形态 - 胶囊悬浮形态 */}
-      <div className="w-full bg-[#1e293b]/80 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 hover:ring-2 hover:ring-primary-start/30">
+      <div className="w-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 hover:ring-2 hover:ring-primary-start/30">
 
         {/* 顶部进度条 */}
         <div className="w-full h-1 bg-black/20 group relative cursor-pointer">

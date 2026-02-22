@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, redirect } from "react-router";
 import type { Route } from "./+types/admin";
 import { useState, useEffect } from "react";
 import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, LogOut, ChevronRight, BarChart3, Users, Trophy, ShoppingBag, Crown, ShieldAlert, Zap, Globe } from "lucide-react";
-import { MusicPlayer } from "~/components/media/MusicPlayer";
+import { AdminMusicPlayer } from "~/components/admin/AdminMusicPlayer";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
@@ -131,8 +131,7 @@ function SidebarContent({ pathname, musicPlaylistId }: { pathname: string; music
       </div>
 
       <div className="mt-auto p-4 w-full">
-        {/* Music Player integration with dynamic config */}
-        <MusicPlayer playlistId={musicPlaylistId} />
+        <AdminMusicPlayer />
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useNavigate, useFetcher } from "react-router";
 import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLayout";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
@@ -9,6 +9,8 @@ import { getUserCoins } from "~/services/membership/coins.server";
 import { useState } from "react";
 import { Package, Search, Filter } from "lucide-react";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
+import { toast } from "~/components/ui/Toast";
+import { useEffect } from "react";
 
 export async function loader({ request, context }: { request: Request; context: any }) {
     const { anime_db } = context.cloudflare.env;
@@ -38,10 +40,16 @@ export async function loader({ request, context }: { request: Request; context: 
         .bind(user.id)
         .all();
 
+    let prefs = {};
+    try {
+        prefs = JSON.parse(user.preferences || '{}');
+    } catch (e) { }
+
     return {
         loggedIn: true,
         user: {
             ...user,
+            prefs,
             avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
         },
         stats: {
@@ -54,11 +62,73 @@ export async function loader({ request, context }: { request: Request; context: 
     };
 }
 
+export async function action({ request, context }: { request: Request; context: any }) {
+    const { anime_db } = context.cloudflare.env;
+    const token = getSessionToken(request);
+    const { valid, user } = await verifySession(token, anime_db);
+
+    if (!valid || !user) {
+        return { success: false, error: "未授权或登录已失效" };
+    }
+
+    const formData = await request.formData();
+    const itemId = formData.get("itemId");
+
+    if (!itemId) return { success: false, error: "缺失关键维拉指令" };
+
+    const purchase = await anime_db.prepare(`
+        SELECT * FROM user_purchases WHERE user_id = ? AND item_id = ?
+    `).bind(user.id, itemId).first();
+
+    if (!purchase) {
+        return { success: false, error: "尚未解锁该维度的物品" };
+    }
+
+    const item = await anime_db.prepare(`
+        SELECT * FROM shop_items WHERE id = ?
+    `).bind(itemId).first();
+
+    if (!item) {
+        return { success: false, error: "物质残片已损坏" };
+    }
+
+    let prefs: any = {};
+    try {
+        prefs = JSON.parse(user.preferences || '{}');
+    } catch (e) { }
+
+    const isEquipped = item.type === 'avatar_frame' ? prefs.equipped_avatar_frame === item.image_url :
+        item.type === 'theme' ? prefs.equipped_theme === item.image_url : false;
+
+    if (isEquipped) {
+        if (item.type === 'avatar_frame') delete prefs.equipped_avatar_frame;
+        if (item.type === 'theme') delete prefs.equipped_theme;
+    } else {
+        if (item.type === 'avatar_frame') prefs.equipped_avatar_frame = item.image_url;
+        if (item.type === 'theme') prefs.equipped_theme = item.image_url;
+    }
+
+    await anime_db.prepare(`
+        UPDATE users SET preferences = ? WHERE id = ?
+    `).bind(JSON.stringify(prefs), user.id).run();
+
+    return { success: true, message: isEquipped ? "已取消装备" : "装备成功！" };
+}
+
 export default function UserInventory() {
     const { loggedIn, user, stats, inventory } = useLoaderData<typeof loader>();
     const navigate = useNavigate();
+    const fetcher = useFetcher();
     const [filter, setFilter] = useState("all");
     const [selectedItem, setSelectedItem] = useState<any>(null);
+
+    useEffect(() => {
+        if (fetcher.data?.success) {
+            toast.success(fetcher.data.message);
+        } else if (fetcher.data?.error) {
+            toast.error(fetcher.data.error);
+        }
+    }, [fetcher.data]);
 
     if (!loggedIn) {
         return (
@@ -197,9 +267,20 @@ export default function UserInventory() {
                                         {selectedItem.description || "暂无描述..."}
                                     </p>
 
-                                    <button className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-lg shadow-white/10">
-                                        装备 / 使用
-                                    </button>
+                                    <fetcher.Form method="post">
+                                        <input type="hidden" name="itemId" value={selectedItem.id} />
+                                        <button
+                                            type="submit"
+                                            className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
+                                            disabled={fetcher.state !== 'idle'}
+                                        >
+                                            {fetcher.state !== 'idle' ? "正在共鸣请求..." : (
+                                                (selectedItem.type === 'avatar_frame' && (user?.prefs as any)?.equipped_avatar_frame === selectedItem.image_url) ||
+                                                    (selectedItem.type === 'theme' && (user?.prefs as any)?.equipped_theme === selectedItem.image_url)
+                                                    ? "卸下装备" : "装备 / 使用"
+                                            )}
+                                        </button>
+                                    </fetcher.Form>
                                 </motion.div>
                             ) : (
                                 <div className="h-full bg-black/60 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col items-center justify-center text-white/30 rounded-r-3xl">

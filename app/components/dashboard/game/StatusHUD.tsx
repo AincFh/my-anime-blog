@@ -16,6 +16,7 @@ interface StatusHUDProps {
             display_name: string;
             badge_color: string | null;
         } | null;
+        preferences?: string;
     };
     stats: {
         coins: number;
@@ -25,6 +26,11 @@ interface StatusHUDProps {
 
 export function StatusHUD({ user, stats }: StatusHUDProps) {
     const expPercent = Math.min((user.exp / user.maxExp) * 100, 100);
+
+    let prefs: any = {};
+    try {
+        if (user.preferences) prefs = JSON.parse(user.preferences);
+    } catch (e) { }
 
     return (
         <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none z-20">
@@ -37,7 +43,7 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
             >
                 {/* 头像框 (六边形或圆形) */}
                 <div className="relative group">
-                    <div className="w-16 h-16 rounded-full border-2 border-white/50 overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] transition-shadow duration-300 relative">
+                    <div className="relative z-10 w-16 h-16 rounded-full border-2 border-white/50 overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] transition-shadow duration-300">
                         <OptimizedImage
                             src={user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Traveler"}
                             alt="Avatar"
@@ -45,7 +51,12 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
                             className="w-full h-full object-cover"
                         />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-xs font-bold px-1.5 py-0.5 rounded border border-white/20">
+                    {prefs?.equipped_avatar_frame && (
+                        <div className="absolute inset-[-18%] z-20 pointer-events-none drop-shadow-2xl">
+                            <img src={prefs.equipped_avatar_frame} alt="frame" className="w-full h-full object-contain scale-[1.15]" />
+                        </div>
+                    )}
+                    <div className="absolute -bottom-1 -right-1 z-30 bg-slate-900 text-white text-xs font-bold px-1.5 py-0.5 rounded border border-white/20">
                         Lv.{user.level}
                     </div>
                 </div>
