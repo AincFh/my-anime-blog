@@ -153,83 +153,137 @@ export function AdminMusicPlayer({ playlistId = "13641046209" }: { playlistId?: 
         {/* 核心展示区 */}
         <div className="p-3">
           <div className="flex items-center gap-3">
-            {/* 迷你封面旋转 */}
+            {/* 迷你封面旋转 - 增加呼吸感和发光 */}
             <motion.div
-              animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 4, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
-              className="w-10 h-10 rounded-full bg-[#222] ring-2 ring-violet-500/30 shrink-0 relative overflow-hidden"
+              animate={isPlaying ? { 
+                rotate: 360,
+                boxShadow: [
+                  "0 0 10px rgba(139, 92, 246, 0.2)",
+                  "0 0 20px rgba(139, 92, 246, 0.4)",
+                  "0 0 10px rgba(139, 92, 246, 0.2)"
+                ]
+              } : { 
+                rotate: 0,
+                boxShadow: "0 0 5px rgba(0,0,0,0.2)"
+              }}
+              transition={{ 
+                rotate: { duration: 4, repeat: isPlaying ? Infinity : 0, ease: "linear" },
+                boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+              }}
+              className="w-12 h-12 rounded-full bg-[#111] ring-2 ring-violet-500/40 shrink-0 relative overflow-hidden group/disc cursor-pointer"
+              onClick={togglePlay}
             >
               {currentSong ? (
-                <img src={currentSong.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                <img src={currentSong.pic} alt="" className="w-full h-full object-cover opacity-80 group-hover/disc:opacity-100 transition-opacity" crossOrigin="anonymous" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <ListMusic size={14} className="text-white/20" />
+                  <ListMusic size={16} className="text-white/20" />
                 </div>
               )}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#111] border border-white/20" />
+              {/* 唱盘纹路细节 */}
+              <div className="absolute inset-0 rounded-full bg-[repeating-radial-gradient(circle,transparent_0,transparent_1px,rgba(255,255,255,0.03)_1.5px,rgba(255,255,255,0.03)_2px)] pointer-events-none" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-2 h-2 rounded-full bg-[#111] border border-white/30 shadow-inner" />
               </div>
             </motion.div>
 
-            {/* 歌曲信息 */}
-            <div className="flex-1 min-w-0">
-              <h4 className="text-[11px] font-bold text-white truncate">
-                {isLoading ? "Fetching..." : currentSong?.title || "Station Offline"}
-              </h4>
-              <p className="text-[9px] text-white/40 truncate uppercase tracking-tighter">
-                {currentSong?.author || "Netease Cloud"}
+            {/* 歌曲信息 - 引入跑马灯 (Marquee) */}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="overflow-hidden whitespace-nowrap relative group/marquee">
+                <motion.h4 
+                  animate={isPlaying && (currentSong?.title?.length || 0) > 12 ? { x: [0, -100, 0] } : { x: 0 }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                  className="inline-block text-[12px] font-black text-white pr-8"
+                >
+                  {isLoading ? "Synchronizing..." : currentSong?.title || "No Signal"}
+                </motion.h4>
+              </div>
+              <p className="text-[9px] text-violet-400/60 font-orbitron uppercase tracking-widest mt-0.5">
+                {currentSong?.author || "Aincrad Archive"}
               </p>
             </div>
 
-            {/* 状态指示器 */}
+            {/* 视觉动向指示器 (更加精致的波形) */}
             {isPlaying && (
-              <div className="flex gap-0.5 items-end h-3">
-                <motion.div animate={{ height: [2, 8, 2] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-0.5 bg-violet-400 rounded-full" />
-                <motion.div animate={{ height: [4, 10, 4] }} transition={{ repeat: Infinity, duration: 0.7 }} className="w-0.5 bg-violet-400 rounded-full" />
-                <motion.div animate={{ height: [3, 6, 3] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-0.5 bg-violet-400 rounded-full" />
+              <div className="flex gap-0.5 items-end h-4 px-1">
+                {[0.4, 0.7, 0.5, 0.8].map((d, i) => (
+                  <motion.div 
+                    key={i}
+                    animate={{ height: ["20%", "100%", "20%"] }} 
+                    transition={{ repeat: Infinity, duration: d + 0.2, ease: "easeInOut" }} 
+                    className="w-0.5 bg-gradient-to-t from-violet-600 to-fuchsia-400 rounded-full" 
+                  />
+                ))}
               </div>
             )}
           </div>
 
-          {/* 进度条 (内嵌) */}
-          <div className="mt-3 relative h-1 bg-white/5 rounded-full overflow-hidden">
-            <motion.div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 to-fuchsia-500"
-              style={{ width: `${progress}%` }}
+          {/* 进度条 (玻璃拟态增强) */}
+          <div className="mt-4 group/progress relative">
+            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm">
+              <motion.div
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              />
+            </div>
+            {/* 隐形点击层 */}
+            <input 
+              type="range"
+              min="0"
+              max={duration || 100}
+              value={currentTime}
+              onChange={handleSeek}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
           </div>
 
-          {/* 控制按钮组 */}
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <button
+          {/* 精密控制按钮组 */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.1, x: -2 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handlePrev}
                 disabled={songs.length === 0}
-                className="w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-20"
+                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-20"
               >
-                <SkipBack size={12} />
-              </button>
-              <button
+                <SkipBack size={14} />
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={togglePlay}
                 disabled={songs.length === 0}
-                className="w-8 h-8 rounded-full bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50 relative overflow-hidden group/play"
               >
-                {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />}
-              </button>
-              <button
+                <div className="absolute inset-0 bg-white/0 group-hover/play:bg-white/10 transition-colors" />
+                {isPlaying ? <Pause size={18} className="fill-current relative z-10" /> : <Play size={18} className="fill-current ml-0.5 relative z-10" />}
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1, x: 2 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handleNext}
                 disabled={songs.length === 0}
-                className="w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-20"
+                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-20"
               >
-                <SkipForward size={12} />
-              </button>
+                <SkipForward size={14} />
+              </motion.button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button onClick={toggleMute} className="text-white/30 hover:text-white/60 transition-colors">
-                {isMuted ? <VolumeX size={10} /> : <Volume2 size={10} />}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={toggleMute} 
+                className="w-7 h-7 rounded-lg hover:bg-white/5 flex items-center justify-center text-white/30 hover:text-violet-400 transition-colors"
+              >
+                {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
-              <span className="text-[9px] font-mono text-white/20">{formatTime(currentTime)}</span>
+              <div className="px-2 py-1 rounded bg-black/40 border border-white/5">
+                <span className="text-[10px] font-mono text-violet-300/80 tracking-tighter">{formatTime(currentTime)}</span>
+              </div>
             </div>
           </div>
         </div>

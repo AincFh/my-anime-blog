@@ -74,7 +74,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // 更新或插入配置
     await db
       .prepare(
-        `INSERT INTO system_config (id, config_json) 
+        `INSERT INTO system_settings (id, config_json) 
          VALUES (1, ?) 
          ON CONFLICT(id) DO UPDATE SET config_json = ?`
       )
