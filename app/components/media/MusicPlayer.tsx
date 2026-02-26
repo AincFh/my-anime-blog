@@ -10,6 +10,32 @@ interface Song {
   lrc: string;
 }
 
+interface LyricLine {
+  time: number;
+  text: string;
+}
+
+function parseLRC(lrc: string): LyricLine[] {
+  if (!lrc) return [];
+  const lines = lrc.split("\n");
+  const result: LyricLine[] = [];
+  const timeRegex = /\[(\d+):(\d+\.\d+)\]/;
+
+  lines.forEach((line) => {
+    const match = timeRegex.exec(line);
+    if (match) {
+      const mins = parseInt(match[1]);
+      const secs = parseFloat(match[2]);
+      const text = line.replace(timeRegex, "").trim();
+      if (text) {
+        result.push({ time: mins * 60 + secs, text });
+      }
+    }
+  });
+
+  return result.sort((a, b) => a.time - b.time);
+}
+
 const MUSIC_PLAYER_TOGGLE_EVENT = "music-player-toggle";
 
 export function musicPlayerToggle() {
@@ -31,11 +57,16 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [isVisible, setIsVisible] = useState(true);
+  const [currentLyrics, setCurrentLyrics] = useState<LyricLine[]>([]);
+  const [activeLyricIndex, setActiveLyricIndex] = useState(-1);
+  const [stylusState, setStylusState] = useState<"iddle" | "lifting" | "playing">("iddle");
+  const [audioData, setAudioData] = useState<Uint8Array | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
   const activeTrackRef = useRef<HTMLButtonElement>(null);
   const playlistId = externalId || "13641046209";
+  const currentSong = songs[currentIndex];
 
   useEffect(() => {
     setIsMounted(true);
@@ -110,6 +141,75 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
     }
   }, [showPlaylist, currentIndex]);
 
+  // LRC 解析与同步
+  useEffect(() => {
+    if (currentSong?.lrc) {
+      setCurrentLyrics(parseLRC(currentSong.lrc));
+    } else {
+      setCurrentLyrics([]);
+    }
+  }, [currentIndex, songs]);
+
+  useEffect(() => {
+    let index = -1;
+    for (let i = 0; i < currentLyrics.length; i++) {
+      if (currentLyrics[i].time <= currentTime) {
+        index = i;
+      } else {
+        break;
+      }
+    }
+    setActiveLyricIndex(index);
+  }, [currentTime, currentLyrics]);
+
+  // Web Audio Visualizer 逻辑
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isPlaying || !audioRef.current) return;
+
+    if (!analyserRef.current) {
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const ctx = new AudioContext();
+        const source = ctx.createMediaElementSource(audioRef.current);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+        analyserRef.current = analyser;
+      } catch (e) {
+        console.warn("Visualizer failed to initialize (CORS or AudioContext block)", e);
+      }
+    }
+
+    const update = () => {
+      if (analyserRef.current) {
+        const data = new Uint8Array(analyserRef.current.frequencyBinCount);
+        analyserRef.current.getByteFrequencyData(data);
+        setAudioData(new Uint8Array(data));
+      }
+      animationFrameRef.current = requestAnimationFrame(update);
+    };
+
+    update();
+    return () => {
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    };
+  }, [isPlaying]);
+
+  // 唱针物理状态机
+  useEffect(() => {
+    if (isPlaying) {
+      setStylusState("lifting");
+      const timer = setTimeout(() => setStylusState("playing"), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setStylusState("iddle");
+    }
+  }, [isPlaying]);
+
   const togglePlay = () => setIsPlaying(!isPlaying);
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
@@ -155,12 +255,10 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
   if (!isMounted || !isVisible) return null;
 
-  const currentSong = songs[currentIndex];
-
   return (
     <div className="fixed bottom-6 left-6 z-[100] group/player pointer-events-auto">
       {songs.length > 0 && currentSong && (
-        <audio ref={audioRef} src={currentSong.url} preload="metadata" />
+        <audio ref={audioRef} src={currentSong.url} preload="metadata" crossOrigin="anonymous" />
       )}
 
       <AnimatePresence mode="wait">
@@ -210,16 +308,20 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                 </div>
               </motion.div>
 
-              {/* 唱针 (Stylus/Needle) */}
+              {/* 唱针 (Stylus/Needle) - 修正定位以确保能够触及唱片 */}
               <motion.div
                 initial={false}
-                animate={{ rotate: isPlaying ? 25 : 0 }}
+                animate={{
+                  rotate: stylusState === "playing" ? 28 : stylusState === "lifting" ? 18 : 0,
+                  y: stylusState === "lifting" ? -6 : 0,
+                  x: stylusState === "playing" ? 4 : 0
+                }}
                 transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                className="absolute top-0 right-1 w-8 h-12 origin-top-right pointer-events-none z-10"
+                className="absolute -top-1 -right-3 w-10 h-14 origin-top-right pointer-events-none z-10"
               >
-                <div className="absolute top-0 right-1 w-1.5 h-1.5 rounded-full bg-slate-400 border border-slate-600 shadow-sm" />
-                <div className="absolute top-[3px] right-[4px] w-0.5 h-8 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full" />
-                <div className="absolute top-[30px] right-[2px] w-2 h-4 bg-slate-500 rounded-sm rotate-12 border border-slate-400/50" />
+                <div className="absolute top-0 right-2 w-2 h-2 rounded-full bg-slate-400 border border-slate-600 shadow-md" />
+                <div className="absolute top-[4px] right-[6px] w-0.5 h-10 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full" />
+                <div className="absolute top-[36px] right-0 w-2.5 h-5 bg-slate-500 rounded-sm rotate-[15deg] border border-slate-400/50 shadow-lg" />
               </motion.div>
 
               {/* 播放/加载状态浮层 */}
@@ -252,7 +354,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="w-80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden"
+            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[720px]' : 'w-80'}`}
           >
             {/* 顶部装饰栏 */}
             <div className="px-6 py-4 flex items-center justify-between border-b border-white/20 dark:border-white/5">
@@ -270,40 +372,114 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               </button>
             </div>
 
-            <div className="p-6 pt-8 space-y-6">
-              {/* 核心唱片区 (Expanded Record) */}
-              <div className="relative flex justify-center">
-                <motion.div
-                  animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                  transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
-                  className="relative w-48 h-48 rounded-full bg-[#111] shadow-2xl shadow-black/40 ring-8 ring-white/10 dark:ring-white/5 group/vinyl overflow-hidden"
-                >
-                  <div className="absolute inset-0 rounded-full bg-[repeating-radial-gradient(circle,transparent_0,transparent_1px,rgba(255,255,255,0.02)_1.5px,rgba(255,255,255,0.02)_2px)]" />
-                  <div className="absolute inset-[12%] rounded-full overflow-hidden border-4 border-[#222]">
-                    <img src={currentSong?.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-4 h-4 rounded-full bg-[#111] border-2 border-white/20" />
-                  </div>
-                </motion.div>
+            <div className="p-6 pt-8 flex gap-8">
+              {/* 左侧：唱片与详情 */}
+              <div className="w-[280px] shrink-0 space-y-6">
+                <div className="relative flex justify-center">
+                  <motion.div
+                    animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                    transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
+                    className="relative w-48 h-48 rounded-full bg-[#111] shadow-2xl shadow-black/40 ring-8 ring-white/10 dark:ring-white/5 group/vinyl overflow-hidden"
+                  >
+                    {/* Aurora Visualizer (环形频谱) */}
+                    <AnimatePresence>
+                      {isPlaying && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          {Array.from({ length: 12 }).map((_, i) => (
+                            <motion.div
+                              key={i}
+                              className="absolute w-1 rounded-full bg-primary-start/40"
+                              style={{
+                                rotate: i * 30,
+                                transformOrigin: "center 100px",
+                                height: audioData ? `${Math.max(10, audioData[i % audioData.length] / 3)}px` : '10px'
+                              }}
+                              animate={{
+                                opacity: [0.3, 0.6, 0.3],
+                                filter: ["blur(1px)", "blur(2px)", "blur(1px)"]
+                              }}
+                              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.1 }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </AnimatePresence>
 
-                {/* 唱针部件 */}
-                <motion.div
-                  animate={{ rotate: isPlaying ? 22 : 0 }}
-                  className="absolute -top-4 -right-4 w-20 h-24 origin-top-right z-10 pointer-events-none"
-                >
-                  <div className="absolute top-0 right-2 w-3 h-3 rounded-full bg-slate-400 border-2 border-slate-600 shadow-md" />
-                  <div className="absolute top-3 right-3 w-1 h-20 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full" />
-                  <div className="absolute bottom-0 right-0 w-4 h-8 bg-slate-500 rounded-md border border-slate-400 shadow-inner" />
-                </motion.div>
+                    {/* 唱片图层 */}
+                    <div className="absolute inset-0 rounded-full bg-[repeating-radial-gradient(circle,transparent_0,transparent_1px,rgba(255,255,255,0.02)_1.5px,rgba(255,255,255,0.02)_2px)]" />
+                    <div className="absolute inset-[12%] rounded-full overflow-hidden border-4 border-[#222]">
+                      <img src={currentSong?.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                    </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-4 h-4 rounded-full bg-[#111] border-2 border-white/20" />
+                    </div>
+                  </motion.div>
+
+                  {/* 唱针部件 - 细化物理反馈并确保能够压在唱盘上 */}
+                  <motion.div
+                    animate={{
+                      rotate: stylusState === "playing" ? 22 : stylusState === "lifting" ? 12 : 0,
+                      y: stylusState === "lifting" ? -12 : 0,
+                      x: stylusState === "playing" ? 6 : 0,
+                      filter: stylusState === "lifting" ? "drop-shadow(8px 15px 15px rgba(0,0,0,0.4))" : "drop-shadow(2px 4px 4px rgba(0,0,0,0.2))"
+                    }}
+                    transition={{ type: "spring", stiffness: 80, damping: 12 }}
+                    className="absolute -top-6 -right-6 w-24 h-28 origin-top-right z-10 pointer-events-none"
+                  >
+                    <div className="absolute top-0 right-3 w-4 h-4 rounded-full bg-slate-400 border-2 border-slate-600 shadow-lg" />
+                    <div className="absolute top-4 right-4 w-1.5 h-24 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full" />
+                    <div className="absolute bottom-0 right-0 w-6 h-12 bg-gradient-to-br from-slate-500 to-slate-800 rounded-md border border-slate-400/50 shadow-inner overflow-hidden">
+                      <div className="w-full h-1.5 bg-white/10" />
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* 歌曲详情 */}
+                <div className="text-center space-y-1">
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white truncate">{currentSong?.title || "未知曲目"}</h3>
+                  <p className="text-xs font-bold text-primary-start uppercase tracking-widest">{currentSong?.author || "Unknown Artist"}</p>
+                </div>
               </div>
 
-              {/* 歌曲详情 */}
-              <div className="text-center space-y-1">
-                <h3 className="text-lg font-black text-slate-800 dark:text-white truncate">{currentSong?.title || "未知曲目"}</h3>
-                <p className="text-xs font-bold text-primary-start uppercase tracking-widest">{currentSong?.author || "Unknown Artist"}</p>
-              </div>
+              {/* 右侧：歌词屏 (Conditional) */}
+              <AnimatePresence>
+                {currentLyrics.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="flex-1 h-[280px] overflow-hidden relative group/lyrics"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/70 dark:from-slate-900/70 to-transparent z-10 pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/70 dark:from-slate-900/70 to-transparent z-10 pointer-events-none" />
 
+                    <motion.div
+                      className="space-y-4 py-20"
+                      animate={{ y: -activeLyricIndex * 40 }}
+                      transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    >
+                      {currentLyrics.map((lyric, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-sm font-bold transition-all duration-500 text-center ${idx === activeLyricIndex ? 'text-primary-start scale-110 blur-0 opacity-100' : 'text-slate-400 dark:text-white/20 blur-[1px] opacity-40'}`}
+                        >
+                          {lyric.text}
+                          {idx === activeLyricIndex && (
+                            <motion.div
+                              layoutId="lyricLine"
+                              className="w-8 h-0.5 bg-primary-start mx-auto mt-1 rounded-full"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="px-6 pb-8 space-y-6">
               {/* 进度控制 */}
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-white/30 px-1">
@@ -352,7 +528,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
                 <button
                   onClick={toggleMute}
-                  className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                  className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors ml-auto"
                 >
                   {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
