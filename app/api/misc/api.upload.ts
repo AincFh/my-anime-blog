@@ -15,7 +15,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     // 2. 检查 R2 绑定
     const env = (context as any).cloudflare.env;
-    const { r2_bucket } = env;
+    const r2_bucket = env.IMAGES_BUCKET;
     if (!r2_bucket) {
         console.error("R2 bucket not bound");
         return jsonWithSecurity({ error: "Storage service unavailable" }, { status: 503 });
@@ -78,11 +78,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 
         // 6. 返回公开访问 URL
         // 假设 R2 绑定了自定义域名，或者使用 Workers 代理访问
-        // 这里我们假设有一个 PUBLIC_R2_DOMAIN 环境变量，或者回退到相对路径 (如果配置了 Workers 路由)
         const publicDomain = env.PUBLIC_R2_DOMAIN || "";
         const url = publicDomain
             ? `https://${publicDomain}/${key}`
-            : `/r2/${key}`; // 需要配置额外的 Worker 路由来处理 /r2/* 请求，或者直接返回 key 让前端处理
+            : `/api/r2/${key}`;
 
         return jsonWithSecurity({
             success: true,

@@ -1,5 +1,17 @@
 import { motion } from "framer-motion";
 import { Check, X, Infinity, Zap, MessageCircle, Palette, Download, Crown, Sparkles, Clock } from "lucide-react";
+import { useLoaderData } from "react-router";
+
+interface Tier {
+    id: number;
+    name: string;
+    display_name: string;
+    price_monthly: number;
+    price_quarterly: number;
+    price_yearly: number;
+    privileges: string;
+    badge_color: string;
+}
 
 interface Privilege {
     name: string;
@@ -9,7 +21,7 @@ interface Privilege {
     svip: string | number | boolean;
 }
 
-const privileges: Privilege[] = [
+const basePrivileges: Privilege[] = [
     { name: "每日 AI 对话次数", icon: <MessageCircle size={16} />, free: 3, vip: 50, svip: "无限" },
     { name: "积分获取倍率", icon: <Zap size={16} />, free: "1x", vip: "1.5x", svip: "2x" },
     { name: "去除广告", icon: <X size={16} />, free: false, vip: true, svip: true },
@@ -34,7 +46,20 @@ function renderValue(value: string | number | boolean) {
     return <span className="font-bold text-white">{value}</span>;
 }
 
+function formatPrice(price: number) {
+    return (price / 100).toFixed(1);
+}
+
 export function PrivilegeComparisonTable() {
+    const loaderData = useLoaderData<{ tiers?: Tier[] }>();
+    const tiers = loaderData?.tiers || [];
+    
+    const vipTier = tiers.find(t => t.name === 'vip');
+    const svipTier = tiers.find(t => t.name === 'svip');
+    
+    const vipPrice = vipTier ? `¥${formatPrice(vipTier.price_monthly)}/月` : "¥19.9/月";
+    const svipPrice = svipTier ? `¥${formatPrice(svipTier.price_monthly)}/月` : "¥39.9/月";
+    
     return (
         <div className="w-full overflow-x-auto">
             <table className="w-full text-sm">
@@ -47,17 +72,17 @@ export function PrivilegeComparisonTable() {
                         </th>
                         <th className="text-center py-4 px-4 bg-gradient-to-b from-blue-500/10 to-transparent rounded-t-xl">
                             <div className="text-blue-400 font-bold">VIP</div>
-                            <div className="text-xs text-blue-400/60">¥19.9/月</div>
+                            <div className="text-xs text-blue-400/60">{vipPrice}</div>
                         </th>
                         <th className="text-center py-4 px-4 bg-gradient-to-b from-yellow-500/10 to-transparent rounded-t-xl relative">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">推荐</div>
                             <div className="text-yellow-400 font-bold flex items-center justify-center gap-1"><Crown size={14} /> SVIP</div>
-                            <div className="text-xs text-yellow-400/60">¥39.9/月</div>
+                            <div className="text-xs text-yellow-400/60">{svipPrice}</div>
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    {privileges.map((privilege, index) => (
+                    {basePrivileges.map((privilege, index) => (
                         <motion.tr
                             key={privilege.name}
                             initial={{ opacity: 0, x: -10 }}

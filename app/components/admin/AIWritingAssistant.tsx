@@ -111,12 +111,7 @@ export function AIWritingAssistant({ content, onInsert, onReplace }: AIWritingAs
                         initial={{ opacity: 0, y: -10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 w-80 rounded-xl shadow-2xl z-50 overflow-hidden"
-                        style={{
-                            background: "var(--card-bg)",
-                            backdropFilter: "blur(20px)",
-                            border: "1px solid var(--glass-border)",
-                        }}
+                        className="absolute top-full left-0 mt-2 w-80 rounded-xl shadow-2xl z-50 overflow-hidden bg-slate-900/95 backdrop-blur-xl border border-white/10"
                     >
                         {/* 头部 */}
                         <div className="px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50">
