@@ -21,11 +21,11 @@ export function DynamicBackground({ images }: DynamicBackgroundProps) {
 
   // Unsplash 高清动漫/风景壁纸作为默认背景
   const backgrounds = [
-    'https://api.yimian.xyz/img?id=234',
-    'https://api.yimian.xyz/img?id=145',
-    'https://api.yimian.xyz/img?id=567',
-    'https://api.yimian.xyz/img?id=890',
-    'https://api.yimian.xyz/img?id=345',
+    'https://picsum.photos/seed/bg234/1920/1080',
+    'https://picsum.photos/seed/bg145/1920/1080',
+    'https://picsum.photos/seed/bg567/1920/1080',
+    'https://picsum.photos/seed/bg890/1920/1080',
+    'https://picsum.photos/seed/bg345/1920/1080',
   ];
 
   const imageList = images && images.length > 0 ? images : backgrounds;
