@@ -149,174 +149,175 @@ export function AdminMusicPlayer({ playlistId = "13641046209" }: { playlistId?: 
 
   return (
     <div className="w-full px-2">
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md">
-        {/* 核心展示区 */}
-        <div className="p-3">
-          <div className="flex items-center gap-3">
-            {/* 迷你封面旋转 - 增加呼吸感和发光 */}
-            <motion.div
-              animate={isPlaying ? { 
-                rotate: 360,
-                boxShadow: [
-                  "0 0 10px rgba(139, 92, 246, 0.2)",
-                  "0 0 20px rgba(139, 92, 246, 0.4)",
-                  "0 0 10px rgba(139, 92, 246, 0.2)"
-                ]
-              } : { 
-                rotate: 0,
-                boxShadow: "0 0 5px rgba(0,0,0,0.2)"
-              }}
-              transition={{ 
-                rotate: { duration: 4, repeat: isPlaying ? Infinity : 0, ease: "linear" },
-                boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-              }}
-              className="w-12 h-12 rounded-full bg-[#111] ring-2 ring-violet-500/40 shrink-0 relative overflow-hidden group/disc cursor-pointer"
-              onClick={togglePlay}
-            >
-              {currentSong ? (
-                <img src={currentSong.pic} alt="" className="w-full h-full object-cover opacity-80 group-hover/disc:opacity-100 transition-opacity" crossOrigin="anonymous" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ListMusic size={16} className="text-white/20" />
-                </div>
-              )}
-              {/* 唱盘纹路细节 */}
-              <div className="absolute inset-0 rounded-full bg-[repeating-radial-gradient(circle,transparent_0,transparent_1px,rgba(255,255,255,0.03)_1.5px,rgba(255,255,255,0.03)_2px)] pointer-events-none" />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-2 h-2 rounded-full bg-[#111] border border-white/30 shadow-inner" />
-              </div>
-            </motion.div>
+      <div className="relative group/admin-player bg-slate-900/40 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-500 hover:border-violet-500/30">
+        {/* 精致流光边框 */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/30 to-transparent" />
 
-            {/* 歌曲信息 - 引入跑马灯 (Marquee) */}
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="overflow-hidden whitespace-nowrap relative group/marquee">
-                <motion.h4 
-                  animate={isPlaying && (currentSong?.title?.length || 0) > 12 ? { x: [0, -100, 0] } : { x: 0 }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  className="inline-block text-[12px] font-black text-white pr-8"
+        {/* 核心展示区 */}
+        <div className="p-4 relative">
+          <div className="flex items-center gap-4">
+            {/* 迷你控制中心 (黑胶外层) */}
+            <div className="relative shrink-0 group/disc-outer">
+              <motion.div
+                animate={isPlaying ? {
+                  rotate: 360,
+                  boxShadow: [
+                    "0 0 15px rgba(139, 92, 246, 0.2)",
+                    "0 0 30px rgba(139, 92, 246, 0.4)",
+                    "0 0 15px rgba(139, 92, 246, 0.2)"
+                  ]
+                } : {
+                  rotate: 0,
+                  boxShadow: "0 0 10px rgba(0,0,0,0.3)"
+                }}
+                transition={{
+                  rotate: { duration: 6, repeat: isPlaying ? Infinity : 0, ease: "linear" },
+                  boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                }}
+                className="w-14 h-14 rounded-full bg-black ring-1 ring-white/10 relative overflow-hidden flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                onClick={togglePlay}
+              >
+                {currentSong?.pic ? (
+                  <img src={currentSong.pic} alt="" className="w-full h-full object-cover opacity-90 transition-opacity" crossOrigin="anonymous" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                    <ListMusic size={20} className="text-white/10" />
+                  </div>
+                )}
+                {/* 黑胶拉丝纹理 */}
+                <div className="absolute inset-0 rounded-full bg-[repeating-radial-gradient(circle,transparent_0,transparent_1.5px,rgba(255,255,255,0.02)_1.8px,rgba(255,255,255,0.02)_2px)] pointer-events-none" />
+                <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0,rgba(255,255,255,0.05)_90deg,transparent_180deg,rgba(255,255,255,0.05)_270deg,transparent_360deg)] pointer-events-none" />
+
+                {/* 中心轴 */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-white/20 shadow-inner z-10" />
+                </div>
+              </motion.div>
+
+              {/* 播放状态的小点 */}
+              {isPlaying && (
+                <motion.div
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-violet-500 rounded-full border-2 border-[#000]"
+                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                />
+              )}
+            </div>
+
+            {/* 歌曲导视区 */}
+            <div className="flex-1 min-w-0">
+              <div className="overflow-hidden whitespace-nowrap relative">
+                <motion.h4
+                  animate={isPlaying && (currentSong?.title?.length || 0) > 10 ? { x: [0, -120, 0] } : { x: 0 }}
+                  transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                  className="inline-block text-[13px] font-bold text-white tracking-tight pr-10"
                 >
-                  {isLoading ? "Synchronizing..." : currentSong?.title || "No Signal"}
+                  {isLoading ? "Synchronizing Matrix..." : currentSong?.title || "System Idle"}
                 </motion.h4>
               </div>
-              <p className="text-[9px] text-violet-400/60 font-orbitron uppercase tracking-widest mt-0.5">
-                {currentSong?.author || "Aincrad Archive"}
-              </p>
-            </div>
-
-            {/* 视觉动向指示器 (更加精致的波形) */}
-            {isPlaying && (
-              <div className="flex gap-0.5 items-end h-4 px-1">
-                {[0.4, 0.7, 0.5, 0.8].map((d, i) => (
-                  <motion.div 
-                    key={i}
-                    animate={{ height: ["20%", "100%", "20%"] }} 
-                    transition={{ repeat: Infinity, duration: d + 0.2, ease: "easeInOut" }} 
-                    className="w-0.5 bg-gradient-to-t from-violet-600 to-fuchsia-400 rounded-full" 
-                  />
-                ))}
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] text-violet-400 font-mono uppercase tracking-tighter opacity-80">
+                  {currentSong?.author || "Aincrad Archive"}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-white/10" />
+                <span className="text-[9px] text-white/30 font-mono">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
               </div>
-            )}
-          </div>
-
-          {/* 进度条 (玻璃拟态增强) */}
-          <div className="mt-4 group/progress relative">
-            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm">
-              <motion.div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              />
             </div>
-            {/* 隐形点击层 */}
-            <input 
-              type="range"
-              min="0"
-              max={duration || 100}
-              value={currentTime}
-              onChange={handleSeek}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            />
+
+            {/* 紧凑频谱仪 */}
+            <div className="flex gap-0.5 items-end h-5 px-1 pb-1">
+              {[0.4, 0.8, 0.6, 0.9, 0.5].map((d, i) => (
+                <motion.div
+                  key={i}
+                  animate={isPlaying ? { height: ["20%", "100%", "30%"] } : { height: "20%" }}
+                  transition={{ repeat: Infinity, duration: d + 0.3, ease: "easeInOut", delay: i * 0.1 }}
+                  className="w-1 bg-gradient-to-t from-violet-600/80 to-fuchsia-400/80 rounded-full"
+                />
+              ))}
+            </div>
           </div>
 
-          {/* 精密控制按钮组 */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.1, x: -2 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handlePrev}
-                disabled={songs.length === 0}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-20"
-              >
-                <SkipBack size={14} />
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={togglePlay}
-                disabled={songs.length === 0}
-                className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50 relative overflow-hidden group/play"
-              >
-                <div className="absolute inset-0 bg-white/0 group-hover/play:bg-white/10 transition-colors" />
-                {isPlaying ? <Pause size={18} className="fill-current relative z-10" /> : <Play size={18} className="fill-current ml-0.5 relative z-10" />}
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.1, x: 2 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handleNext}
-                disabled={songs.length === 0}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-20"
-              >
-                <SkipForward size={14} />
-              </motion.button>
+          {/* 交互控制层 */}
+          <div className="mt-5 flex items-center justify-between gap-4">
+            {/* 极简进度条 */}
+            <div className="flex-1 relative group/progress-bar pt-1">
+              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-400"
+                  style={{ width: `${progress}%`, boxShadow: "0 0 10px rgba(139, 92, 246, 0.4)" }}
+                />
+              </div>
+              <input
+                type="range"
+                min="0" max={duration || 100} value={currentTime}
+                onChange={handleSeek}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
             </div>
 
             <div className="flex items-center gap-3">
-              <button 
-                onClick={toggleMute} 
-                className="w-7 h-7 rounded-lg hover:bg-white/5 flex items-center justify-center text-white/30 hover:text-violet-400 transition-colors"
-              >
-                {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              <button onClick={handlePrev} className="text-white/30 hover:text-white transition-colors">
+                <SkipBack size={14} />
               </button>
-              <div className="px-2 py-1 rounded bg-black/40 border border-white/5">
-                <span className="text-[10px] font-mono text-violet-300/80 tracking-tighter">{formatTime(currentTime)}</span>
-              </div>
+              <button
+                onClick={togglePlay}
+                className="w-9 h-9 rounded-full bg-white text-slate-950 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+              >
+                {isPlaying ? <Pause size={16} className="fill-current" /> : <Play size={16} className="fill-current ml-0.5" />}
+              </button>
+              <button onClick={handleNext} className="text-white/30 hover:text-white transition-colors">
+                <SkipForward size={14} />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* 底部功能栏 (播放列表预览) */}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full py-1.5 bg-white/5 hover:bg-white/10 flex items-center justify-center gap-1.5 border-t border-white/5 transition-colors"
-        >
-          <ListMusic size={10} className="text-white/40" />
-          <span className="text-[10px] text-white/30 font-medium">Playlist ({songs.length})</span>
-        </button>
+        {/* 底部扩展 (列表项悬浮展示) */}
+        <div className="px-4 py-2 bg-white/5 flex items-center justify-between border-t border-white/5">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 text-[10px] font-bold text-white/40 hover:text-violet-400 transition-colors"
+          >
+            <ListMusic size={12} />
+            DATABASE INDEX
+          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleMute} className="text-white/30 hover:text-white transition-colors">
+              {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+            </button>
+            <input
+              type="range" min="0" max="1" step="0.1" value={volume}
+              onChange={handleVolumeChange}
+              className="w-12 h-1 accent-violet-500 bg-white/10 rounded-full appearance-none cursor-pointer"
+            />
+          </div>
+        </div>
 
         <AnimatePresence>
           {isExpanded && (
             <motion.div
               initial={{ height: 0 }}
-              animate={{ height: 120 }}
+              animate={{ height: 160 }}
               exit={{ height: 0 }}
-              className="overflow-y-auto custom-scrollbar bg-black/20"
+              className="overflow-y-auto bg-slate-950/80 custom-scrollbar divide-y divide-white/5"
             >
               {songs.map((song, idx) => (
                 <button
                   key={idx}
                   onClick={() => { setCurrentIndex(idx); setIsPlaying(true); }}
-                  className={`w-full flex items-center gap-2 p-2 px-3 text-left transition-colors ${currentIndex === idx ? 'bg-violet-500/20 border-l-2 border-violet-500' : 'hover:bg-white/5'}`}
+                  className={`w-full flex items-center gap-3 p-3 text-left transition-all ${currentIndex === idx ? 'bg-violet-500/10' : 'hover:bg-white/5'}`}
                 >
-                  <div className="w-6 h-6 rounded bg-black/40 overflow-hidden shrink-0">
-                    <img src={song.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                  <div className="w-8 h-8 rounded-lg bg-black/40 overflow-hidden shrink-0 border border-white/5">
+                    <img src={song.pic} alt="" className="w-full h-full object-cover opacity-60" crossOrigin="anonymous" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-[10px] truncate ${currentIndex === idx ? 'text-violet-300 font-bold' : 'text-white/50'}`}>{song.title}</p>
-                    <p className="text-[8px] text-white/20 truncate">{song.author}</p>
+                    <p className={`text-[11px] font-bold truncate ${currentIndex === idx ? 'text-violet-400' : 'text-white/60'}`}>
+                      {idx.toString().padStart(2, '0')}. {song.title}
+                    </p>
+                    <p className="text-[9px] text-white/20 mt-0.5 truncate">{song.author}</p>
                   </div>
                 </button>
               ))}
@@ -324,6 +325,7 @@ export function AdminMusicPlayer({ playlistId = "13641046209" }: { playlistId?: 
           )}
         </AnimatePresence>
       </div>
+
 
       <style dangerouslySetInnerHTML={{
         __html: `

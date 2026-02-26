@@ -354,7 +354,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[720px]' : 'w-80'}`}
+            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2.5rem] shadow-2xl transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[720px]' : 'w-[380px]'}`}
           >
             {/* 顶部装饰栏 */}
             <div className="px-6 py-4 flex items-center justify-between border-b border-white/20 dark:border-white/5">
@@ -511,19 +511,21 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <ListMusic size={18} />
                 </button>
 
-                <div className="flex items-center gap-4">
-                  <button onClick={handlePrev} className="w-10 h-10 rounded-full text-slate-400 dark:text-white/30 hover:text-primary-start transition-colors">
-                    <SkipBack size={20} className="fill-current" />
-                  </button>
-                  <button
-                    onClick={togglePlay}
-                    className="w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all"
-                  >
-                    {isPlaying ? <Pause size={24} className="fill-current" /> : <Play size={24} className="fill-current ml-1" />}
-                  </button>
-                  <button onClick={handleNext} className="w-10 h-10 rounded-full text-slate-400 dark:text-white/30 hover:text-primary-start transition-colors">
-                    <SkipForward size={20} className="fill-current" />
-                  </button>
+                <div className="flex-1 flex justify-center">
+                  <div className="flex items-center gap-5">
+                    <button onClick={handlePrev} className="w-10 h-10 rounded-full text-slate-400 dark:text-white/30 hover:text-primary-start transition-colors flex items-center justify-center">
+                      <SkipBack size={20} className="fill-current" />
+                    </button>
+                    <button
+                      onClick={togglePlay}
+                      className="w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    >
+                      {isPlaying ? <Pause size={24} className="fill-current" /> : <Play size={24} className="fill-current ml-1" />}
+                    </button>
+                    <button onClick={handleNext} className="w-10 h-10 rounded-full text-slate-400 dark:text-white/30 hover:text-primary-start transition-colors flex items-center justify-center">
+                      <SkipForward size={20} className="fill-current" />
+                    </button>
+                  </div>
                 </div>
 
                 <button
