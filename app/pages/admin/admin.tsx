@@ -201,8 +201,8 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto relative scroll-smooth pt-16 md:pt-0 pb-24 md:pb-0 flex flex-col">
         {/* Desktop Top Header (Right side of sidebar) */}
-        <header className="hidden md:flex sticky top-0 z-20 h-20 px-8 items-center justify-end bg-gradient-to-b from-[#0a0e1a] to-[#0a0e1a]/0 backdrop-blur-sm">
-          <div className="flex items-center gap-5">
+        <header className="hidden md:flex sticky top-0 z-20 h-20 px-8 items-center justify-end bg-gradient-to-b from-[#0a0e1a] to-[#0a0e1a]/0 backdrop-blur-sm pointer-events-none">
+          <div className="flex items-center gap-5 pointer-events-auto">
             <div className="flex items-center gap-3 pr-5 border-r border-white/10">
               <div className="text-right hidden lg:block">
                 <div className="text-sm font-semibold text-white">Administrator</div>

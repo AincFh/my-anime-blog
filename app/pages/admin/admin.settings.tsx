@@ -310,7 +310,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as SettingsTab)}
-                className={`py-2 px-4 rounded-xl text-left transition-all flexitems-center gap-3 whitespace-nowrap ${activeTab === tab.key
+                className={`py-2 px-4 rounded-xl text-left transition-all flex items-center gap-3 whitespace-nowrap ${activeTab === tab.key
                   ? "bg-violet-500/15 border border-violet-500/30 text-violet-300 font-medium shadow-[0_0_10px_rgba(139,92,246,0.1)]"
                   : "text-white/50 hover:bg-white/5 hover:text-white/70 font-medium"
                   }`}

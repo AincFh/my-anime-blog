@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+import { musicPlayerToggle } from "~/components/media/MusicPlayer";
 
 /**
  * 全局指令终端 (Omni-Command)
@@ -42,7 +43,7 @@ export function OmniCommand() {
       icon: "🎵",
       category: "system",
       action: () => {
-        // TODO: 切换音乐播放器显示
+        musicPlayerToggle();
         setIsOpen(false);
       },
     },
