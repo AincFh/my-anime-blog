@@ -1,5 +1,5 @@
 import { GlassCard } from "~/components/layout/GlassCard";
-import { GlitchText } from "~/components/animations/GlitchText";
+import { GlitchText } from "~/components/ui/animations/GlitchText";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
 import { useState, useEffect } from "react";

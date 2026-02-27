@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
-import { GlitchText } from "~/components/animations/GlitchText";
+import { GlitchText } from "~/components/ui/animations/GlitchText";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 /**
