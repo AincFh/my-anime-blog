@@ -8,8 +8,8 @@ export interface Env {
     anime_db: D1Database;
 
     // AI & Analytics
-    AI: any; // Cloudflare AI binding type
-    ANALYTICS?: any; // AnalyticsEngineDataset
+    AI: { run: (model: string, input: any) => Promise<any> };
+    ANALYTICS?: { write: (data: any) => void };
 
     // R2 Buckets
     IMAGES_BUCKET: R2Bucket;

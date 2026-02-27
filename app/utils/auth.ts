@@ -1,7 +1,4 @@
-/**
- * 认证工具函数
- * 用于验证用户会话和管理权限
- */
+import type { Database } from "~/services/db.server";
 
 export interface Session {
   sessionId: string;
@@ -25,7 +22,7 @@ export function getSessionId(request: Request): string | null {
  */
 export async function verifySession(
   sessionId: string | null,
-  db: any
+  db: Database
 ): Promise<Session | null> {
   if (!sessionId) return null;
 
@@ -36,7 +33,13 @@ export async function verifySession(
        FROM sessions s 
        JOIN users u ON s.user_id = u.id 
        WHERE s.token = ? AND s.expires_at > ?`
-    ).bind(sessionId, Math.floor(Date.now() / 1000)).first();
+    ).bind(sessionId, Math.floor(Date.now() / 1000)).first<{
+      token: string;
+      user_id: number;
+      expires_at: number;
+      username: string;
+      role: string;
+    }>();
 
     if (!sessionResult) {
       return null;
@@ -60,14 +63,14 @@ export async function verifySession(
  */
 export async function requireAdmin(
   request: Request,
-  db: any
+  db: Database
 ): Promise<Session | null> {
   const session = await verifySession(getSessionId(request), db);
-  
+
   if (!session || session.role !== 'admin') {
     return null;
   }
-  
+
   return session;
 }
 
@@ -76,7 +79,7 @@ export async function requireAdmin(
  */
 export async function requireAuth(
   request: Request,
-  db: any
+  db: Database
 ): Promise<Session | null> {
   const sessionId = getSessionId(request);
   return await verifySession(sessionId, db);

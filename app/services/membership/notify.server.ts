@@ -5,6 +5,7 @@
 
 import { getSubscriptionsNeedingNotification, markNotificationSent } from './subscription.server';
 import { getTierById } from './tier.server';
+import { type Database } from '../db.server';
 
 export interface NotificationResult {
     success: boolean;
@@ -27,17 +28,18 @@ export interface RenewalNotification {
  * 获取需要发送续费提醒的用户
  */
 export async function getPendingRenewalNotifications(
-    db: any
+    db: Database
 ): Promise<RenewalNotification[]> {
     const subscriptions = await getSubscriptionsNeedingNotification(db);
     const notifications: RenewalNotification[] = [];
 
     for (const sub of subscriptions) {
         // 获取用户信息
+        interface UserResult { id: number; email: string; nickname: string | null }
         const user = await db
             .prepare('SELECT id, email, nickname FROM users WHERE id = ?')
             .bind(sub.user_id)
-            .first();
+            .first<UserResult>();
 
         if (!user) continue;
 
@@ -154,7 +156,7 @@ Project Blue Sky
  * 设计为定时任务调用（如每天一次）
  */
 export async function processRenewalNotifications(
-    db: any,
+    db: Database,
     emailService?: any
 ): Promise<NotificationResult> {
     const result: NotificationResult = {

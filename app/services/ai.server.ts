@@ -4,6 +4,7 @@
  */
 
 import { execute, queryFirst } from './db.server';
+import { type Database } from './db.server';
 import type { AIMessage, AICompletionOptions, AICompletionResult } from '~/utils/ai-shared';
 import { AI_PROMPTS, buildMessages, safeParseJSON } from '~/utils/ai-shared';
 
@@ -189,7 +190,7 @@ export async function callDeepseekWithCache(
  * 记录 AI 使用量
  */
 export async function trackAIUsage(
-    db: any,
+    db: Database,
     record: AIUsageRecord
 ): Promise<void> {
     try {
@@ -210,7 +211,7 @@ export async function trackAIUsage(
  * 检查是否超过每日限制
  */
 export async function checkDailyLimit(
-    db: any,
+    db: Database,
     kv: KVNamespace | null,
     feature: AIFeature,
     customLimits?: Record<AIFeature, number>

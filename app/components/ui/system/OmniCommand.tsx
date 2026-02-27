@@ -78,7 +78,8 @@ export function OmniCommand() {
           body.style.filter = "";
           body.style.animation = "";
           // 跳转到随机风景图
-          window.open("https://api.yimian.xyz/img", "_blank");
+          window.open("https://picsum.photos/1920/1080", "_blank");
+
         }, 500);
         setIsOpen(false);
       },
@@ -233,8 +234,8 @@ export function OmniCommand() {
                     <motion.div
                       key={command.id}
                       className={`px-4 py-3 cursor-pointer transition-colors ${index === selectedIndex
-                          ? "bg-white/20"
-                          : "hover:bg-white/10"
+                        ? "bg-white/20"
+                        : "hover:bg-white/10"
                         }`}
                       onClick={() => command.action()}
                       whileHover={{ x: 4 }}

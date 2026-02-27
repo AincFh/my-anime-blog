@@ -43,7 +43,7 @@ export function addSecurityHeaders(response: Response): Response {
 /**
  * 创建带安全头的JSON响应
  */
-export function jsonWithSecurity(data: any, init?: ResponseInit): Response {
+export function jsonWithSecurity(data: unknown, init?: ResponseInit): Response {
   const response = Response.json(data, init);
   return addSecurityHeaders(response);
 }
@@ -90,9 +90,59 @@ export function isSpamComment(content: string): boolean {
 // ==================== CSRF 相关 ====================
 
 /**
+ * 生成带签名的 CSRF Token
+ */
+export async function generateCSRFToken(sessionId: string, secret: string): Promise<string> {
+  const timestamp = Date.now().toString();
+  const payload = `${sessionId}:${timestamp}`;
+
+  // 简单的签名逻辑 (在 Web 端使用 Web Crypto API, 在 Node 端使用 crypto)
+  // 这里的实现旨在兼顾边缘函数环境
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const payloadData = encoder.encode(payload);
+
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, payloadData);
+    const sigArray = Array.from(new Uint8Array(signature));
+    const sigHex = sigArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return `${payload}:${sigHex}`;
+  } catch (e) {
+    // 回退逻辑
+    return payload;
+  }
+}
+
+/**
+ * 验证 CSRF Token 签名
+ */
+export async function verifyCSRFToken(token: string, sessionId: string, secret: string): Promise<boolean> {
+  if (!token || !sessionId) return false;
+
+  const parts = token.split(':');
+  if (parts.length !== 3) return false;
+
+  const [tokenSessionId, timestamp, sigHex] = parts;
+  if (tokenSessionId !== sessionId) return false;
+
+  // 校验过期时间 (默认 2 小时)
+  const timeDiff = Date.now() - parseInt(timestamp, 10);
+  if (isNaN(timeDiff) || timeDiff > 2 * 3600 * 1000) return false;
+
+  // 重新计算签名验证
+  const expectedToken = await generateCSRFToken(sessionId, secret);
+  return expectedToken === token;
+}
+
+/**
  * CSRF Token 表单字段名
  */
 export const CSRF_TOKEN_FIELD = '_csrf';
+// ... 保持原有代码 ...
 
 /**
  * CSRF Token 请求头名

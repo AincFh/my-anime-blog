@@ -7,42 +7,42 @@ import type { Route } from "./+types/gallery";
 const sampleImages = [
   {
     id: 1,
-    url: "https://api.yimian.xyz/img?id=234",
+    url: "https://picsum.photos/seed/anime234/1200/800",
     title: "夏日的回忆",
     category: "illustration",
     date: "2023-11-20"
   },
   {
     id: 2,
-    url: "https://api.yimian.xyz/img?id=145",
+    url: "https://picsum.photos/seed/anime145/1200/800",
     title: "东京的夜晚",
     category: "photography",
     date: "2023-11-18"
   },
   {
     id: 3,
-    url: "https://api.yimian.xyz/img?id=567",
+    url: "https://picsum.photos/seed/anime567/1200/800",
     title: "宁静的海边",
     category: "illustration",
     date: "2023-11-15"
   },
   {
     id: 4,
-    url: "https://api.yimian.xyz/img?id=890",
+    url: "https://picsum.photos/seed/anime890/1200/800",
     title: "樱花车站",
     category: "illustration",
     date: "2023-11-10"
   },
   {
     id: 5,
-    url: "https://api.yimian.xyz/img?id=345",
+    url: "https://picsum.photos/seed/anime345/1200/800",
     title: "雨后的城市",
     category: "photography",
     date: "2023-11-05"
   },
   {
     id: 6,
-    url: "https://api.yimian.xyz/img?id=678",
+    url: "https://picsum.photos/seed/anime678/1200/800",
     title: "星空露营",
     category: "illustration",
     date: "2023-11-01"

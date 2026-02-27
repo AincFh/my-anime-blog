@@ -168,7 +168,8 @@ function mergeSettings(defaultObj: any, dbObj: any): SystemSettings {
 export default function Settings({ loaderData, actionData }: Route.ComponentProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("basic");
 
-  const initialSettings = mergeSettings(defaultSettings, loaderData.settings);
+  const initialSettings = mergeSettings(defaultSettings, loaderData?.settings);
+
   const [settings, setSettings] = useState<SystemSettings>(initialSettings);
   const [hasChanges, setHasChanges] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -203,7 +204,8 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
     setIsSaving(true);
     const formData = new FormData();
     formData.append("config_json", JSON.stringify(settings));
-    if (loaderData.csrfToken) {
+    if (loaderData?.csrfToken) {
+
       formData.append("_csrf", loaderData.csrfToken);
     }
     submit(formData, { method: "post" });

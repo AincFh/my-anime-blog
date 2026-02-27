@@ -1,10 +1,5 @@
-/**
- * 统一支付网关
- * 抽象支付接口，支持多种支付方式
- */
-
 import { generateOrderNo, generateNonce, generatePaymentSign } from '../security/payment-sign.server';
-import { execute, queryFirst } from '../db.server';
+import { execute, queryFirst, type Database, queryAll } from '../db.server';
 
 export type PaymentMethod = 'wechat' | 'alipay' | 'paypal' | 'mock';
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'cancelled' | 'expired';
@@ -87,11 +82,8 @@ export interface PaymentCallbackData {
     paidAt?: number;
 }
 
-/**
- * 创建支付订单
- */
 export async function createPaymentOrder(
-    db: any,
+    db: Database,
     params: CreateOrderParams
 ): Promise<{ success: boolean; order?: PaymentOrder; error?: string }> {
     const orderNo = generateOrderNo();
@@ -142,7 +134,7 @@ export async function createPaymentOrder(
  * 获取订单
  */
 export async function getOrder(
-    db: any,
+    db: Database,
     orderNo: string
 ): Promise<PaymentOrder | null> {
     return queryFirst<PaymentOrder>(
@@ -156,7 +148,7 @@ export async function getOrder(
  * 更新订单状态
  */
 export async function updateOrderStatus(
-    db: any,
+    db: Database,
     orderNo: string,
     status: OrderStatus,
     tradeNo?: string,
@@ -164,7 +156,7 @@ export async function updateOrderStatus(
 ): Promise<boolean> {
     try {
         const updates: string[] = ['status = ?'];
-        const values: any[] = [status];
+        const values: (string | number | null)[] = [status];
 
         if (tradeNo) {
             updates.push('trade_no = ?');
@@ -195,14 +187,14 @@ export async function updateOrderStatus(
  * 获取用户订单列表
  */
 export async function getUserOrders(
-    db: any,
+    db: Database,
     userId: number,
     status?: OrderStatus,
     limit: number = 20,
     offset: number = 0
 ): Promise<PaymentOrder[]> {
     let query = 'SELECT * FROM payment_orders WHERE user_id = ?';
-    const params: any[] = [userId];
+    const params: (string | number | null)[] = [userId];
 
     if (status) {
         query += ' AND status = ?';
@@ -212,14 +204,13 @@ export async function getUserOrders(
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    const result = await db.prepare(query).bind(...params).all();
-    return result.results || [];
+    return queryAll<PaymentOrder>(db, query, ...params);
 }
 
 /**
  * 检查并过期超时订单
  */
-export async function expireTimeoutOrders(db: any): Promise<number> {
+export async function expireTimeoutOrders(db: Database): Promise<number> {
     const now = Math.floor(Date.now() / 1000);
 
     const result = await execute(
@@ -316,7 +307,7 @@ export async function releasePaymentLock(
  * @returns 已存在的订单，或 null
  */
 export async function getOrderByTradeNo(
-    db: any,
+    db: Database,
     tradeNo: string
 ): Promise<PaymentOrder | null> {
     return queryFirst<PaymentOrder>(

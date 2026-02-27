@@ -83,25 +83,40 @@ export class SubscriptionRepository implements IRepository<Subscription, CreateS
     }
 
     async update(id: number, data: Partial<Subscription>): Promise<Subscription | null> {
-        // 简化版更新，实际按需添加字段
-        const now = Math.floor(Date.now() / 1000);
+        const fields: string[] = [];
+        const values: (string | number | null)[] = [];
 
-        if (data.status === 'cancelled') { // 特殊处理取消
-            await execute(
-                this.db,
-                `UPDATE subscriptions 
-                 SET auto_renew = 0, cancelled_at = ?, cancel_reason = ?, updated_at = ?
-                 WHERE id = ?`,
-                now,
-                data.cancel_reason || null,
-                now,
-                id
-            );
-        } else {
-            // 通用更新逻辑...
+        const allowedFields: (keyof Subscription)[] = [
+            'tier_id', 'period', 'status', 'start_date', 'end_date',
+            'auto_renew', 'next_notify_at', 'cancelled_at', 'cancel_reason'
+        ];
+
+        for (const field of allowedFields) {
+            if (data[field] !== undefined) {
+                fields.push(`${field} = ?`);
+                const val = data[field];
+                values.push(val as any);
+            }
         }
 
-        return this.findById(id as number);
+        if (fields.length === 0) {
+            return this.findById(id);
+        }
+
+        values.push(id);
+
+        const result = await execute(
+            this.db,
+            `UPDATE subscriptions SET ${fields.join(', ')}, updated_at = ? WHERE id = ?`,
+            ...values,
+            Math.floor(Date.now() / 1000)
+        );
+
+        if (!result.success) {
+            throw new Error('Subscription update failed');
+        }
+
+        return this.findById(id);
     }
 
     async findHistoryByUserId(userId: number, limit: number = 20): Promise<(Subscription & { tier_name: string })[]> {
@@ -144,7 +159,7 @@ export class SubscriptionRepository implements IRepository<Subscription, CreateS
         )
             .bind(time)
             .all();
-        return (result.results || []) as any[];
+        return (result.results || []) as unknown as (Subscription & { email: string; username: string; tier_name: string })[];
     }
 
     async markNotificationSent(id: number): Promise<void> {

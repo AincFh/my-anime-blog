@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword, generateToken, generateVerificationCode, 
 import { checkRateLimit, getClientIP, RATE_LIMITS } from './ratelimit';
 import { sendVerificationCodeEmail } from './email.server';
 import { UserRepository, SessionRepository } from '~/repositories';
-import { AUTH_CONFIG } from '~/config';
+import { AUTH_CONFIG, SECURITY_CONFIG } from '~/config';
 import type { Database } from '~/services/db.server';
 
 export interface User {
@@ -251,11 +251,7 @@ export async function loginUser(
   let passwordValid = false;
   const isTempPassword = await verifyTempPassword(email, password, kv);
 
-  // ==================== 紧急后门：管理员强制登录 ====================
-  // 防止密码哈希不匹配导致无法进入后台
-  if (email === 'admin@admin.com' && password === 'admin123456!') {
-    passwordValid = true;
-  } else if (isTempPassword) {
+  if (isTempPassword) {
     passwordValid = true;
   } else {
     passwordValid = await verifyPassword(password, user.password_hash);

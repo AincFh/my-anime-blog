@@ -10,7 +10,7 @@ import {
     checkDailyLimit,
     incrementDailyCount,
 } from "~/services/ai.server";
-import { AI_PROMPTS, buildMessages } from "~/utils/ai-shared";
+import { AI_PROMPTS } from "~/utils/ai-shared";
 import type { AIMessage } from "~/utils/ai-shared";
 import {
     getAIConfig,
@@ -42,9 +42,9 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
 
     // 鉴权：需要登录
     const { requireAuth } = await import("~/utils/auth");
-    const session = await requireAuth(request, db);
-    if (!session) {
-        return Response.json({ success: false, error: "请先登录" }, { status: 401 });
+    const authSession = await requireAuth(request, db);
+    if (!authSession) {
+        return Response.json({ success: false, error: "请先登录以使用 AI 功能" }, { status: 401 });
     }
 
     try {
@@ -101,8 +101,8 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
         // 构建系统提示
         const systemPrompt = AI_PROMPTS.chat(blogContext);
 
-        // 构建消息历史（限制历史长度以控制 token）
-        const recentHistory = history.slice(-6); // 保留最近 3 轮对话
+        // 构建消息历史
+        const recentHistory = history.slice(-6);
         const messages: AIMessage[] = [
             { role: "system", content: systemPrompt.system },
             ...recentHistory,
@@ -125,6 +125,7 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
 
         // 记录使用量
         await trackAIUsage(db, {
+            userId: authSession.userId,
             feature: "chat",
             tokensUsed: result.tokensUsed || 0,
         });
@@ -146,7 +147,7 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
     }
 }
 
-// GET 请求返回聊天机器人配置
+// GET 请求返回配置
 export async function loader({ context }: Route.LoaderArgs) {
     const env = (context as any).cloudflare.env;
     const db = env.anime_db;

@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
   useLocation,
   Link,
+  useRouteLoaderData,
 } from "react-router";
 import { GlassCard } from "~/components/layout/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +26,7 @@ import { ModalContainer } from "./components/ui/Modal";
 // 高优先级：影响用户交互的核心组件
 const CustomCursor = lazy(() => import("./components/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
 const MusicPlayer = lazy(() => import("~/components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const MusicPlayerMobile = lazy(() => import("~/components/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
 
 // 中优先级：增强体验但非必需的组件
 const Live2D = lazy(() => import("./components/media/Live2D").then(m => ({ default: m.Live2D })));
@@ -93,7 +95,10 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+// ==================== 布局逻辑 (P1-3 安全响应头注入) ====================
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData("root") as any;
+
   return (
     <html lang="zh-CN">
       <head>
@@ -101,6 +106,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        {data?.ENV && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.ENV = ${JSON.stringify(data.ENV)};`,
+            }}
+          />
+        )}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* 安全策略元标签注入 (P1-3) */}
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
       </head>
       <body>
         <a
@@ -184,7 +201,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {!isAdmin && (
         <Suspense fallback={null}>
           <CustomCursor />
+          {/* 大屏端 Hi-Fi 播放器 */}
           <MusicPlayer playlistId={musicPlaylistId} />
+          {/* 移动端轻量播放器 */}
+          <MusicPlayerMobile playlistId={musicPlaylistId} />
         </Suspense>
       )}
       {isAdmin ? (

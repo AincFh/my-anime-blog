@@ -32,7 +32,7 @@ export function getDevicePerformance(): PerformanceLevel {
 
   const isMobile = isMobileDevice();
   const hardwareConcurrency = navigator.hardwareConcurrency || 2;
-  const deviceMemory = (navigator as any).deviceMemory || 4;
+  const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory || 4;
 
   if (isMobile) {
     // 移动设备默认中等或低性能

@@ -19,7 +19,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const result = await verifySession(token, anime_db);
 
     if (!result.valid || !result.user) {
-      return Response.json({ user: null }, { status: 401 });
+      return Response.json({ user: null });
     }
 
     return Response.json({ user: result.user });

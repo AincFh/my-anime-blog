@@ -4,6 +4,13 @@
  */
 
 // 认证与安全配置
+export const SECURITY_CONFIG = {
+    // CSRF 独立密钥（优先从环境读取，保障 P0-10 隔离要求）
+    csrfSecret: (typeof process !== 'undefined' ? process.env.CSRF_SECRET : null) || "aincrad-fallback-csrf-key-99",
+    // 极盾风控等级
+    turnstileLevel: 'strict',
+};
+
 export const AUTH_CONFIG = {
     // 验证码有效期（秒）
     codeExpiration: 300,
@@ -95,4 +102,37 @@ export const DEFAULT_AI_CONFIG = {
         personality: '活泼可爱、热情、略带傲娇',
         welcomeMessage: '你好呀～我是小绫，有什么想问的尽管说！(◕‿◕)',
     },
+};
+// 音乐播放器配置
+export const MUSIC_CONFIG = {
+    // Meting API 基础地址
+    apiBase: 'https://api.i-meto.com/meting/api',
+    // 默认网易云歌单 ID (动漫原声精选)
+    defaultPlaylistId: '13641046209',
+    // 缓存过期时间 (秒) - 1小时
+    cacheTtl: 3600,
+};
+
+// UI 视觉参数常数
+export const UI_CONSTANTS = {
+    // 樱花粒子默认密度
+    sakuraParticleDensity: 30,
+    // 默认文章封面
+    defaultArticleCover: 'https://img.moegirl.org.cn/common/thumb/c/c1/Anime_Blog_Hero.jpg/800px-Anime_Blog_Hero.jpg',
+    // 全局品牌色
+    colors: {
+        primary: '#FF69B4', // 樱花粉
+        secondary: '#00BFFF', // 深空蓝
+    },
+    // Live2D 看板娘配置
+    live2d: {
+        modelPath: 'https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json',
+        scriptSrc: 'https://cdn.jsdelivr.net/npm/live2d-widget@3.0.5/lib/L2Dwidget.min.js',
+        width: 120,
+        height: 240,
+        opacity: {
+            default: 0.7,
+            hover: 0.8
+        }
+    }
 };

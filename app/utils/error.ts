@@ -5,13 +5,13 @@
 export interface AppErrorOptions {
     status?: number;
     code?: string;
-    data?: any;
+    data?: unknown;
 }
 
 export class AppError extends Error {
     public status: number;
     public code: string;
-    public data: any;
+    public data: unknown;
 
     constructor(message: string, options: AppErrorOptions = {}) {
         super(message);
@@ -21,11 +21,11 @@ export class AppError extends Error {
         this.data = options.data || null;
     }
 
-    static isAppError(error: any): error is AppError {
+    static isAppError(error: unknown): error is AppError {
         return error instanceof AppError;
     }
 }
 
-export function isRouteError(error: any): boolean {
-    return error?.status === 404 || error?.status === 500;
+export function isRouteError(error: unknown): boolean {
+    return (error as any)?.status === 404 || (error as any)?.status === 500;
 }

@@ -4,13 +4,14 @@
  */
 
 import { execute, executeBatch, queryFirst } from '../db.server';
+import { type Database } from '../db.server';
 
 // ... (retain existing code) ...
 
 /**
  * 获取归档统计信息（预计可归档数量）
  */
-export async function getArchiveStats(db: any): Promise<{
+export async function getArchiveStats(db: Database): Promise<{
     auditLogs: number;
     loginHistory: number;
     coinTransactions: number;
@@ -51,7 +52,7 @@ const RETENTION_DAYS = {
  * @param retentionDays 保留天数
  */
 export async function archiveAuditLogs(
-    db: any,
+    db: Database,
     retentionDays: number = RETENTION_DAYS.AUDIT_LOGS
 ): Promise<ArchiveResult> {
     const cutoffDate = Math.floor(Date.now() / 1000) - retentionDays * 24 * 60 * 60;
@@ -100,7 +101,7 @@ export async function archiveAuditLogs(
  * 归档登录历史
  */
 export async function archiveLoginHistory(
-    db: any,
+    db: Database,
     retentionDays: number = RETENTION_DAYS.LOGIN_HISTORY
 ): Promise<ArchiveResult> {
     const cutoffDate = Math.floor(Date.now() / 1000) - retentionDays * 24 * 60 * 60;
@@ -143,7 +144,7 @@ export async function archiveLoginHistory(
  * 归档积分交易记录
  */
 export async function archiveCoinTransactions(
-    db: any,
+    db: Database,
     retentionDays: number = RETENTION_DAYS.COIN_TRANSACTIONS
 ): Promise<ArchiveResult> {
     const cutoffDate = Math.floor(Date.now() / 1000) - retentionDays * 24 * 60 * 60;
@@ -185,7 +186,7 @@ export async function archiveCoinTransactions(
 /**
  * 执行所有归档任务
  */
-export async function runAllArchives(db: any): Promise<Record<string, ArchiveResult>> {
+export async function runAllArchives(db: Database): Promise<Record<string, ArchiveResult>> {
     return {
         auditLogs: await archiveAuditLogs(db),
         loginHistory: await archiveLoginHistory(db),

@@ -1,9 +1,4 @@
-/**
- * 审计日志服务
- * 记录所有关键操作，用于安全审计和问题追溯
- */
-
-import { execute } from '../db.server';
+import { execute, type Database, queryAll } from '../db.server';
 
 export type AuditAction =
     | 'login'
@@ -37,19 +32,19 @@ export interface AuditLogEntry {
     action: AuditAction;
     targetType?: string;
     targetId?: string;
-    oldValue?: any;
-    newValue?: any;
+    oldValue?: unknown;
+    newValue?: unknown;
     ipAddress?: string;
     userAgent?: string;
     riskLevel?: RiskLevel;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 /**
  * 记录审计日志
  */
 export async function logAudit(
-    db: any,
+    db: Database,
     entry: AuditLogEntry
 ): Promise<void> {
     try {
@@ -123,7 +118,7 @@ export function extractAuditInfo(request: Request): {
  * 记录登录审计
  */
 export async function logLoginAudit(
-    db: any,
+    db: Database,
     userId: number,
     success: boolean,
     request: Request,
@@ -145,13 +140,13 @@ export async function logLoginAudit(
  * 记录支付审计
  */
 export async function logPaymentAudit(
-    db: any,
+    db: Database,
     userId: number,
     orderId: string,
     action: 'payment_create' | 'payment_success' | 'payment_failed' | 'payment_refund',
     amount: number,
     request: Request,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
 ): Promise<void> {
     const { ipAddress, userAgent } = extractAuditInfo(request);
 
@@ -171,13 +166,13 @@ export async function logPaymentAudit(
  * 记录订阅审计
  */
 export async function logSubscriptionAudit(
-    db: any,
+    db: Database,
     userId: number,
     subscriptionId: string,
     action: 'subscription_create' | 'subscription_cancel' | 'subscription_renew',
     request: Request,
-    oldValue?: any,
-    newValue?: any
+    oldValue?: unknown,
+    newValue?: unknown
 ): Promise<void> {
     const { ipAddress, userAgent } = extractAuditInfo(request);
 
@@ -197,42 +192,38 @@ export async function logSubscriptionAudit(
  * 查询用户审计日志
  */
 export async function getUserAuditLogs(
-    db: any,
+    db: Database,
     userId: number,
     limit: number = 50,
     offset: number = 0
 ): Promise<any[]> {
-    const result = await db
-        .prepare(
-            `SELECT * FROM audit_logs 
+    return queryAll<any>(
+        db,
+        `SELECT * FROM audit_logs 
        WHERE user_id = ? 
        ORDER BY created_at DESC 
-       LIMIT ? OFFSET ?`
-        )
-        .bind(userId, limit, offset)
-        .all();
-
-    return result.results || [];
+       LIMIT ? OFFSET ?`,
+        userId,
+        limit,
+        offset
+    );
 }
 
 /**
  * 查询高风险操作
  */
 export async function getHighRiskAuditLogs(
-    db: any,
+    db: Database,
     limit: number = 100
 ): Promise<any[]> {
-    const result = await db
-        .prepare(
-            `SELECT al.*, u.email, u.username 
+    return queryAll<any>(
+        db,
+        `SELECT al.*, u.email, u.username 
        FROM audit_logs al
        LEFT JOIN users u ON al.user_id = u.id
        WHERE al.risk_level = 'high'
        ORDER BY al.created_at DESC 
-       LIMIT ?`
-        )
-        .bind(limit)
-        .all();
-
-    return result.results || [];
+       LIMIT ?`,
+        limit
+    );
 }

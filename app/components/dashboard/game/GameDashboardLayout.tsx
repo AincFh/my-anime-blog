@@ -14,7 +14,7 @@ export function GameDashboardLayout({
     backgroundImage
 }: GameDashboardLayoutProps) {
     // 默认背景图 (二次元风景/角色)
-    const bgImage = backgroundImage || "https://api.yimian.xyz/img?id=444";
+    const bgImage = backgroundImage || "https://picsum.photos/seed/animehub/1920/1080";
 
     return (
         <div className="fixed inset-0 w-full h-full overflow-hidden bg-slate-900 text-white font-sans">

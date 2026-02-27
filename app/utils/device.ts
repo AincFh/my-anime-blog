@@ -95,9 +95,10 @@ export function getOSType(): OSType {
 export function isTouchDevice(): boolean {
     if (typeof window === 'undefined') return false;
 
+    const msPoints = (navigator as { msMaxTouchPoints?: number })?.msMaxTouchPoints;
     return 'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
-        (navigator as any).msMaxTouchPoints > 0;
+        (msPoints !== undefined && msPoints > 0);
 }
 
 // 检测是否为低端设备（用于性能降级）
@@ -108,10 +109,10 @@ export function isLowEndDevice(): boolean {
     const hardwareConcurrency = navigator.hardwareConcurrency || 4;
 
     // 检测设备内存（仅 Chrome 支持）
-    const deviceMemory = (navigator as any).deviceMemory || 4;
+    const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory || 4;
 
     // 检测连接类型
-    const connection = (navigator as any).connection;
+    const connection = (navigator as { connection?: { effectiveType: string } }).connection;
     const effectiveType = connection?.effectiveType || '4g';
 
     // 低端设备判定：CPU核心少、内存小、网络慢
@@ -182,8 +183,8 @@ export function getPerformanceLevel(): PerformanceLevel {
     if (typeof navigator === 'undefined') return 'high';
 
     const hardwareConcurrency = navigator.hardwareConcurrency || 4;
-    const deviceMemory = (navigator as any).deviceMemory || 4;
-    const connection = (navigator as any).connection;
+    const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory || 4;
+    const connection = (navigator as { connection?: { effectiveType: string } }).connection;
     const effectiveType = connection?.effectiveType || '4g';
 
     // 高性能设备

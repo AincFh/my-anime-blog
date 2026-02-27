@@ -6,6 +6,7 @@
 import { SubscriptionRepository } from '~/repositories';
 import type { Subscription } from '~/repositories/subscription.repository';
 import { calculateEndDate } from './tier.server';
+import { type Database } from '../db.server';
 
 export type { Subscription };
 
@@ -20,7 +21,7 @@ export interface CreateSubscriptionParams {
  * 创建订阅
  */
 export async function createSubscription(
-    db: any,
+    db: Database,
     params: CreateSubscriptionParams
 ): Promise<{ success: boolean; subscription?: Subscription; error?: string }> {
     const subRepo = new SubscriptionRepository(db);
@@ -60,7 +61,7 @@ export async function createSubscription(
  * 升级/续费订阅
  */
 async function upgradeSubscription(
-    db: any,
+    db: Database,
     existing: Subscription,
     newTierId: number,
     newPeriod: 'monthly' | 'quarterly' | 'yearly'
@@ -109,7 +110,7 @@ async function upgradeSubscription(
  * 取消订阅（到期后不续费）
  */
 export async function cancelSubscription(
-    db: any,
+    db: Database,
     userId: number,
     reason?: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -142,7 +143,7 @@ export async function cancelSubscription(
  * 恢复自动续费
  */
 export async function resumeAutoRenew(
-    db: any,
+    db: Database,
     userId: number
 ): Promise<{ success: boolean; error?: string }> {
     const subRepo = new SubscriptionRepository(db);
@@ -176,7 +177,7 @@ export async function resumeAutoRenew(
  * 获取用户当前订阅
  */
 export async function getUserSubscription(
-    db: any,
+    db: Database,
     userId: number
 ): Promise<(Subscription & { display_name: string }) | null> {
     const subRepo = new SubscriptionRepository(db);
@@ -187,7 +188,7 @@ export async function getUserSubscription(
  * 获取用户订阅历史
  */
 export async function getUserSubscriptionHistory(
-    db: any,
+    db: Database,
     userId: number,
     limit: number = 20
 ): Promise<Subscription[]> {
@@ -198,7 +199,7 @@ export async function getUserSubscriptionHistory(
 /**
  * 检查并过期订阅
  */
-export async function expireSubscriptions(db: any): Promise<number> {
+export async function expireSubscriptions(db: Database): Promise<number> {
     const subRepo = new SubscriptionRepository(db);
     return subRepo.expireSubscriptions();
 }
@@ -217,7 +218,7 @@ export async function getSubscriptionsNeedingNotification(
  * 标记通知已发送
  */
 export async function markNotificationSent(
-    db: any,
+    db: Database,
     subscriptionId: number
 ): Promise<void> {
     const subRepo = new SubscriptionRepository(db);

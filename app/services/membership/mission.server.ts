@@ -1,9 +1,4 @@
-/**
- * 使命系统服务
- * 管理每日/周/月任务的追踪与奖励
- */
-
-import { execute, queryFirst } from '../db.server';
+import { execute, queryFirst, type Database } from '../db.server';
 import { addCoins } from './coins.server';
 
 export interface Mission {
@@ -48,12 +43,12 @@ function getResetTime(type: 'daily' | 'weekly' | 'monthly'): number {
 /**
  * 获取用户当前的全部任务状态
  */
-export async function getUserMissions(db: any, userId: number): Promise<any[]> {
+export async function getUserMissions(db: Database, userId: number): Promise<any[]> {
     const now = Math.floor(Date.now() / 1000);
 
     // 1. 获取所有激活的任务定义
-    const missions = await db.prepare('SELECT * FROM missions WHERE is_active = 1 ORDER BY sort_order').all();
-    const missionDefs = missions.results as Mission[];
+    const missions = await db.prepare('SELECT * FROM missions WHERE is_active = 1 ORDER BY sort_order').all<Mission>();
+    const missionDefs = missions.results;
 
     const results = [];
     for (const mission of missionDefs) {
@@ -139,7 +134,7 @@ export async function updateMissionProgress(
             await execute(
                 db,
                 'UPDATE user_missions SET current_count = 0, status = "in_progress", reset_at = ? WHERE user_id = ? AND mission_id = ?',
-                getResetTime(mission.type as any),
+                getResetTime(mission.type),
                 userId,
                 mission.id
             );
@@ -188,7 +183,7 @@ export async function updateMissionProgress(
  * 领取任务奖励
  */
 export async function claimMissionReward(
-    db: any,
+    db: Database,
     userId: number,
     missionId: string
 ): Promise<{ success: boolean; coins?: number; exp?: number; error?: string }> {

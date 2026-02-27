@@ -1,9 +1,4 @@
-/**
- * 会员等级服务
- * 管理会员等级、权限检查
- */
-
-import { queryFirst, execute } from '../db.server';
+import { queryFirst, execute, type Database, queryAll } from '../db.server';
 
 export interface MembershipTier {
     id: number;
@@ -61,18 +56,15 @@ const DEFAULT_PRIVILEGES: TierPrivileges = {
 /**
  * 获取所有会员等级
  */
-export async function getAllTiers(db: any): Promise<MembershipTier[]> {
-    const result = await db
-        .prepare('SELECT * FROM membership_tiers WHERE is_active = 1 ORDER BY sort_order')
-        .all();
-    return result.results || [];
+export async function getAllTiers(db: Database): Promise<MembershipTier[]> {
+    return queryAll<MembershipTier>(db, 'SELECT * FROM membership_tiers WHERE is_active = 1 ORDER BY sort_order');
 }
 
 /**
  * 获取会员等级详情
  */
 export async function getTierById(
-    db: any,
+    db: Database,
     tierId: number
 ): Promise<MembershipTier | null> {
     return queryFirst<MembershipTier>(
@@ -86,7 +78,7 @@ export async function getTierById(
  * 根据名称获取等级
  */
 export async function getTierByName(
-    db: any,
+    db: Database,
     name: string
 ): Promise<MembershipTier | null> {
     return queryFirst<MembershipTier>(
@@ -111,16 +103,18 @@ export function parsePrivileges(tier: MembershipTier | null): TierPrivileges {
     }
 }
 
+import { type Subscription } from './subscription.server';
+
 /**
  * 获取用户当前会员等级
  */
 export async function getUserMembershipTier(
-    db: any,
+    db: Database,
     userId: number
-): Promise<{ tier: MembershipTier | null; subscription: any | null }> {
+): Promise<{ tier: MembershipTier | null; subscription: Subscription | null }> {
     // 查询用户的有效订阅
     const now = Math.floor(Date.now() / 1000);
-    const subscription = await queryFirst<any>(
+    const subscription = await queryFirst<Subscription & MembershipTier>(
         db,
         `SELECT s.*, t.* 
      FROM subscriptions s
@@ -135,7 +129,7 @@ export async function getUserMembershipTier(
     if (subscription) {
         return {
             tier: {
-                id: subscription.tier_id,
+                id: (subscription as any).tier_id || subscription.id,
                 name: subscription.name,
                 display_name: subscription.display_name,
                 description: subscription.description,
@@ -161,7 +155,7 @@ export async function getUserMembershipTier(
  * 检查用户是否有特定权限
  */
 export async function checkUserPrivilege(
-    db: any,
+    db: Database,
     userId: number,
     privilege: keyof TierPrivileges
 ): Promise<boolean> {
@@ -182,7 +176,7 @@ export async function checkUserPrivilege(
  * 获取用户权限值
  */
 export async function getUserPrivilegeValue<T extends keyof TierPrivileges>(
-    db: any,
+    db: Database,
     userId: number,
     privilege: T
 ): Promise<TierPrivileges[T]> {
@@ -194,7 +188,7 @@ export async function getUserPrivilegeValue<T extends keyof TierPrivileges>(
 /**
  * 检查用户是否是 VIP 或更高
  */
-export async function isVIPOrAbove(db: any, userId: number): Promise<boolean> {
+export async function isVIPOrAbove(db: Database, userId: number): Promise<boolean> {
     const { tier } = await getUserMembershipTier(db, userId);
     return tier ? tier.name !== 'free' : false;
 }
@@ -202,7 +196,7 @@ export async function isVIPOrAbove(db: any, userId: number): Promise<boolean> {
 /**
  * 检查用户是否是 SVIP
  */
-export async function isSVIP(db: any, userId: number): Promise<boolean> {
+export async function isSVIP(db: Database, userId: number): Promise<boolean> {
     const { tier } = await getUserMembershipTier(db, userId);
     return tier?.name === 'svip';
 }

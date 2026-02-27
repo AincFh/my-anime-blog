@@ -11,7 +11,6 @@ import {
     incrementDailyCount,
 } from "~/services/ai.server";
 import { AI_PROMPTS, buildMessages } from "~/utils/ai-shared";
-import type { AIMessage } from "~/utils/ai-shared";
 import {
     getAIConfig,
     getDeepseekAPIKey,
@@ -36,6 +35,13 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
     const env = (context as any).cloudflare.env;
     const db = env.anime_db;
     const kv = env.CACHE_KV || null;
+
+    // 鉴权：需要登录
+    const { requireAuth } = await import("~/utils/auth");
+    const authSession = await requireAuth(request, db);
+    if (!authSession) {
+        return Response.json({ success: false, error: "请先登录以使用 AI 功能" }, { status: 401 });
+    }
 
     try {
         // 检查 AI 功能是否启用
@@ -67,7 +73,7 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
 
         // 解析请求
         const body: SummaryRequest = await request.json();
-        const { content, title } = body;
+        const { content } = body;
 
         if (!content || typeof content !== "string" || content.trim().length < 50) {
             return Response.json({
@@ -98,8 +104,9 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
             });
         }
 
-        // 记录使用量
+        // 记录使用量 (使用 authSession 中的用户信息)
         await trackAIUsage(db, {
+            userId: authSession.userId,
             feature: "summary",
             tokensUsed: result.tokensUsed || 0,
         });

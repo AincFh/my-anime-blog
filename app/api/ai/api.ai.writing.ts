@@ -145,6 +145,7 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
 
         // 记录使用量
         await trackAIUsage(db, {
+            userId: session.userId,
             feature: "writing",
             tokensUsed: result.tokensUsed || 0,
         });

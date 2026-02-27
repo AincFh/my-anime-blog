@@ -2,8 +2,8 @@ import { useScroll, useTransform, motion } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { FloatingNav } from "./FloatingNav";
 import { MobileNav } from "./MobileNav";
-import { DynamicBackground } from "../animations/DynamicBackground";
-import { CanvasParticleSystem } from "../animations/CanvasParticleSystem";
+import { DynamicBackground } from "../ui/animations/DynamicBackground";
+import { CanvasParticleSystem } from "../ui/animations/CanvasParticleSystem";
 import { MusicPlayerMobile } from "../media/MusicPlayerMobile";
 import { shouldEnableParticles, shouldUseGlassmorphism } from "~/utils/performance";
 

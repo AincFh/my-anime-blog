@@ -3,7 +3,7 @@
  * 管理积分获取、消费、余额查询
  */
 
-import { execute, queryFirst } from '../db.server';
+import { execute, queryFirst, type Database } from '../db.server';
 
 export interface CoinTransaction {
     id: number;
@@ -34,7 +34,7 @@ export type CoinSource =
 /**
  * 获取用户积分余额
  */
-export async function getUserCoins(db: any, userId: number): Promise<number> {
+export async function getUserCoins(db: Database, userId: number): Promise<number> {
     const user = await queryFirst<{ coins: number }>(
         db,
         'SELECT coins FROM users WHERE id = ?',
@@ -44,10 +44,10 @@ export async function getUserCoins(db: any, userId: number): Promise<number> {
 }
 
 /**
- * 增加积分（原子操作）
+ * 增加积分（事务操作 - P1-2 防御竞态）
  */
 export async function addCoins(
-    db: any,
+    db: Database,
     userId: number,
     amount: number,
     source: CoinSource,
@@ -61,51 +61,44 @@ export async function addCoins(
     }
 
     try {
-        // 获取当前余额（用于记录交易）
+        // 1. 获取当前余额
         const currentBalance = await getUserCoins(db, userId);
+        const newBalance = currentBalance + amount;
 
-        // ⚠️ 使用原子更新，避免并发问题
-        await execute(
-            db,
-            'UPDATE users SET coins = coins + ? WHERE id = ?',
-            amount,
-            userId
-        );
-
-        // 查询更新后的余额
-        const newBalance = await getUserCoins(db, userId);
-
-        // 记录交易
-        await execute(
-            db,
-            `INSERT INTO coin_transactions (
-        user_id, amount, type, source, reference_type, reference_id,
-        balance_before, balance_after, description, operator_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            userId,
-            amount,
-            'earn',
-            source,
-            referenceType || null,
-            referenceId || null,
-            currentBalance,
-            newBalance,
-            description || null,
-            operatorId || null
-        );
+        // 2. 事务性批处理更新
+        await db.batch([
+            // 更新余额
+            db.prepare('UPDATE users SET coins = coins + ? WHERE id = ?').bind(amount, userId),
+            // 记录流水
+            db.prepare(`INSERT INTO coin_transactions (
+                user_id, amount, type, source, reference_type, reference_id,
+                balance_before, balance_after, description, operator_id, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch())`).bind(
+                userId,
+                amount,
+                'earn',
+                source,
+                referenceType || null,
+                referenceId || null,
+                currentBalance,
+                newBalance,
+                description || null,
+                operatorId || null
+            )
+        ]);
 
         return { success: true, newBalance };
     } catch (error) {
-        console.error('Add coins error:', error);
-        return { success: false, newBalance: 0, error: '积分增加失败' };
+        console.error('Add coins error (Transaction):', error);
+        return { success: false, newBalance: 0, error: '积分增加失败 (并发限制)' };
     }
 }
 
 /**
- * 消费积分（原子操作）
+ * 消费积分（事务操作 - P1-2 防御竞态）
  */
 export async function spendCoins(
-    db: any,
+    db: Database,
     userId: number,
     amount: number,
     source: CoinSource,
@@ -118,53 +111,43 @@ export async function spendCoins(
     }
 
     try {
-        // 获取当前余额
+        // 1. 获取当前余额并预校验
         const currentBalance = await getUserCoins(db, userId);
-
         if (currentBalance < amount) {
             return { success: false, newBalance: currentBalance, error: '积分不足' };
         }
+        const newBalance = currentBalance - amount;
 
-        // ⚠️ 使用原子更新 + 条件检查，防止并发时透支
-        // coins >= amount 确保不会扣成负数
-        const updateResult = await execute(
-            db,
-            'UPDATE users SET coins = coins - ? WHERE id = ? AND coins >= ?',
-            amount,
-            userId,
-            amount
-        );
+        // 2. 执行事务性扣减
+        // 注意：D1 暂不支持 SQL 触发的事务回滚检查（如自定义消息），
+        // 我们在 UPDATE 中带上 coins >= amount 以物理防止透支。
+        const results = await db.batch([
+            db.prepare('UPDATE users SET coins = coins - ? WHERE id = ? AND coins >= ?').bind(amount, userId, amount),
+            db.prepare(`INSERT INTO coin_transactions (
+                user_id, amount, type, source, reference_type, reference_id,
+                balance_before, balance_after, description, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch())`).bind(
+                userId,
+                -amount,
+                'spend',
+                source,
+                referenceType || null,
+                referenceId || null,
+                currentBalance,
+                newBalance,
+                description || null
+            )
+        ]);
 
-        // 检查是否更新成功（如果没有更新行，说明余额不足）
-        if (!updateResult.meta?.changes || updateResult.meta.changes === 0) {
-            return { success: false, newBalance: currentBalance, error: '积分不足或并发冲突' };
+        // 3. 验证更新是否真实发生
+        if (!results[0].meta.changes || results[0].meta.changes === 0) {
+            return { success: false, newBalance: currentBalance, error: '积分扣减失败 (余额不足或并发冲突)' };
         }
-
-        // 查询更新后的余额
-        const newBalance = await getUserCoins(db, userId);
-
-        // 记录交易
-        await execute(
-            db,
-            `INSERT INTO coin_transactions (
-        user_id, amount, type, source, reference_type, reference_id,
-        balance_before, balance_after, description
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            userId,
-            -amount,
-            'spend',
-            source,
-            referenceType || null,
-            referenceId || null,
-            currentBalance,
-            newBalance,
-            description || null
-        );
 
         return { success: true, newBalance };
     } catch (error) {
-        console.error('Spend coins error:', error);
-        return { success: false, newBalance: 0, error: '积分消费失败' };
+        console.error('Spend coins error (Transaction):', error);
+        return { success: false, newBalance: 0, error: '支付失败，请重试' };
     }
 }
 
@@ -172,7 +155,7 @@ export async function spendCoins(
  * 退还积分
  */
 export async function refundCoins(
-    db: any,
+    db: Database,
     userId: number,
     amount: number,
     originalTransactionId: string,
@@ -193,7 +176,7 @@ export async function refundCoins(
  * 获取用户积分交易历史
  */
 export async function getCoinTransactionHistory(
-    db: any,
+    db: Database,
     userId: number,
     limit: number = 50,
     offset: number = 0
@@ -206,7 +189,7 @@ export async function getCoinTransactionHistory(
        LIMIT ? OFFSET ?`
         )
         .bind(userId, limit, offset)
-        .all();
+        .all<CoinTransaction>();
 
     return result.results || [];
 }
@@ -215,7 +198,7 @@ export async function getCoinTransactionHistory(
  * 每日登录奖励
  */
 export async function claimDailyLoginReward(
-    db: any,
+    db: Database,
     userId: number,
     multiplier: number = 1
 ): Promise<{ success: boolean; coins: number; error?: string }> {
@@ -258,7 +241,7 @@ export async function claimDailyLoginReward(
  * 管理员赠送积分
  */
 export async function giftCoins(
-    db: any,
+    db: Database,
     userId: number,
     amount: number,
     operatorId: number,

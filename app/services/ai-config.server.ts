@@ -4,6 +4,7 @@
  */
 
 import { queryFirst } from './db.server';
+import { type Database } from './db.server';
 
 // ============ 类型定义 ============
 
@@ -39,7 +40,7 @@ export type { AIConfig };
 /**
  * 从数据库获取 AI 配置
  */
-export async function getAIConfig(db: any): Promise<AIConfig> {
+export async function getAIConfig(db: Database): Promise<AIConfig> {
     try {
         const settings = await queryFirst<{ config_json: string }>(
             db,
@@ -82,7 +83,7 @@ export async function getAIConfig(db: any): Promise<AIConfig> {
  * 检查特定 AI 功能是否启用
  */
 export async function isAIFeatureEnabled(
-    db: any,
+    db: Database,
     feature: keyof AIConfig['features']
 ): Promise<boolean> {
     const config = await getAIConfig(db);
@@ -118,7 +119,7 @@ export async function validateAPIKey(apiKey: string): Promise<boolean> {
 /**
  * 构建博客上下文信息（用于聊天机器人）
  */
-export async function buildBlogContext(db: any): Promise<string> {
+export async function buildBlogContext(db: Database): Promise<string> {
     try {
         // 获取最新文章列表
         const articles = await db.prepare(`
@@ -127,7 +128,7 @@ export async function buildBlogContext(db: any): Promise<string> {
       WHERE status = 'published'
       ORDER BY created_at DESC
       LIMIT 20
-    `).all();
+    `).all() as { results: any[] };
 
         // 获取番剧列表
         const animes = await db.prepare(`
@@ -135,7 +136,7 @@ export async function buildBlogContext(db: any): Promise<string> {
       FROM animes
       ORDER BY created_at DESC
       LIMIT 10
-    `).all();
+    `).all() as { results: any[] };
 
         let context = '## 博客文章\n';
         for (const article of articles.results || []) {
@@ -150,7 +151,8 @@ export async function buildBlogContext(db: any): Promise<string> {
                 dropped: '弃坑',
                 plan: '计划中',
             };
-            context += `- 《${anime.title}》${statusMap[anime.status] || anime.status}${anime.rating ? ` 评分:${anime.rating}/10` : ''}\n`;
+            const statusKey = String(anime.status);
+            context += `- 《${anime.title}》${statusMap[statusKey] || statusKey}${anime.rating ? ` 评分:${anime.rating}/10` : ''}\n`;
         }
 
         return context;

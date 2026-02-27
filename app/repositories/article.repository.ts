@@ -94,18 +94,39 @@ export class ArticleRepository implements IRepository<Article, CreateArticleDTO>
     }
 
     async update(id: number, data: Partial<Article>): Promise<Article | null> {
-        // 简化实现，实际可能需要动态构建 SQL
-        // 这里仅为了演示 Repository 模式，完整实现需要类似 UserRepository 的动态字段构建
         const fields: string[] = [];
-        const values: any[] = [];
+        const values: (string | number | null)[] = [];
 
-        // ... (省略部分字段以保持简洁，核心逻辑同 UserRepository)
-        // 仅实现 views 更新作为示例
-        if (data.views !== undefined) {
-            // 特殊处理：如果是递增
+        const allowedFields: (keyof Article)[] = [
+            'slug', 'title', 'content', 'summary', 'category',
+            'cover_image', 'tags', 'mood_color', 'status',
+            'allow_comment', 'views', 'likes'
+        ];
+
+        for (const field of allowedFields) {
+            if (data[field] !== undefined) {
+                fields.push(`${field} = ?`);
+                values.push(data[field] as any);
+            }
         }
 
-        return this.findById(id as number);
+        if (fields.length === 0) {
+            return this.findById(id);
+        }
+
+        values.push(id);
+
+        const result = await execute(
+            this.db,
+            `UPDATE articles SET ${fields.join(', ')} WHERE id = ?`,
+            ...values
+        );
+
+        if (!result.success) {
+            throw new Error('Article update failed');
+        }
+
+        return this.findById(id);
     }
 
     async incrementViews(id: number): Promise<void> {

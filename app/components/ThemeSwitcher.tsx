@@ -20,7 +20,7 @@ const themes: Theme[] = [
     primaryColor: '#ff6b6b',
     secondaryColor: '#4ecdc4',
     backgroundColor: '#1a1a2e',
-    backgroundImage: 'url(https://api.yimian.xyz/img?id=201)',
+    backgroundImage: 'url(https://picsum.photos/seed/anime201/1920/1080)',
   },
   {
     id: 'miku',
@@ -28,7 +28,7 @@ const themes: Theme[] = [
     primaryColor: '#00bfff',
     secondaryColor: '#9932cc',
     backgroundColor: '#1a1a2e',
-    backgroundImage: 'url(https://api.yimian.xyz/img?id=202)',
+    backgroundImage: 'url(https://picsum.photos/seed/anime202/1920/1080)',
   },
   {
     id: 'asuka',
@@ -36,7 +36,7 @@ const themes: Theme[] = [
     primaryColor: '#ff69b4',
     secondaryColor: '#ff8c00',
     backgroundColor: '#1a1a2e',
-    backgroundImage: 'url(https://api.yimian.xyz/img?id=203)',
+    backgroundImage: 'url(https://picsum.photos/seed/anime203/1920/1080)',
   },
   {
     id: 'evangelion',
@@ -44,7 +44,7 @@ const themes: Theme[] = [
     primaryColor: '#ff0000',
     secondaryColor: '#ffffff',
     backgroundColor: '#000000',
-    backgroundImage: 'url(https://api.yimian.xyz/img?id=204)',
+    backgroundImage: 'url(https://picsum.photos/seed/anime204/1920/1080)',
   },
   {
     id: 'totoro',
@@ -52,7 +52,7 @@ const themes: Theme[] = [
     primaryColor: '#4a9e6d',
     secondaryColor: '#ff9a8b',
     backgroundColor: '#e8f5e9',
-    backgroundImage: 'url(https://api.yimian.xyz/img?id=205)',
+    backgroundImage: 'url(https://picsum.photos/seed/anime205/1920/1080)',
   },
   {
     id: 'sailormoon',
@@ -60,7 +60,7 @@ const themes: Theme[] = [
     primaryColor: '#ff1493',
     secondaryColor: '#00bfff',
     backgroundColor: '#f0f8ff',
-    backgroundImage: 'url(https://api.yimian.xyz/img?id=206)',
+    backgroundImage: 'url(https://picsum.photos/seed/anime206/1920/1080)',
   },
 ];
 

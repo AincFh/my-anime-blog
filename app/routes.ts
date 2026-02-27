@@ -84,7 +84,8 @@ export default [
   route("api/user/purchases", "api/user/api.user.purchases.ts"),
   route("api/daily-signin", "api/user/api.daily-signin.ts"),
 
-  // 管理员与评论治理
+  // 监控与治理
+  route("api/system/health", "api/system/api.system.health.tsx"),
   route("api/admin/comments", "api/admin/api.admin.comments.ts"),
   route("api/admin/purge-cache", "api/admin/api.admin.purge-cache.tsx"),
   route("api/admin/change-password", "api/admin/api.admin.change-password.tsx"),

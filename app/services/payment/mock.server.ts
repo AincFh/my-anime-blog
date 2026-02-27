@@ -13,6 +13,7 @@ import {
     type PaymentResult,
     type PaymentOrder
 } from './gateway.server';
+import { type Database } from '../db.server';
 
 /**
  * 模拟支付配置
@@ -40,7 +41,7 @@ function assertMockAllowed(environment: string): void {
  * @param environment - 从 context.cloudflare.env.ENVIRONMENT 传入
  */
 export async function createMockPayment(
-    db: any,
+    db: Database,
     params: Omit<CreateOrderParams, 'paymentMethod'>,
     environment: string = 'development'
 ): Promise<PaymentResult> {
@@ -73,7 +74,7 @@ export async function createMockPayment(
  * @param environment - 从 context.cloudflare.env.ENVIRONMENT 传入
  */
 export async function executeMockPayment(
-    db: any,
+    db: Database,
     orderNo: string,
     simulate: 'success' | 'fail' | 'random' = 'success',
     environment: string = 'development'
@@ -149,7 +150,7 @@ export function generateMockCallbackData(order: PaymentOrder, success: boolean):
  * 获取模拟支付状态
  */
 export async function getMockPaymentStatus(
-    db: any,
+    db: Database,
     orderNo: string
 ): Promise<{
     status: string;

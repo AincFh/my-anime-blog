@@ -105,7 +105,7 @@ CREATE TRIGGER articles_ad AFTER DELETE ON articles BEGIN
   INSERT INTO articles_fts(articles_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.content);
 END;
 
-VALUES 
+INSERT INTO animes (title, status, progress, rating, review) VALUES 
 ('新世纪福音战士', 'completed', '26/26', 10, '神作！A.T. Field 的概念太震撼了。'),
 ('鬼灭之刃', 'completed', '26/26', 9, '作画精美，剧情紧凑。'),
 ('咒术回战', 'watching', '15/24', 8, '战斗场面很棒，期待后续发展。'),
@@ -120,3 +120,26 @@ CREATE TABLE system_settings (
     config_json TEXT NOT NULL,       -- 存储所有开关、主题色、SEO信息的 JSON
     updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
+
+-- 8. 索引优化 (全量补全)
+CREATE INDEX IF NOT EXISTS idx_articles_status_created ON articles(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_articles_slug ON articles(slug);
+CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category);
+CREATE INDEX IF NOT EXISTS idx_comments_article_id ON comments(article_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_animes_status ON animes(status);
+
+-- AI 使用量统计索引
+DROP TABLE IF EXISTS ai_usage;
+CREATE TABLE ai_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    feature TEXT NOT NULL,
+    tokens_used INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (unixepoch()),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ai_usage_user_created ON ai_usage(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage(feature);
