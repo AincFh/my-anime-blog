@@ -1,9 +1,11 @@
 import { useScroll, useTransform, motion } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, lazy } from "react";
 import { FloatingNav } from "./FloatingNav";
 import { MobileNav } from "./MobileNav";
-import { DynamicBackground } from "../ui/animations/DynamicBackground";
-import { CanvasParticleSystem } from "../ui/animations/CanvasParticleSystem";
+const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
+const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
+import { DynamicBackground } from "~/components/ui/animations/DynamicBackground";
+import { CanvasParticleSystem } from "~/components/ui/animations/CanvasParticleSystem";
 import { MusicPlayerMobile } from "../media/MusicPlayerMobile";
 import { shouldEnableParticles, shouldUseGlassmorphism } from "~/utils/performance";
 

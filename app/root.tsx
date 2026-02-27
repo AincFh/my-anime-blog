@@ -24,7 +24,7 @@ import { ModalContainer } from "./components/ui/Modal";
 
 // ==================== 懒加载组件定义 ====================
 // 高优先级：影响用户交互的核心组件
-const CustomCursor = lazy(() => import("./components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
+const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
 const MusicPlayer = lazy(() => import("~/components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
 const MusicPlayerMobile = lazy(() => import("~/components/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
 
@@ -36,7 +36,7 @@ const AchievementSystem = lazy(() => import("./components/system/AchievementSyst
 // 低优先级：彩蛋/装饰性组件，用户不会立即需要
 const TheatricalMode = lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
 const AmbientSound = lazy(() => import("./components/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
-const KonamiCode = lazy(() => import("./components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
+const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
 const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
 const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
 const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
