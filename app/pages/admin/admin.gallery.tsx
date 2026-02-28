@@ -196,7 +196,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="hidden md:flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <motion.button
               onClick={() => fileInputRef.current?.click()}
               disabled={isSubmitting}

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-import { musicPlayerToggle } from "~/components/media/MusicPlayer";
+import { musicPlayerToggle } from "~/hooks/useMusicPlayer";
 
 /**
  * 全局指令终端 (Omni-Command)

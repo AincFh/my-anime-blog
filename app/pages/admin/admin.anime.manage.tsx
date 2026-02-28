@@ -3,7 +3,7 @@ import type { Route } from "./+types/admin.anime.manage";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSessionId } from "~/utils/auth";
 import { useState, useEffect, useCallback } from "react";
-import { RadarChart } from "~/components/system/RadarChart";
+import { RadarChart } from "~/components/ui/system/RadarChart";
 import { QuickSyncButton } from "~/components/admin/QuickSyncButton";
 import { Plus, Search, Edit2, Trash2, X, Link as LinkIcon, Star, Filter, Heart, PlayCircle, Clock, Loader2, Calendar, Film } from "lucide-react";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
@@ -490,7 +490,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                         <option value="dropped">弃番</option>
                                     </select>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <input
                                         type="text"
                                         name="progress"

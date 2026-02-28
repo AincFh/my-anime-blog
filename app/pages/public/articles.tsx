@@ -114,13 +114,13 @@ export default function ArticlesPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-20">
+        <div className="w-full md:container mx-auto md:px-4 py-8 md:py-20">
             <div className="max-w-6xl mx-auto">
                 {/* 标题区域 */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-16"
+                    className="text-center mb-12 md:mb-16 px-4 md:px-0"
                 >
                     <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-cyan-500 to-teal-500 bg-clip-text text-transparent">
                         文章归档
@@ -133,11 +133,11 @@ export default function ArticlesPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="glass-card p-4 rounded-2xl mb-8"
+                    className="glass-card p-4 rounded-none md:rounded-2xl border-x-0 md:border-x mb-8"
                 >
-                    <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center px-4 md:px-0">
                         {/* 搜索框 */}
-                        <div className="relative flex-1">
+                        <div className="relative flex-1 shrink-0">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                 {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                             </div>
@@ -150,8 +150,8 @@ export default function ArticlesPage() {
                             />
                         </div>
 
-                        {/* 分类筛选 */}
-                        <div className="flex flex-wrap gap-2">
+                        {/* 分类筛选 - 移动端横滑 */}
+                        <div className="flex overflow-x-auto hide-scrollbar snap-x gap-2 pb-1 md:pb-0 md:flex-wrap">
                             {categories.map((cat) => (
                                 <button
                                     key={cat}
@@ -170,7 +170,7 @@ export default function ArticlesPage() {
 
                 {/* 文章列表 */}
                 {articles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 md:gap-8 bg-slate-200/50 dark:bg-slate-800/50 md:bg-transparent pb-4 md:pb-0">
                         {articles.map((article, index) => (
                             <motion.article
                                 key={article.id}
@@ -178,7 +178,7 @@ export default function ArticlesPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 + index * 0.05 }}
                                 whileHover={{ y: -5 }}
-                                className="glass-card rounded-2xl overflow-hidden group"
+                                className="glass-card rounded-none md:rounded-2xl border-x-0 md:border-x overflow-hidden group shadow-none md:shadow-lg"
                             >
                                 {/* 封面图 */}
                                 <div className="aspect-video relative overflow-hidden bg-slate-200 dark:bg-slate-700">

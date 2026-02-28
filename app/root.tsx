@@ -25,17 +25,17 @@ import { ModalContainer } from "./components/ui/Modal";
 // ==================== 懒加载组件定义 ====================
 // 高优先级：影响用户交互的核心组件
 const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
-const MusicPlayer = lazy(() => import("~/components/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
-const MusicPlayerMobile = lazy(() => import("~/components/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
+const MusicPlayer = lazy(() => import("~/components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const MusicPlayerMobile = lazy(() => import("~/components/ui/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
 
 // 中优先级：增强体验但非必需的组件
-const Live2D = lazy(() => import("./components/media/Live2D").then(m => ({ default: m.Live2D })));
-const OmniCommand = lazy(() => import("./components/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
-const AchievementSystem = lazy(() => import("./components/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
+const Live2D = lazy(() => import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
+const OmniCommand = lazy(() => import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
+const AchievementSystem = lazy(() => import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
 
 // 低优先级：彩蛋/装饰性组件，用户不会立即需要
 const TheatricalMode = lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
-const AmbientSound = lazy(() => import("./components/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
+const AmbientSound = lazy(() => import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
 const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
 const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
 const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));

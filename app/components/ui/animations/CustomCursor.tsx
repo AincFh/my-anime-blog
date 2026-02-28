@@ -24,7 +24,7 @@ export function CustomCursor() {
     const handleMouseOver = useCallback((e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const isLinkOrButton = !!(target.tagName === "A" || target.tagName === "BUTTON" || target.closest("a") || target.closest("button"));
-        
+
         if (isLinkOrButton !== isHovering) {
             setIsHovering(isLinkOrButton);
         }
@@ -43,7 +43,7 @@ export function CustomCursor() {
             });
         }
         setClickParticles(prev => [...prev, ...particles]);
-        
+
         // 清理粒子
         setTimeout(() => {
             setClickParticles(prev => prev.filter(p => !particles.find(pp => pp.id === p.id)));
@@ -52,7 +52,7 @@ export function CustomCursor() {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        
+
         window.addEventListener("mousemove", updateMousePosition, { passive: true });
         window.addEventListener("mouseover", handleMouseOver);
         window.addEventListener("click", handleClick, { passive: true });
@@ -74,9 +74,9 @@ export function CustomCursor() {
 
     return (
         <>
-            {/* 自定义鼠标指针 - 粉色箭头 */}
+            {/* 自定义鼠标指针 - 粉色箭头 (移动端彻底屏蔽) */}
             <motion.div
-                className="fixed top-0 left-0 pointer-events-none z-[60]"
+                className="hidden md:block fixed top-0 left-0 pointer-events-none z-[60]"
                 style={{
                     left: `${mousePosition.x}px`,
                     top: `${mousePosition.y}px`,
@@ -85,7 +85,7 @@ export function CustomCursor() {
                     scale: isHovering ? 0.8 : 1,
                     rotate: isHovering ? 15 : 0,
                 }}
-                transition={{ 
+                transition={{
                     type: "spring",
                     stiffness: 500,
                     damping: 28,
@@ -114,7 +114,7 @@ export function CustomCursor() {
                 const endX = particle.x + Math.cos(angle) * distance;
                 const endY = particle.y + Math.sin(angle) * distance;
                 const emoji = Math.random() > 0.5 ? '🌸' : '✨';
-                
+
                 return (
                     <motion.div
                         key={particle.id}

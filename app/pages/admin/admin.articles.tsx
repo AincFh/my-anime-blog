@@ -105,7 +105,7 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
           </h1>
           <p className="text-white/50 text-sm mt-1">监管全站博文，支持手动修正 PV/Likes 热度数据。</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 hidden md:flex">
           <Link to="/admin/article/new">
             <button className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium transition-all active:scale-95 shadow-sm bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 shadow-violet-500/30 flex items-center justify-center gap-2 text-sm">
               <Plus size={18} />

@@ -223,19 +223,19 @@ export default function SettingsPage() {
             </ClientOnly>
             <NavMenu />
 
-            <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
-                <div className="w-full h-full max-w-6xl pointer-events-auto flex gap-8">
+            <div className="absolute inset-0 flex items-center justify-center pl-4 md:pl-24 pr-4 md:pr-8 pt-[calc(env(safe-area-inset-top)+5rem)] md:pt-24 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-8 pointer-events-none">
+                <div className="w-full h-full max-w-6xl pointer-events-auto flex flex-col md:flex-row gap-4 md:gap-8">
 
-                    {/* Sidebar */}
-                    <div className="w-64 flex flex-col gap-2">
+                    {/* Sidebar / Topbar on Mobile */}
+                    <div className="w-full md:w-64 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 custom-scrollbar pb-2 md:pb-0">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden
+                                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden whitespace-nowrap shrink-0
                                     ${activeTab === tab.id
-                                        ? "bg-white text-slate-900 shadow-lg shadow-white/10"
+                                        ? "bg-white text-slate-900 shadow-[0_4px_20px_rgb(255,255,255,0.15)]"
                                         : "text-white/60 hover:text-white hover:bg-white/10"
                                     }
                                 `}
@@ -247,7 +247,7 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 overflow-y-auto custom-scrollbar">
+                    <div className="flex-1 min-w-0 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 md:p-8 overflow-y-auto custom-scrollbar">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}

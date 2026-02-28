@@ -83,11 +83,11 @@ export function shouldEnableHighPerformanceEffects(): boolean {
  * 是否应该启用粒子特效
  */
 export function shouldEnableParticles(): boolean {
+  if (isMobileDevice()) return false; // 严格执行移动端减负，全面禁用无用装饰性粒子
+
   const performance = getDevicePerformance();
-  // 低性能设备完全禁用粒子
+  // 低性能PC设备完全禁用粒子
   if (performance === "low") return false;
-  // 移动端仅高性能设备启用
-  if (isMobileDevice()) return performance === "medium";
   // PC 设备中等以上启用
   return true;
 }

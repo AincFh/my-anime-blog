@@ -180,7 +180,7 @@ export default function AdminShop() {
                                 <input type="hidden" name="action" value={isAdding ? "create" : "update"} />
                                 {editingItem && <input type="hidden" name="id" value={editingItem.id} />}
 
-                                <div className="grid grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="col-span-2 space-y-2">
                                         <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">商品名称</label>
                                         <input name="name" defaultValue={editingItem?.name} required className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:border-pink-500/50 outline-none transition-all" />
@@ -200,7 +200,7 @@ export default function AdminShop() {
                                     <textarea name="description" defaultValue={editingItem?.description} rows={2} required className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:border-pink-500/50 outline-none transition-all resize-none" />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">价格 (Coins)</label>
                                         <input type="number" name="price_coins" defaultValue={editingItem?.price_coins} required className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-amber-400 font-black focus:border-amber-500/50 outline-none transition-all" />

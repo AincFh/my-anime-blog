@@ -6,7 +6,7 @@ const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").th
 const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
 import { DynamicBackground } from "~/components/ui/animations/DynamicBackground";
 import { CanvasParticleSystem } from "~/components/ui/animations/CanvasParticleSystem";
-import { MusicPlayerMobile } from "../media/MusicPlayerMobile";
+import { MusicPlayerMobile } from "~/components/ui/media/MusicPlayerMobile";
 import { shouldEnableParticles, shouldUseGlassmorphism } from "~/utils/performance";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -34,8 +34,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 </motion.div>
             </div>
 
-            {/* Atmosphere Layer - Bokeh Lights (纯 CSS 动画) */}
-            <div className="fixed inset-0 z-1 pointer-events-none">
+            {/* Atmosphere Layer - Bokeh Lights (纯 CSS 动画) 移动端屏蔽减负 */}
+            <div className="fixed inset-0 z-1 pointer-events-none hidden md:block">
                 {/* Large bokeh circles - 使用 CSS animation 替代 Framer Motion */}
                 <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary-start/20 blur-3xl animate-bokeh-1" />
                 <div className="absolute bottom-20 -left-20 w-80 h-80 rounded-full bg-primary-end/20 blur-3xl animate-bokeh-2" />
@@ -48,8 +48,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             {/* Floating Navigation - 灵动岛风格，桌面端显示，移动端作为顶部状态栏 */}
             <FloatingNav />
 
-            {/* Content - 顶部留出导航空间 */}
-            <div id="main-content" className="relative z-10 pt-20 pb-20 md:pb-0">
+            {/* Content - 顶部和底部留出导航和安全区空间 */}
+            <div id="main-content" className="relative z-10 pt-[calc(env(safe-area-inset-top)+1rem)] md:pt-[calc(env(safe-area-inset-top)+5rem)] pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-0">
                 {children}
             </div>
 

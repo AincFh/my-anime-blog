@@ -184,10 +184,10 @@ export function AIChatBot() {
 
     return (
         <>
-            {/* 悬浮按钮 - 放在右侧中间偏下，避开 Live2D */}
+            {/* 悬浮按钮 - 放在右侧中间偏下，避开 Live2D (移动端彻底屏蔽) */}
             <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed bottom-[280px] right-4 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl"
+                className="hidden md:flex fixed bottom-[280px] right-4 z-50 w-12 h-12 rounded-full items-center justify-center shadow-lg hover:shadow-xl"
                 style={{
                     background: "linear-gradient(135deg, #FF9F43, #FF6B6B)",
                 }}

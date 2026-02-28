@@ -113,12 +113,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         className="flex flex-col lg:flex-row items-center justify-between min-h-[70vh] px-4"
       >
         {/* Left: Greeting Text */}
-        <div className="lg:w-1/2 mb-12 lg:mb-0 text-center lg:text-left">
+        <div className="lg:w-1/2 mb-10 lg:mb-0 text-center lg:text-left">
           <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 bg-gradient-to-r from-primary-start to-primary-end bg-clip-text text-transparent"
+            className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-4 md:mb-6 bg-gradient-to-r from-primary-start to-primary-end bg-clip-text text-transparent break-words leading-tight"
           >
             <GreetingText />
           </motion.h1>
@@ -126,7 +126,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-xl md:text-2xl text-slate-700 max-w-2xl font-light tracking-wide mb-8"
+            className="text-lg md:text-xl lg:text-2xl text-slate-700 max-w-2xl font-medium tracking-wide mb-6"
           >
             在这里分享关于动漫、游戏和技术的一切
           </motion.p>
@@ -203,21 +203,21 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9, duration: 0.8 }}
-        className="mt-32 mb-24"
+        className="mt-16 md:mt-32 mb-16 md:mb-24"
       >
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+        <div className="flex items-center justify-between mb-8 md:mb-12 px-4 md:px-0">
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
             最新文章
           </h2>
           <Link
             to="/articles"
-            className="text-gray-400 hover:text-pink-500 transition-colors flex items-center gap-2"
+            className="text-slate-400 hover:text-pink-500 transition-colors flex items-center gap-2 text-sm md:text-base"
           >
             查看全部 <span>→</span>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
           {articles.map((article: any, index: number) => (
             <motion.div
               key={article.id}
@@ -261,9 +261,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </motion.div>
                   )}
 
-                  <div className="p-6 flex-1 flex flex-col">
+                  <div className="p-4 md:p-6 flex-1 flex flex-col">
                     {/* 标题 */}
-                    <h3 className="text-xl font-bold mb-3 line-clamp-2 text-slate-800 hover:text-primary-start transition-colors">
+                    <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 line-clamp-2 text-slate-800 hover:text-primary-start transition-colors">
                       {article.title}
                     </h3>
 
@@ -304,15 +304,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2, duration: 0.8 }}
-          className="mb-24"
+          className="mb-16 md:mb-24"
         >
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+          <div className="flex items-center justify-between mb-8 md:mb-12 px-4 md:px-0">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
               追番记录
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* 移动端分为2列，防止单列封面过巨 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             {animes.map((anime: any, index: number) => (
               <motion.div
                 key={anime.id}

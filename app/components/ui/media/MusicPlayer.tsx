@@ -234,28 +234,40 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             <div className="p-6 pt-8 flex gap-8">
               {/* 左侧：可视化唱片 */}
               <div className="w-[280px] shrink-0 space-y-6">
-                <div className="relative flex justify-center">
+                <div className="relative flex justify-center mt-2 mb-2">
+
+                  {/* 可视化器：抽出独立一层，使用极坐标中心原点渲染，避免和唱片同步公转且防止坐标由于高度变化崩碎 */}
+                  {isPlaying && audioData && (
+                    <div className="absolute top-1/2 left-1/2 w-0 h-0 z-0 pointer-events-none">
+                      {Array.from({ length: 32 }).map((_, i) => {
+                        const val = audioData[i % audioData.length] || 0;
+                        const height = Math.max(6, val / 3.5);
+                        return (
+                          <div
+                            key={i}
+                            className="absolute origin-bottom opacity-70"
+                            style={{
+                              transform: `rotate(${i * (360 / 32)}deg) translateY(-106px)`,
+                              width: '4px',
+                              height: `${height}px`,
+                              left: '-2px',
+                              bottom: '0',
+                              transition: 'height 0.1s ease'
+                            }}
+                          >
+                            <div className="w-full h-full bg-primary-start rounded-full shadow-sm" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* 唱片本体，独立被驱动旋转 */}
                   <motion.div
                     animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
                     transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
-                    className="relative w-48 h-48 rounded-full bg-[#111] shadow-2xl ring-8 ring-white/10 dark:ring-white/5 group/vinyl overflow-hidden"
+                    className="relative w-48 h-48 rounded-full bg-[#111] shadow-2xl ring-8 ring-white/10 dark:ring-white/5 group/vinyl overflow-hidden z-10"
                   >
-                    {/* 可视化器 */}
-                    {isPlaying && audioData && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute w-1 rounded-full bg-primary-start/40"
-                            style={{
-                              rotate: i * 30,
-                              transformOrigin: "center 100px",
-                              height: `${Math.max(10, audioData[i % audioData.length] / 3)}px`
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
                     <div className="absolute inset-[12%] rounded-full overflow-hidden border-4 border-[#222]">
                       <img src={currentSong?.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
                     </div>
@@ -263,16 +275,17 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
                   <motion.div
                     animate={{
-                      rotate: stylusState === "playing" ? 34 : stylusState === "lifting" ? 15 : 0,
-                      y: stylusState === "lifting" ? -15 : 0,
-                      x: stylusState === "playing" ? -4 : 0
+                      rotate: stylusState === "playing" ? 30 : stylusState === "lifting" ? 15 : 0,
                     }}
                     transition={{ type: "spring", stiffness: 50, damping: 15 }}
-                    className="absolute -top-4 right-12 w-32 h-44 origin-top-right z-10 pointer-events-none"
+                    className="absolute -top-4 right-10 w-8 h-44 origin-[16px_16px] z-10 pointer-events-none"
                   >
-                    {/* 大唱针细节 - 复用原设计 */}
-                    <div className="absolute top-0 right-2 w-7 h-7 rounded-full bg-gradient-to-br from-slate-300 via-slate-500 to-slate-100 border-2 border-slate-400 shadow-2xl z-20" />
-                    <div className="absolute top-4 right-4 w-2 h-42 bg-gradient-to-b from-slate-400 via-slate-600 to-slate-200 rounded-full shadow-lg origin-top" />
+                    {/* 唱臂转轴 */}
+                    <div className="absolute top-0 left-0 w-8 h-8 rounded-full bg-gradient-to-br from-slate-300 via-slate-500 to-slate-100 border-2 border-slate-400 shadow-2xl z-20" />
+                    {/* 唱臂杆 */}
+                    <div className="absolute top-4 left-[14px] w-1.5 h-[140px] bg-gradient-to-b from-slate-400 via-slate-600 to-slate-200 rounded-full shadow-lg" />
+                    {/* 唱针拾音头 */}
+                    <div className="absolute top-[138px] -left-1 w-3.5 h-6 bg-slate-500 rounded-sm rotate-[18deg] shadow-md border border-slate-400" />
                   </motion.div>
                 </div>
 
@@ -284,7 +297,10 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
               {/* 右侧：歌词 */}
               {currentLyrics.length > 0 && (
-                <div className="flex-1 h-[280px] overflow-hidden relative">
+                <div
+                  className="flex-1 h-[280px] overflow-hidden relative"
+                  style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)' }}
+                >
                   <motion.div
                     className="space-y-4 py-20"
                     animate={{ y: -activeLyricIndex * 40 }}
@@ -321,7 +337,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                 />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between relative">
                 <button
                   onClick={() => setShowPlaylist(!showPlaylist)}
                   className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${showPlaylist ? 'bg-primary-start text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}
@@ -329,7 +345,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <ListMusic size={18} />
                 </button>
 
-                <div className="flex items-center gap-10">
+                {/* 强化横向居中的中心坐标系限定 */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-10">
                   <button onClick={handlePrev} className="text-slate-400 hover:text-primary-start transition-colors"><SkipBack size={24} className="fill-current" /></button>
                   <button
                     onClick={togglePlay}

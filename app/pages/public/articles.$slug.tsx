@@ -106,12 +106,12 @@ export default function ArticleDetailPage() {
     // const getCategoryColor = ... (removed local function)
 
     return (
-        <div className="min-h-screen pt-4 pb-12 px-4">
+        <div className="min-h-screen pt-4 md:pt-8 pb-12 w-full md:px-4">
             <div className="max-w-4xl mx-auto">
                 {/* 返回按钮 */}
                 <Link
                     to="/articles"
-                    className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary-start transition-colors mb-6"
+                    className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary-start transition-colors mb-6 px-4 md:px-0"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     返回文章列表
@@ -121,7 +121,7 @@ export default function ArticleDetailPage() {
                 <motion.header
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
+                    className="mb-8 px-4 md:px-0"
                 >
                     {/* 分类 */}
                     <div className="mb-4">
@@ -130,8 +130,8 @@ export default function ArticleDetailPage() {
                         </span>
                     </div>
 
-                    {/* 标题 */}
-                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white mb-4 leading-tight">
+                    {/* 标题 - 增加换行和长词防压断重置 */}
+                    <h1 className="text-2xl md:text-4xl font-bold text-slate-800 dark:text-white mb-4 leading-tight break-words">
                         {article.title}
                     </h1>
 
@@ -163,7 +163,7 @@ export default function ArticleDetailPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="mb-8 rounded-2xl overflow-hidden"
+                        className="mb-8 rounded-none md:rounded-2xl overflow-hidden"
                     >
                         <OptimizedImage
                             src={article.cover_image}
@@ -179,10 +179,10 @@ export default function ArticleDetailPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="glass-card p-8 rounded-2xl mb-8"
+                    className="glass-card p-5 md:p-8 rounded-none md:rounded-2xl border-x-0 md:border-x mb-8"
                 >
                     <div
-                        className="prose prose-base md:prose-lg dark:prose-invert max-w-none
+                        className="prose prose-sm md:prose-base dark:prose-invert max-w-none
                             prose-headings:text-slate-800 dark:prose-headings:text-white
                             prose-p:text-slate-600 dark:prose-p:text-slate-300
                             prose-a:text-primary-start hover:prose-a:text-primary-end
@@ -201,7 +201,7 @@ export default function ArticleDetailPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="flex flex-wrap gap-2 mb-8"
+                        className="flex flex-wrap gap-2 mb-8 px-4 md:px-0"
                     >
                         {tags.map((tag, i) => (
                             <span
@@ -220,7 +220,7 @@ export default function ArticleDetailPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.35 }}
-                    className="flex gap-3 mb-12"
+                    className="flex gap-3 mb-12 px-4 md:px-0"
                 >
                     <button
                         onClick={() => {
@@ -240,6 +240,7 @@ export default function ArticleDetailPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
+                        className="px-4 md:px-0"
                     >
                         <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6">
                             相关文章

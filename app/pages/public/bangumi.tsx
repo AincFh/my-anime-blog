@@ -181,12 +181,12 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
 
   return (
-    <div className="container mx-auto px-4 py-20">
+    <div className="w-full md:container mx-auto md:px-4 py-8 md:py-20">
       {/* 标题 */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-16"
+        className="text-center mb-10 md:mb-16 px-4 md:px-0"
       >
         <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
           我的番剧墙
@@ -199,10 +199,10 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-col md:flex-row items-center justify-between gap-4 mb-12 bg-white/5 dark:bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10"
+        className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 md:mb-12 bg-white/5 dark:bg-black/20 backdrop-blur-md p-3 md:p-4 rounded-none md:rounded-[2rem] border-y md:border border-white/10"
       >
-        {/* 状态筛选 */}
-        <div className="flex flex-wrap gap-2">
+        {/* 状态筛选 - 移动端横滑 */}
+        <div className="flex overflow-x-auto hide-scrollbar snap-x gap-2 pb-1 md:pb-0 md:flex-wrap px-4 md:px-0">
           {[
             { id: 'all', label: '全部' },
             { id: 'watching', label: '在看' },
@@ -224,7 +224,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
         </div>
 
         {/* 排序方式 */}
-        <div className="flex items-center gap-2 bg-white/10 rounded-xl p-1">
+        <div className="flex items-center gap-2 bg-white/10 md:rounded-xl p-1 overflow-x-auto hide-scrollbar px-4 md:px-1">
           {[
             { id: 'default', label: '默认', icon: Filter },
             { id: 'rating', label: '评分', icon: Star },
@@ -260,13 +260,13 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-12"
               >
-                <div className="flex items-center gap-4 mb-6">
-                  <h2 className={`text-2xl font-bold ${config.color}`}>{config.label}</h2>
+                <div className="flex items-center gap-4 mb-4 md:mb-6 px-4 md:px-0">
+                  <h2 className={`text-xl md:text-2xl font-bold ${config.color}`}>{config.label}</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-30" style={{ color: config.color }} />
                   <span className="text-sm text-slate-500">{(statusAnimes as any[]).length} 部</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
                   {(statusAnimes as any[]).map((anime: any, index: number) => (
                     <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} />
                   ))}
@@ -276,7 +276,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
           })
         ) : (
           // 扁平视图 (排序后)
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
             {processedAnimes.map((anime: any, index: number) => {
               const status = anime.status || 'plan';
               const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.plan;

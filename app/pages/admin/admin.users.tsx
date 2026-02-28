@@ -174,7 +174,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-2xl font-bold shadow-lg shadow-violet-500/20 hover:scale-105 active:scale-95 transition-all"
+                        className="hidden md:flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-2xl font-bold shadow-lg shadow-violet-500/20 hover:scale-105 active:scale-95 transition-all"
                     >
                         <Plus size={18} />
                         <span>招募新旅行者</span>

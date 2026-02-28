@@ -99,7 +99,7 @@ export function FloatingNav() {
     <>
       {/* 导航栏容器 */}
       <motion.nav
-        className="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[95vw]"
+        className="hidden md:block fixed top-[calc(env(safe-area-inset-top)+1rem)] md:top-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100vw-2rem)] md:w-auto max-w-[95vw]"
         style={{ y }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -107,12 +107,12 @@ export function FloatingNav() {
       >
         <div
           className="
-            relative flex items-center py-2.5 px-2 rounded-full
+            relative flex items-center justify-between md:justify-start py-2.5 px-3 md:px-2 rounded-full
             /* --- iOS 玻璃态核心样式 --- */
             bg-white/60                 /* 1. 高透的白色背景 */
             backdrop-blur-xl            /* 2. 极强的背景高斯模糊 */
             border border-white/40      /* 3. 半透明的白色边框 */
-            shadow-lg shadow-black/5    /* 4. 柔和的投影 */
+            shadow-[0_8px_30px_rgb(0,0,0,0.12)]    /* 4. 柔和的投影 */
             /* 兼容暗色模式 */
             dark:bg-slate-900/60 dark:border-white/10
           "

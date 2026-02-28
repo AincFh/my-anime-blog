@@ -238,7 +238,7 @@ export default function AdminMissions() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-white/40 uppercase ml-1">目标动作</label>
                                         <input
