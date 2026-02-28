@@ -5,8 +5,8 @@
 
 // 认证与安全配置
 export const SECURITY_CONFIG = {
-    // CSRF 独立密钥（优先从环境读取，保障 P0-10 隔离要求）
-    csrfSecret: (typeof process !== 'undefined' ? process.env.CSRF_SECRET : null) || "aincrad-fallback-csrf-key-99",
+    // 移除不安全的 Fallback (P1 安全修复: 强制从构建环境或 Runtime 剥离)
+    csrfSecret: typeof process !== 'undefined' ? process.env.CSRF_SECRET : undefined,
     // 极盾风控等级
     turnstileLevel: 'strict',
 };

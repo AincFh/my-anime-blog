@@ -74,6 +74,7 @@ export default function Register() {
 
                         <RegisterForm
                             onRegister={handleRegister}
+                            onSendCode={handleSendCode}
                             isLoading={isLoading}
                             error={error}
                         />

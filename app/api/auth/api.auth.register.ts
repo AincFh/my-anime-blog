@@ -1,4 +1,4 @@
-﻿/**
+/**
  * API: 用户注册
  * POST /api/auth/register
  */
@@ -24,6 +24,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const formData = await request.formData();
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const code = formData.get("code") as string;
     const username = (formData.get("username") as string) || undefined;
 
     // 验证输入
@@ -34,18 +35,25 @@ export async function action({ request, context }: Route.ActionArgs) {
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       return Response.json(
-        { success: false, error: "密码长度至少6位" },
+        { success: false, error: "密码强度不够，至少8位字符" },
         { status: 400 }
       );
     }
 
-    // 注册用户（简化版：无需验证码）
+    if (!code || code.length !== 6) {
+      return Response.json(
+        { success: false, error: "请输入6位验证码" },
+        { status: 400 }
+      );
+    }
+
+    // 注册用户（封堵 P1 后门风险，强制向内核传递邮件验证码）
     const result = await registerUser(
       email,
       password,
-      "", // 占位：后续可添加验证码
+      code,
       username || "",
       anime_db,
       CACHE_KV

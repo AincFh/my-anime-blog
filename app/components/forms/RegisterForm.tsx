@@ -5,6 +5,7 @@ import { Mail, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle, RefreshCw } 
 
 interface RegisterFormProps {
     onRegister: (data: FormData) => Promise<void>;
+    onSendCode: (email: string) => Promise<boolean>;
     isLoading: boolean;
     error?: string;
 }
@@ -38,7 +39,7 @@ function generateCaptcha() {
     };
 }
 
-export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps) {
+export function RegisterForm({ onRegister, onSendCode, isLoading, error }: RegisterFormProps) {
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -46,23 +47,26 @@ export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps
         captchaInput: "",
         agreed: false
     });
-    const [captcha, setCaptcha] = useState(generateCaptcha);
     const [localError, setLocalError] = useState("");
     const [showCaptcha, setShowCaptcha] = useState(false);
+    const [isSendingCode, setIsSendingCode] = useState(false);
+    const [countdown, setCountdown] = useState(0);
 
-    const refreshCaptcha = useCallback(() => {
-        setCaptcha(generateCaptcha());
-        setFormData(prev => ({ ...prev, captchaInput: "" }));
-    }, []);
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [countdown]);
 
-    const handleGetCaptcha = () => {
+    const handleGetCaptcha = async () => {
         // 验证邮箱、密码是否填写
         if (!formData.email || !formData.email.includes("@")) {
             setLocalError("请输入有效的邮箱地址");
             return;
         }
-        if (formData.password.length < 6) {
-            setLocalError("密码长度至少6位");
+        if (formData.password.length < 8) {
+            setLocalError("密码长度至少8位，包含大小写及数字");
             return;
         }
         if (formData.password !== formData.confirmPassword) {
@@ -75,24 +79,44 @@ export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps
         }
 
         setLocalError("");
-        setShowCaptcha(true);
-        refreshCaptcha();
+        setIsSendingCode(true);
+
+        const sent = await onSendCode(formData.email);
+        setIsSendingCode(false);
+
+        if (sent) {
+            setShowCaptcha(true);
+            setCountdown(60);
+        } else {
+            setLocalError("发送验证码失败，请重试");
+        }
+    };
+
+    const handleResendCode = async () => {
+        if (countdown > 0) return;
+        setIsSendingCode(true);
+        const sent = await onSendCode(formData.email);
+        setIsSendingCode(false);
+        if (sent) {
+            setCountdown(60);
+        } else {
+            setLocalError("验证码无法送达，请检查邮箱是否正确");
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLocalError("");
 
-        // 验证验证码
-        if (formData.captchaInput !== captcha.answer) {
-            setLocalError("验证码错误，请重试");
-            refreshCaptcha();
+        if (!formData.captchaInput || formData.captchaInput.length !== 6) {
+            setLocalError("请输入 6 位邮箱验证码");
             return;
         }
 
         const form = new FormData();
         form.append("email", formData.email);
         form.append("password", formData.password);
+        form.append("code", formData.captchaInput);
 
         await onRegister(form);
     };
@@ -129,7 +153,7 @@ export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
-                        placeholder="至少6位字符"
+                        placeholder="至少 8 位包含拼写的字符"
                         disabled={showCaptcha}
                     />
                 </div>
@@ -185,9 +209,10 @@ export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps
                         type="button"
                         onClick={handleGetCaptcha}
                         className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-start/30 text-sm font-bold text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-primary-start/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-start transform hover:-translate-y-0.5 transition-all duration-200"
+                        disabled={isSendingCode}
                     >
-                        获取验证码
-                        <ArrowRight size={18} />
+                        {isSendingCode ? <Loader2 className="animate-spin" size={18} /> : "获取并发送验证码"}
+                        {!isSendingCode && <ArrowRight size={18} />}
                     </motion.button>
                 ) : (
                     <motion.div
@@ -201,25 +226,25 @@ export function RegisterForm({ onRegister, isLoading, error }: RegisterFormProps
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">验证码</label>
                             <div className="flex gap-3 items-center">
-                                {/* 验证码显示区域 */}
-                                <div className="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 font-mono text-lg font-bold text-slate-700 dark:text-slate-200 select-none tracking-wider">
-                                    {captcha.question}
+                                <div className="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 select-none">
+                                    邮件安全码
                                 </div>
                                 <button
                                     type="button"
-                                    onClick={refreshCaptcha}
-                                    className="p-2 text-slate-500 hover:text-primary-start transition-colors"
-                                    title="刷新验证码"
+                                    onClick={handleResendCode}
+                                    disabled={countdown > 0 || isSendingCode}
+                                    className="p-2 text-slate-500 hover:text-primary-start disabled:opacity-50 transition-colors"
+                                    title="重新发送"
                                 >
-                                    <RefreshCw size={20} />
+                                    {countdown > 0 ? <span className="text-xs font-bold">{countdown}s</span> : <RefreshCw size={18} />}
                                 </button>
                                 <input
                                     type="text"
                                     value={formData.captchaInput}
                                     onChange={(e) => setFormData({ ...formData, captchaInput: e.target.value })}
-                                    className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start text-center font-mono text-lg transition-all duration-200"
-                                    placeholder="答案"
-                                    maxLength={4}
+                                    className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start text-center font-mono text-lg transition-all duration-200 tracking-widest"
+                                    placeholder="代码"
+                                    maxLength={6}
                                 />
                             </div>
                         </div>

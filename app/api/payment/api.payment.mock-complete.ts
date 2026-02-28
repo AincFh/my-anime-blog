@@ -32,31 +32,37 @@ export async function loader({ request, context }: { request: Request; context: 
         return new Response('订单不存在', { status: 404 });
     }
 
-    // Verify signature (if provided - for backward compatibility)
-    if (nonce && timestamp && signature) {
-        const verification = await verifyPaymentSignature(
-            orderNo,
-            order.amount,
-            order.user_id,
-            nonce,
-            parseInt(timestamp),
-            signature,
-            PAYMENT_SECRET
-        );
+    // 强制验证签名 (P0 安全修复)
+    if (!nonce || !timestamp || !signature) {
+        await logAudit(anime_db, {
+            userId: order.user_id,
+            action: 'payment_failed',
+            targetType: 'order',
+            targetId: orderNo,
+            metadata: { error: 'Missing signature parameters', type: 'invalid_signature' },
+        });
+        return new Response('安全验证失败：缺少签名核心参数', { status: 403 });
+    }
 
-        if (!verification.valid) {
-            await logAudit(anime_db, {
-                userId: order.user_id,
-                action: 'payment_failed',
-                targetType: 'order',
-                targetId: orderNo,
-                metadata: { error: verification.error, type: 'invalid_signature' },
-            });
-            return new Response(`安全验证失败: ${verification.error}`, { status: 403 });
-        }
-    } else {
-        // Log unsigned access attempt (for monitoring)
-        console.warn(`Unsigned payment completion attempt for order ${orderNo}`);
+    const verification = await verifyPaymentSignature(
+        orderNo,
+        order.amount,
+        order.user_id,
+        nonce,
+        parseInt(timestamp),
+        signature,
+        PAYMENT_SECRET
+    );
+
+    if (!verification.valid) {
+        await logAudit(anime_db, {
+            userId: order.user_id,
+            action: 'payment_failed',
+            targetType: 'order',
+            targetId: orderNo,
+            metadata: { error: verification.error, type: 'invalid_signature' },
+        });
+        return new Response(`安全验证失败: ${verification.error}`, { status: 403 });
     }
 
     if (order.status !== 'pending') {
