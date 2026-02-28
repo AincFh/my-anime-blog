@@ -61,9 +61,8 @@ export async function loader({ request, context }: { request: Request; context: 
     });
 }
 
-// 执行签到
 export async function action({ request, context }: { request: Request; context: any }) {
-    const { anime_db } = context.cloudflare.env;
+    const { anime_db, CACHE_KV } = context.cloudflare.env;
 
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
@@ -71,6 +70,20 @@ export async function action({ request, context }: { request: Request; context: 
     if (!valid || !user) {
         return Response.json({ success: false, error: '请先登录' }, { status: 401 });
     }
+
+    let unlock = async () => {};
+    // 0. 路由级微秒排它锁 (P0 防护措施：防范利用 JS Promise.all 并发刷钱)
+    if (CACHE_KV) {
+        const { acquirePaymentLock, releasePaymentLock } = await import('~/services/payment/gateway.server');
+        const lockKey = `action_lock:signin:${user.id}`;
+        const acquired = await acquirePaymentLock(CACHE_KV, lockKey, 5); // 锁死5秒足以击碎并发请求
+        if (!acquired) {
+            return Response.json({ success: false, error: '手速太快啦，排队受理中，请勿频发并发重试' }, { status: 429 });
+        }
+        unlock = async () => { await releasePaymentLock(CACHE_KV, lockKey); };
+    }
+
+    try {
 
     // 检查今日是否已签到
     const today = new Date().toISOString().split('T')[0];
@@ -169,4 +182,7 @@ export async function action({ request, context }: { request: Request; context: 
     };
 
     return Response.json({ ...result, balance: newBalance });
+    } finally {
+        await unlock();
+    }
 }

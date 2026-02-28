@@ -201,6 +201,17 @@ export async function claimMissionReward(
         return { success: false, error: '任务未完成或已领取' };
     }
 
+    // 0. 乐观原子锁 (P0 级别防并发超刷修复)
+    // 利用 D1 事务原子性，将 UPDATE 提前，谁先把 completed 变成了 claimed，谁才具备发钱资格。若慢了一步被其他并发抢先则 changes 会变成 0
+    const now = Math.floor(Date.now() / 1000);
+    const updateResult = await db.prepare(
+        'UPDATE user_missions SET status = "claimed", last_updated_at = ? WHERE user_id = ? AND mission_id = ? AND status = "completed"'
+    ).bind(now, userId, missionId).run();
+
+    if (!updateResult.meta.changes || updateResult.meta.changes === 0) {
+        return { success: false, error: '领取失败，任务已在其他终端被受理，请勿重复刷取' };
+    }
+
     // 1. 发放金币
     if (mission.reward_coins > 0) {
         await addCoins(db, userId, mission.reward_coins, 'activity', `任务奖励: ${mission.name}`);
@@ -212,15 +223,7 @@ export async function claimMissionReward(
         // 这里可以扩展等级检查逻辑
     }
 
-    // 3. 标记为已领取
-    await execute(
-        db,
-        'UPDATE user_missions SET status = "claimed", last_updated_at = ? WHERE user_id = ? AND mission_id = ?',
-        Math.floor(Date.now() / 1000),
-        userId,
-        missionId
-    );
-
+    // (由于在首部已通过乐观锁先行完成状态的安全挂接，此处的收尾更新已被废弃，防止二次覆盖)
     return {
         success: true,
         coins: mission.reward_coins,
