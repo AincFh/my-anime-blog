@@ -76,7 +76,7 @@ export function CustomCursor() {
         <>
             {/* 自定义鼠标指针 - 粉色箭头 (移动端彻底屏蔽) */}
             <motion.div
-                className="hidden md:block fixed top-0 left-0 pointer-events-none z-[60]"
+                className="hidden md:block fixed top-0 left-0 pointer-events-none z-[99999]"
                 style={{
                     left: `${mousePosition.x}px`,
                     top: `${mousePosition.y}px`,
@@ -118,7 +118,7 @@ export function CustomCursor() {
                 return (
                     <motion.div
                         key={particle.id}
-                        className="fixed pointer-events-none z-50 text-2xl"
+                        className="fixed pointer-events-none z-[99998] text-2xl"
                         initial={{
                             x: particle.x,
                             y: particle.y,

@@ -57,29 +57,8 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // 初始化 Audio
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        if (!audioRef.current) {
-            audioRef.current = new Audio();
-            audioRef.current.crossOrigin = "anonymous";
-        }
-
-        const audio = audioRef.current;
-        const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-        const handleDurationChange = () => setDuration(audio.duration);
-        const handleEnded = () => handleNext();
-
-        audio.addEventListener("timeupdate", handleTimeUpdate);
-        audio.addEventListener("loadedmetadata", handleDurationChange);
-        audio.addEventListener("ended", handleEnded);
-
-        return () => {
-            audio.removeEventListener("timeupdate", handleTimeUpdate);
-            audio.removeEventListener("loadedmetadata", handleDurationChange);
-            audio.removeEventListener("ended", handleEnded);
-        };
-    }, []);
+    // 通过事件属性方式让 DOM 层面直接报告时间更新
+    // 不再这里自行 new Audio 制造孤点引用
 
     // 监听开关事件
     useEffect(() => {
@@ -177,8 +156,9 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
         togglePlay,
         handleNext,
         handlePrev,
-        currentTime,
+        setCurrentTime,
         duration,
+        setDuration,
         handleSeek,
         volume,
         setVolume,

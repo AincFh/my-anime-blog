@@ -19,7 +19,9 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
     handleNext,
     handlePrev,
     currentTime,
+    setCurrentTime,
     duration,
+    setDuration,
     handleSeek,
     volume,
     setVolume,
@@ -135,9 +137,17 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   if (!isMounted || !isVisible) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-[100] group/player pointer-events-auto hidden md:block">
+    <div className="fixed bottom-6 left-6 z-40 group/player pointer-events-auto hidden md:block">
       {songs.length > 0 && currentSong && (
-        <audio ref={audioRef} src={currentSong.url} preload="metadata" crossOrigin="anonymous" />
+        <audio 
+          ref={audioRef} 
+          src={currentSong.url} 
+          preload="metadata" 
+          crossOrigin="anonymous" 
+          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onEnded={handleNext}
+        />
       )}
 
       <AnimatePresence mode="wait">
@@ -236,25 +246,32 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               <div className="w-[312px] shrink-0 space-y-8">
                 <div className="relative flex justify-center mt-4 mb-6">
 
-                  {/* 可视化器：采用极坐标涟漪水波纹扩散圈 (Ripple Effect) */}
+                  {/* 可视化器：全天候演进版多频复合水波纹呼吸动效 (Fluid Frequency Ripple) */}
                   {isPlaying && audioData && (() => {
-                    const avgAmplitude = Array.from(audioData).reduce((a, b) => a + b, 0) / (audioData.length || 1);
-                    const scaleFactor = 1 + avgAmplitude / 500; // 缓和震荡比例基数
-                    const scaleFactor2 = 1 + avgAmplitude / 300;
+                    const lowFreq = Array.from(audioData.slice(0, 10)).reduce((a, b) => a + b, 0) / 10;
+                    const midFreq = Array.from(audioData.slice(10, 22)).reduce((a, b) => a + b, 0) / 12;
+                    const highFreq = Array.from(audioData.slice(22, 32)).reduce((a, b) => a + b, 0) / 10;
+                    
+                    const scaleL = 1 + lowFreq / 300; 
+                    const scaleM = 1 + midFreq / 250;
+                    const scaleH = 1 + highFreq / 200;
                     
                     return (
                       <div className="absolute top-1/2 left-1/2 w-0 h-0 z-0 pointer-events-none flex items-center justify-center">
+                        {/* 泛音流体波（最高频外扩最快） */}
                         <div 
-                          className="absolute w-56 h-56 rounded-full border-2 border-primary-start/30 opacity-60 transition-transform duration-75"
-                          style={{ transform: `scale(${scaleFactor})` }}
+                          className="absolute w-56 h-56 bg-primary-start/10 opacity-60 blur-xl transition-transform duration-75 animate-[spin_8s_linear_infinite]"
+                          style={{ borderRadius: '45% 55% 40% 60% / 55% 45% 60% 40%', transform: `scale(${scaleH * 1.15})` }}
                         />
+                        {/* 中频流光电磁场 */}
                         <div 
-                          className="absolute w-56 h-56 rounded-full border border-primary-start/10 opacity-30 transition-transform duration-100"
-                          style={{ transform: `scale(${scaleFactor2})` }}
+                          className="absolute w-56 h-56 border border-primary-start/30 opacity-60 transition-transform duration-100 animate-[spin_12s_linear_infinite_reverse]"
+                          style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%', transform: `scale(${scaleM * 1.05})` }}
                         />
+                        {/* 低频深水激荡圈（缓慢呼吸的内层核心） */}
                         <div 
-                          className="absolute w-56 h-56 rounded-full bg-primary-start/5 opacity-50 blur-lg transition-transform duration-100"
-                          style={{ transform: `scale(${scaleFactor2 * 1.05})` }}
+                          className="absolute w-56 h-56 border-2 border-primary-start/40 opacity-80 transition-transform duration-100 animate-[spin_18s_linear_infinite]"
+                          style={{ borderRadius: '60% 40% 30% 70% / 50% 60% 50% 40%', transform: `scale(${scaleL})` }}
                         />
                       </div>
                     );
@@ -274,7 +291,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   {/* 悬臂与唱针 */}
                   <motion.div
                     animate={{
-                      rotate: stylusState === "playing" ? 26 : stylusState === "lifting" ? 10 : 0,
+                      rotate: stylusState === "playing" ? 15 : stylusState === "lifting" ? 5 : -5,
                     }}
                     transition={{ type: "spring", stiffness: 45, damping: 15 }}
                     style={{ transformOrigin: "16px 16px" }}
@@ -312,7 +329,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                     {currentLyrics.map((lyric, idx) => (
                       <div
                         key={idx}
-                        className={`text-sm font-bold transition-all duration-500 text-center ${idx === activeLyricIndex ? 'text-primary-start scale-110 opacity-100' : 'text-slate-400 dark:text-white/20 opacity-40 blur-[0.5px]'}`}
+                        className={`text-[15px] font-bold transition-all duration-500 text-center ${idx === activeLyricIndex ? 'text-primary-start scale-[1.12] opacity-100' : 'text-slate-400 dark:text-white/30 opacity-60'}`}
                       >
                         {lyric.text}
                       </div>
@@ -369,28 +386,33 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <button onClick={handleNext} className="text-slate-400 hover:text-primary-start transition-colors"><SkipForward size={24} className="fill-current" /></button>
                 </div>
 
-                {/* 音量控制 (Hover 抽屉式隐形收展设计) */}
-                <div className="flex items-center gap-2 w-8 hover:w-28 shrink-0 group transition-all duration-300 overflow-hidden bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full h-8 px-2 cursor-pointer ml-auto border border-transparent">
-                  <button onClick={() => setIsMuted(!isMuted)} className="text-slate-500 hover:text-slate-700 dark:text-white/60 dark:hover:text-white transition-colors shrink-0">
-                    {isMuted || volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
-                  </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={isMuted ? 0 : volume}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      setVolume(v);
-                      if (v > 0) setIsMuted(false);
-                    }}
-                    className="flex-1 w-full h-1 bg-slate-300 dark:bg-white/20 rounded-full appearance-none cursor-pointer outline-none transition-all opacity-0 group-hover:opacity-100 group-hover:h-1.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 group-hover:[&::-webkit-slider-thumb]:w-2.5 group-hover:[&::-webkit-slider-thumb]:h-2.5 group-hover:[&::-webkit-slider-thumb]:rounded-full group-hover:[&::-webkit-slider-thumb]:bg-primary-start"
-                    style={{
-                      background: `linear-gradient(to right, #FF7A00 ${(isMuted ? 0 : volume) * 100}%, transparent ${(isMuted ? 0 : volume) * 100}%)`,
-                      backgroundColor: 'rgba(148, 163, 184, 0.2)'
-                    }}
-                  />
+                {/* 音量控制 (垂直向上悬浮抽屉弹窗, 避免挤压同层布局) */}
+                <div className="relative flex items-center justify-center shrink-0 group hover:z-50 ml-auto">
+                  <div 
+                    onClick={() => setIsMuted(!isMuted)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center bg-transparent group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors cursor-pointer text-slate-500 hover:text-slate-700 dark:text-white/60 dark:hover:text-white"
+                  >
+                    {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                  </div>
+                  {/* 向上滑出的垂直弹层 */}
+                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-10 h-32 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full shadow-2xl opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 flex flex-col items-center justify-center py-4 z-50">
+                    <div className="flex-1 w-full flex items-center justify-center">
+                      <input
+                        type="range"
+                        min="0" max="1" step="0.01"
+                        value={isMuted ? 0 : volume}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setVolume(v);
+                          if (v > 0) setIsMuted(false);
+                        }}
+                        className="w-[88px] h-1.5 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer outline-none transition-all [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-start origin-center -rotate-90 hover:[&::-webkit-slider-thumb]:scale-125 shadow-inner"
+                        style={{
+                          background: `linear-gradient(to right, #FF7A00 ${(isMuted ? 0 : volume) * 100}%, transparent ${(isMuted ? 0 : volume) * 100}%)`,
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
