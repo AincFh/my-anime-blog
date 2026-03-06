@@ -236,31 +236,29 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               <div className="w-[312px] shrink-0 space-y-8">
                 <div className="relative flex justify-center mt-4 mb-6">
 
-                  {/* 可视化器：抽出独立一层，使用极坐标中心原点渲染，避免和唱片同步公转且防止坐标由于高度变化崩碎 */}
-                  {isPlaying && audioData && (
-                    <div className="absolute top-1/2 left-1/2 w-0 h-0 z-0 pointer-events-none">
-                      {Array.from({ length: 32 }).map((_, i) => {
-                        const val = audioData[i % audioData.length] || 0;
-                        const height = Math.max(6, val / 3.5);
-                        return (
-                          <div
-                            key={i}
-                            className="absolute origin-bottom opacity-70"
-                            style={{
-                              transform: `rotate(${i * (360 / 32)}deg) translateY(-106px)`,
-                              width: '4px',
-                              height: `${height}px`,
-                              left: '-2px',
-                              bottom: '0',
-                              transition: 'height 0.1s ease'
-                            }}
-                          >
-                            <div className="w-full h-full bg-primary-start rounded-full shadow-sm" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  {/* 可视化器：采用极坐标涟漪水波纹扩散圈 (Ripple Effect) */}
+                  {isPlaying && audioData && (() => {
+                    const avgAmplitude = Array.from(audioData).reduce((a, b) => a + b, 0) / (audioData.length || 1);
+                    const scaleFactor = 1 + avgAmplitude / 500; // 缓和震荡比例基数
+                    const scaleFactor2 = 1 + avgAmplitude / 300;
+                    
+                    return (
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 z-0 pointer-events-none flex items-center justify-center">
+                        <div 
+                          className="absolute w-56 h-56 rounded-full border-2 border-primary-start/30 opacity-60 transition-transform duration-75"
+                          style={{ transform: `scale(${scaleFactor})` }}
+                        />
+                        <div 
+                          className="absolute w-56 h-56 rounded-full border border-primary-start/10 opacity-30 transition-transform duration-100"
+                          style={{ transform: `scale(${scaleFactor2})` }}
+                        />
+                        <div 
+                          className="absolute w-56 h-56 rounded-full bg-primary-start/5 opacity-50 blur-lg transition-transform duration-100"
+                          style={{ transform: `scale(${scaleFactor2 * 1.05})` }}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   {/* 唱片本体，独立被驱动旋转 */}
                   <motion.div
@@ -279,7 +277,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                       rotate: stylusState === "playing" ? 26 : stylusState === "lifting" ? 10 : 0,
                     }}
                     transition={{ type: "spring", stiffness: 45, damping: 15 }}
-                    className="absolute -top-4 right-2 w-8 h-48 origin-[16px_16px] z-20 pointer-events-none drop-shadow-xl"
+                    style={{ transformOrigin: "16px 16px" }}
+                    className="absolute -top-4 right-2 w-8 h-48 z-20 pointer-events-none drop-shadow-xl"
                   >
                     {/* 唱臂转轴 */}
                     <div className="absolute top-0 left-0 w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-400 to-slate-200 border border-slate-300 shadow-md z-20" />
@@ -358,8 +357,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <ListMusic size={18} />
                 </button>
 
-                {/* 强化横向居中的中心坐标系限定 */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-10">
+                {/* 强化横向居中的中心坐标系限定，缩小 gap 到 6 使左右切歌控件更紧凑不“过宽” */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-6">
                   <button onClick={handlePrev} className="text-slate-400 hover:text-primary-start transition-colors"><SkipBack size={24} className="fill-current" /></button>
                   <button
                     onClick={togglePlay}
@@ -370,10 +369,10 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <button onClick={handleNext} className="text-slate-400 hover:text-primary-start transition-colors"><SkipForward size={24} className="fill-current" /></button>
                 </div>
 
-                {/* 音量控制 */}
-                <div className="flex items-center gap-2 w-24 shrink-0 group">
-                  <button onClick={() => setIsMuted(!isMuted)} className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
-                    {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                {/* 音量控制 (Hover 抽屉式隐形收展设计) */}
+                <div className="flex items-center gap-2 w-8 hover:w-28 shrink-0 group transition-all duration-300 overflow-hidden bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full h-8 px-2 cursor-pointer ml-auto border border-transparent">
+                  <button onClick={() => setIsMuted(!isMuted)} className="text-slate-500 hover:text-slate-700 dark:text-white/60 dark:hover:text-white transition-colors shrink-0">
+                    {isMuted || volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
                   </button>
                   <input
                     type="range"
@@ -386,7 +385,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                       setVolume(v);
                       if (v > 0) setIsMuted(false);
                     }}
-                    className="flex-1 w-full h-1 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer outline-none transition-all group-hover:h-1.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 group-hover:[&::-webkit-slider-thumb]:w-2.5 group-hover:[&::-webkit-slider-thumb]:h-2.5 group-hover:[&::-webkit-slider-thumb]:rounded-full group-hover:[&::-webkit-slider-thumb]:bg-primary-start"
+                    className="flex-1 w-full h-1 bg-slate-300 dark:bg-white/20 rounded-full appearance-none cursor-pointer outline-none transition-all opacity-0 group-hover:opacity-100 group-hover:h-1.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 group-hover:[&::-webkit-slider-thumb]:w-2.5 group-hover:[&::-webkit-slider-thumb]:h-2.5 group-hover:[&::-webkit-slider-thumb]:rounded-full group-hover:[&::-webkit-slider-thumb]:bg-primary-start"
                     style={{
                       background: `linear-gradient(to right, #FF7A00 ${(isMuted ? 0 : volume) * 100}%, transparent ${(isMuted ? 0 : volume) * 100}%)`,
                       backgroundColor: 'rgba(148, 163, 184, 0.2)'
