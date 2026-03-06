@@ -23,28 +23,28 @@ import { ToastContainer } from "./components/ui/Toast";
 import { ModalContainer } from "./components/ui/Modal";
 
 // ==================== 懒加载组件定义 ====================
-// 在客户端检测移动端，避免移动端加载无用的庞大重型桌面组件 JS chunk
-const isMobileClient = () => typeof window !== 'undefined' && window.innerWidth < 768;
+// 设备分流由 App 组件的 isMobile state 在 JSX 渲染层控制
+// lazy() 层仅负责代码拆分，不做设备判断
 
-// 高优先级：影响用户交互的核心组件
-const CustomCursor = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
-const MusicPlayer = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+// 桌面端专属
+const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
+const MusicPlayer = lazy(() => import("~/components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const Live2D = lazy(() => import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
+const OmniCommand = lazy(() => import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
+const AchievementSystem = lazy(() => import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
+const TheatricalMode = lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
+const AmbientSound = lazy(() => import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
+const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
+const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
+const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
+const IdleTimeEasterEgg = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
+const KonamiCodeEasterEggV2 = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.KonamiCodeEasterEgg })));
+
+// 移动端专属
 const MusicPlayerMobile = lazy(() => import("~/components/ui/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
 
-// 中优先级：增强体验但非必需的组件
-const Live2D = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
-const OmniCommand = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
-const AchievementSystem = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
-
-// 低优先级：彩蛋/装饰性组件，用户不会立即需要
-const TheatricalMode = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
-const AmbientSound = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
-const KonamiCode = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
-const TitleChanger = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
+// 通用（桌面+移动都需要）
 const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
-const HiddenPixelButton = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
-const IdleTimeEasterEgg = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
-const KonamiCodeEasterEggV2 = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/interactive/EasterEggs").then(m => ({ default: m.KonamiCodeEasterEgg })));
 
 // ==================== 延迟加载封装 ====================
 /**
@@ -170,46 +170,34 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
   const { theme, musicPlaylistId } = loaderData;
+  const [isMobile, setIsMobile] = useState(false);
 
-  // SPA页面转场动画配置
-  const pageVariants = {
-    initial: {
-      opacity: 0,
-      y: 50,
-      scale: 0.95,
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.95,
-      y: -20,
-    },
-  };
-
-  const pageTransition = {
-    type: "tween" as const,
-    ease: "easeInOut" as const,
-    duration: 0.5,
-  };
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   return (
     <ThemeProviderWrapper specifiedTheme={theme} themeAction="/action/set-theme">
       <ToastContainer />
       <ModalContainer />
-      {/* 懒加载组件 - 按优先级分批加载，避免网络拥塞 */}
-      {!isAdmin && (
+
+      {/* ==================== 桌面端专属组件 ==================== */}
+      {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
+          {/* 自定义光标 + Hi-Fi 播放器 — 仅桌面端 */}
           <CustomCursor />
-          {/* 大屏端 Hi-Fi 播放器 */}
           <MusicPlayer playlistId={musicPlaylistId} />
-          {/* 移动端轻量播放器 */}
+        </Suspense>
+      )}
+
+      {/* ==================== 移动端专属组件 ==================== */}
+      {!isAdmin && isMobile && (
+        <Suspense fallback={null}>
           <MusicPlayerMobile playlistId={musicPlaylistId} />
         </Suspense>
       )}
+
+      {/* ==================== 页面布局 ==================== */}
       {isAdmin ? (
         <AdminLayout>
           <Outlet />
@@ -217,12 +205,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
       ) : (
         <PublicLayout>
           <Outlet />
-          {/* 这里可以放置其他需要 Layout 上下文的组件 */}
         </PublicLayout>
       )}
 
-      {/* 延迟加载的背景组件/系统放在最外层，不影响主布局 */}
-      {!isAdmin && (
+      {/* ==================== 桌面端延迟加载 — 增强体验组件 ==================== */}
+      {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
             <Live2D />
@@ -239,6 +226,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <HiddenPixelButton />
             <IdleTimeEasterEgg />
             <KonamiCodeEasterEggV2 />
+          </DelayedSuspense>
+        </Suspense>
+      )}
+
+      {/* ==================== 移动端延迟加载 — 仅保留必要组件 ==================== */}
+      {!isAdmin && isMobile && (
+        <Suspense fallback={null}>
+          <DelayedSuspense delayMs={2000}>
+            <CopyAttribution />
           </DelayedSuspense>
         </Suspense>
       )}

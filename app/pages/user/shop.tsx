@@ -285,8 +285,8 @@ export default function ShopPage() {
                                         ))}
                                     </div>
 
-                                    {/* 商品网格 */}
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                                    {/* 商品网格 - 移动端单列，避免卡片内容挤压变形 */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
                                         {filteredItems.map((item: any) => (
                                             <motion.div
                                                 key={item.id}
@@ -367,7 +367,7 @@ export default function ShopPage() {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    className="grid grid-cols-3 md:grid-cols-3 gap-5"
+                                    className="grid grid-cols-2 md:grid-cols-3 gap-5"
                                 >
                                     {loaderData.rechargePackages.map((pkg: any) => (
                                         <div key={pkg.id} className="group bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border border-yellow-500/20 rounded-2xl p-6 hover:border-yellow-500/50 transition-all flex flex-col items-center text-center relative overflow-hidden">

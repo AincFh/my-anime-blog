@@ -130,14 +130,14 @@ export function Live2D() {
     if (isMobile) return null;
 
     return (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-4 right-4 z-50 hidden lg:block pointer-events-none lg:pointer-events-auto">
             <AnimatePresence>
                 {isVisible && (
                     <motion.div
                         initial={{ opacity: 0, y: 20, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="relative group"
+                        className="relative group w-32 h-48 pointer-events-auto"
                     >
                         <div className="w-32 h-48">
                             {!isLoaded && (

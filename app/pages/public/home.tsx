@@ -311,9 +311,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               追番记录
             </h2>
           </div>
-
-          {/* 移动端分为2列，防止单列封面过巨 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+          {/* 移动端分为1列，防止单列封面过巨或文字被挤压变形，平板2列，桌面4列 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {animes.map((anime: any, index: number) => (
               <motion.div
                 key={anime.id}

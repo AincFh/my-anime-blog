@@ -266,7 +266,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
                   <span className="text-sm text-slate-500">{(statusAnimes as any[]).length} 部</span>
                 </div>
 
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
                   {(statusAnimes as any[]).map((anime: any, index: number) => (
                     <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} />
                   ))}
@@ -276,7 +276,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
           })
         ) : (
           // 扁平视图 (排序后)
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
             {processedAnimes.map((anime: any, index: number) => {
               const status = anime.status || 'plan';
               const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.plan;
