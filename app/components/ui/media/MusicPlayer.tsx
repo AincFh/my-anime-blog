@@ -125,6 +125,24 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
     }
   }, [isPlaying]);
 
+  // 强制同步时钟守护线程 (rAF)：不依赖脆弱的 onTimeUpdate 以治愈进度条停摆顽疾
+  useEffect(() => {
+    let animationFrameId: number;
+    const syncAudioState = () => {
+      if (audioRef.current) {
+        if (!audioRef.current.paused) {
+          setCurrentTime(audioRef.current.currentTime);
+        }
+        if (audioRef.current.duration && audioRef.current.duration !== duration) {
+          setDuration(audioRef.current.duration);
+        }
+      }
+      animationFrameId = requestAnimationFrame(syncAudioState);
+    };
+    animationFrameId = requestAnimationFrame(syncAudioState);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [setCurrentTime, setDuration, duration]);
+
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
   const formatTime = (time: number) => {
@@ -323,13 +341,14 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                 >
                   <motion.div
                     className="space-y-4 py-20"
-                    animate={{ y: -activeLyricIndex * 40 }}
+                    animate={{ y: -activeLyricIndex * 42 }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
                   >
                     {currentLyrics.map((lyric, idx) => (
                       <div
                         key={idx}
-                        className={`text-[15px] font-bold transition-all duration-500 text-center ${idx === activeLyricIndex ? 'text-primary-start scale-[1.12] opacity-100' : 'text-slate-400 dark:text-white/30 opacity-60'}`}
+                        onClick={() => handleSeek(lyric.time)}
+                        className={`text-[15px] font-bold transition-all duration-500 text-center cursor-pointer hover:text-slate-600 dark:hover:text-white/80 ${idx === activeLyricIndex ? 'text-primary-start scale-[1.15] opacity-100 drop-shadow-md' : 'text-slate-400 dark:text-white/30 opacity-60'}`}
                       >
                         {lyric.text}
                       </div>
