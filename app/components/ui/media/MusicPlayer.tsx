@@ -293,9 +293,9 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   </motion.div>
                 </div>
 
-                <div className="text-center space-y-1.5 px-4">
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white truncate">{currentSong?.title || "未知曲目"}</h3>
-                  <p className="text-xs font-semibold text-primary-start/80 uppercase tracking-widest">{currentSong?.author || "Unknown Artist"}</p>
+                <div className="text-center space-y-1">
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white truncate">{currentSong?.title || "未知曲目"}</h3>
+                  <p className="text-xs font-bold text-primary-start uppercase tracking-widest">{currentSong?.author || "Unknown Artist"}</p>
                 </div>
               </div>
 
@@ -349,30 +349,25 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                 </div>
               </div>
 
-              {/* 控件栏，摒弃绝对定位，采用安全 Flex 排版 */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between relative">
                 {/* 播放列表开关 */}
                 <button
                   onClick={() => setShowPlaylist(!showPlaylist)}
-                  className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center transition-all ${showPlaylist ? 'bg-primary-start text-white shadow-md' : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500'}`}
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${showPlaylist ? 'bg-primary-start text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}
                 >
                   <ListMusic size={18} />
                 </button>
 
-                {/* 核心播放控制 */}
-                <div className="flex items-center justify-center gap-6 flex-1 px-2">
-                  <button onClick={handlePrev} className="text-slate-400 hover:text-primary-start transition-colors shrink-0">
-                    <SkipBack size={24} className="fill-current" />
-                  </button>
+                {/* 强化横向居中的中心坐标系限定 */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-10">
+                  <button onClick={handlePrev} className="text-slate-400 hover:text-primary-start transition-colors"><SkipBack size={24} className="fill-current" /></button>
                   <button
                     onClick={togglePlay}
-                    className="w-[60px] h-[60px] shrink-0 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
+                    className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
                   >
                     {isPlaying ? <Pause size={28} className="fill-current" /> : <Play size={28} className="fill-current ml-1" />}
                   </button>
-                  <button onClick={handleNext} className="text-slate-400 hover:text-primary-start transition-colors shrink-0">
-                    <SkipForward size={24} className="fill-current" />
-                  </button>
+                  <button onClick={handleNext} className="text-slate-400 hover:text-primary-start transition-colors"><SkipForward size={24} className="fill-current" /></button>
                 </div>
 
                 {/* 音量控制 */}
