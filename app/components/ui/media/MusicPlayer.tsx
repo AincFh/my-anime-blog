@@ -183,10 +183,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               onClick={toggleExpand}
               className="relative w-20 h-20 flex items-center justify-center focus:outline-none"
             >
-              <motion.div
-                animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                transition={{ duration: 4, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
-                className="relative w-16 h-16 rounded-full bg-[#111] shadow-2xl overflow-hidden ring-4 ring-black/20 dark:ring-white/10"
+              <div
+                className={`relative w-16 h-16 rounded-full bg-[#111] shadow-2xl overflow-hidden ring-4 ring-black/20 dark:ring-white/10 ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}
               >
                 <div className="absolute inset-[15%] rounded-full overflow-hidden border border-black/50 shadow-inner">
                   {currentSong ? (
@@ -198,16 +196,16 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   )}
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-[#222] border border-white/20 shadow-inner" />
+                  <div className="w-5 h-5 rounded-full bg-[#222] border-2 border-white/20 shadow-inner" />
                 </div>
-              </motion.div>
+              </div>
 
               {/* 装饰唱针 */}
               <motion.div
                 animate={{
-                  rotate: stylusState === "playing" ? 28 : stylusState === "lifting" ? 18 : 0,
+                  rotate: stylusState === "playing" ? 8 : stylusState === "lifting" ? 2 : -5,
                   y: stylusState === "lifting" ? -6 : 0,
-                  x: stylusState === "playing" ? 4 : 0
+                  x: stylusState === "playing" ? 2 : 0
                 }}
                 className="absolute -top-1 -right-3 w-10 h-14 origin-top-right pointer-events-none z-10"
               >
@@ -264,52 +262,51 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               <div className="w-[312px] shrink-0 space-y-8">
                 <div className="relative flex justify-center mt-4 mb-6">
 
-                  {/* 可视化器：全天候演进版多频复合水波纹呼吸动效 (Fluid Frequency Ripple) */}
+                  {/* 可视化器：全天候演进版多频复合水波纹呼吸动效 (防溃散截断限缩版) */}
                   {isPlaying && audioData && (() => {
                     const lowFreq = Array.from(audioData.slice(0, 10)).reduce((a, b) => a + b, 0) / 10;
                     const midFreq = Array.from(audioData.slice(10, 22)).reduce((a, b) => a + b, 0) / 12;
                     const highFreq = Array.from(audioData.slice(22, 32)).reduce((a, b) => a + b, 0) / 10;
                     
-                    const scaleL = 1 + lowFreq / 300; 
-                    const scaleM = 1 + midFreq / 250;
-                    const scaleH = 1 + highFreq / 200;
+                    // 用 Math.min 牢牢锁死极值放大倍率，绝对不越界溢出组件甚至全屏
+                    const scaleL = 1 + Math.min(lowFreq / 400, 0.4); 
+                    const scaleM = 1 + Math.min(midFreq / 300, 0.35);
+                    const scaleH = 1 + Math.min(highFreq / 250, 0.3);
                     
                     return (
                       <div className="absolute top-1/2 left-1/2 w-0 h-0 z-0 pointer-events-none flex items-center justify-center">
                         {/* 泛音流体波（最高频外扩最快） */}
                         <div 
                           className="absolute w-56 h-56 bg-primary-start/10 opacity-60 blur-xl transition-transform duration-75 animate-[spin_8s_linear_infinite]"
-                          style={{ borderRadius: '45% 55% 40% 60% / 55% 45% 60% 40%', transform: `scale(${scaleH * 1.15})` }}
+                          style={{ borderRadius: '45% 55% 40% 60% / 55% 45% 60% 40%', transform: `scale(${scaleH * 1.05})` }}
                         />
                         {/* 中频流光电磁场 */}
                         <div 
-                          className="absolute w-56 h-56 border border-primary-start/30 opacity-60 transition-transform duration-100 animate-[spin_12s_linear_infinite_reverse]"
-                          style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%', transform: `scale(${scaleM * 1.05})` }}
+                          className="absolute w-48 h-48 border border-primary-start/30 opacity-60 transition-transform duration-100 animate-[spin_12s_linear_infinite_reverse]"
+                          style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%', transform: `scale(${scaleM * 1.02})` }}
                         />
                         {/* 低频深水激荡圈（缓慢呼吸的内层核心） */}
                         <div 
-                          className="absolute w-56 h-56 border-2 border-primary-start/40 opacity-80 transition-transform duration-100 animate-[spin_18s_linear_infinite]"
+                          className="absolute w-52 h-52 border-2 border-primary-start/40 opacity-80 transition-transform duration-100 animate-[spin_18s_linear_infinite]"
                           style={{ borderRadius: '60% 40% 30% 70% / 50% 60% 50% 40%', transform: `scale(${scaleL})` }}
                         />
                       </div>
                     );
                   })()}
 
-                  {/* 唱片本体，独立被驱动旋转 */}
-                  <motion.div
-                    animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                    transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
-                    className="relative w-56 h-56 rounded-full bg-[#111] shadow-2xl ring-[10px] ring-black/5 dark:ring-white/5 group/vinyl overflow-hidden z-10"
+                  {/* CD 唱片图 (原生CSS平滑无限自转) */}
+                  <div
+                    className={`relative w-64 h-64 rounded-full bg-[#111] shadow-2xl overflow-hidden ring-[8px] ring-black/40 dark:ring-white/10 ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''} z-10`}
                   >
                     <div className="absolute inset-[15%] rounded-full overflow-hidden border-4 border-[#222]">
                       <img src={currentSong?.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
                     </div>
-                  </motion.div>
+                  </div>
 
                   {/* 悬臂与唱针 */}
                   <motion.div
                     animate={{
-                      rotate: stylusState === "playing" ? 15 : stylusState === "lifting" ? 5 : -5,
+                      rotate: stylusState === "playing" ? 8 : stylusState === "lifting" ? 2 : -5,
                     }}
                     transition={{ type: "spring", stiffness: 45, damping: 15 }}
                     style={{ transformOrigin: "16px 16px" }}
