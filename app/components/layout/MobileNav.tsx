@@ -9,6 +9,7 @@ export function MobileNav() {
     const tabs = [
         { name: "首页", path: "/", icon: Home },
         { name: "文章", path: "/articles", icon: Book },
+        { name: "商城", path: "/shop", icon: ShoppingBag },
         { name: "番剧", path: "/bangumi", icon: Tv },
         { name: "我的", path: "/user/dashboard", icon: User },
     ];
@@ -35,7 +36,7 @@ export function MobileNav() {
                             prefetch="intent"
                             style={{ WebkitTapHighlightColor: "transparent" }}
                             className={cn(
-                                "group relative flex flex-col items-center justify-center w-[3.5rem] h-[3rem] rounded-full transition-colors active:scale-95",
+                                "group relative flex flex-col items-center justify-center w-[4rem] h-[3.5rem] rounded-full transition-colors active:scale-95",
                                 isActive ? "text-slate-800 dark:text-white" : "text-slate-500 dark:text-slate-400"
                             )}
                         >

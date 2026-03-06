@@ -38,7 +38,7 @@ export function MusicPlayerMobile({ playlistId = "13641046209" }: { playlistId?:
     <div className="md:hidden">
       {/* 悬浮控制球 (Floating Action Button) - Apple HIG 标准热区 56x56 */}
       <motion.button
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary-start to-primary-end text-white shadow-[0_8px_30px_rgb(0,0,0,0.3)] shadow-primary-start/40 flex items-center justify-center p-0.5"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary-start to-primary-end text-white shadow-[0_8px_30px_rgb(0,0,0,0.3)] shadow-primary-start/40 flex items-center justify-center p-0.5"
         onClick={() => setIsExpanded(true)}
         initial={false}
         animate={isExpanded ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}

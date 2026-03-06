@@ -23,25 +23,28 @@ import { ToastContainer } from "./components/ui/Toast";
 import { ModalContainer } from "./components/ui/Modal";
 
 // ==================== 懒加载组件定义 ====================
+// 在客户端检测移动端，避免移动端加载无用的庞大重型桌面组件 JS chunk
+const isMobileClient = () => typeof window !== 'undefined' && window.innerWidth < 768;
+
 // 高优先级：影响用户交互的核心组件
-const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
-const MusicPlayer = lazy(() => import("~/components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
+const CustomCursor = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/animations/CustomCursor").then(m => ({ default: m.CustomCursor })));
+const MusicPlayer = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
 const MusicPlayerMobile = lazy(() => import("~/components/ui/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
 
 // 中优先级：增强体验但非必需的组件
-const Live2D = lazy(() => import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
-const OmniCommand = lazy(() => import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
-const AchievementSystem = lazy(() => import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
+const Live2D = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
+const OmniCommand = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
+const AchievementSystem = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
 
 // 低优先级：彩蛋/装饰性组件，用户不会立即需要
-const TheatricalMode = lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
-const AmbientSound = lazy(() => import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
-const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
-const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
+const TheatricalMode = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
+const AmbientSound = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
+const KonamiCode = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
+const TitleChanger = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
 const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
-const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
-const IdleTimeEasterEgg = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
-const KonamiCodeEasterEggV2 = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.KonamiCodeEasterEgg })));
+const HiddenPixelButton = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
+const IdleTimeEasterEgg = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
+const KonamiCodeEasterEggV2 = lazy(() => isMobileClient() ? Promise.resolve({ default: () => null }) : import("./components/interactive/EasterEggs").then(m => ({ default: m.KonamiCodeEasterEgg })));
 
 // ==================== 延迟加载封装 ====================
 /**

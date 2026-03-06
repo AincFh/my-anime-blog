@@ -132,9 +132,12 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                     </div>
                     <input
                         type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        enterKeyHint="next"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
+                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
                         placeholder="your@email.com"
                         disabled={showCaptcha}
                     />
@@ -150,9 +153,11 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                     </div>
                     <input
                         type="password"
+                        autoComplete="new-password"
+                        enterKeyHint="next"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
+                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
                         placeholder="至少 8 位包含拼写的字符"
                         disabled={showCaptcha}
                     />
@@ -168,9 +173,11 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                     </div>
                     <input
                         type="password"
+                        autoComplete="new-password"
+                        enterKeyHint="next"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
+                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
                         placeholder="再次输入密码"
                         disabled={showCaptcha}
                     />
@@ -240,9 +247,12 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                                 </button>
                                 <input
                                     type="text"
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    enterKeyHint="done"
                                     value={formData.captchaInput}
                                     onChange={(e) => setFormData({ ...formData, captchaInput: e.target.value })}
-                                    className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start text-center font-mono text-lg transition-all duration-200 tracking-widest"
+                                    className="flex-1 px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start text-center font-mono text-lg transition-all duration-200 tracking-widest"
                                     placeholder="代码"
                                     maxLength={6}
                                 />

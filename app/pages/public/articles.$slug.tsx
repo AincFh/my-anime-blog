@@ -9,6 +9,7 @@ import type { Route } from "./+types/articles.$slug";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { getCategoryColor } from "~/utils/categoryColor";
 import { toast } from "~/components/ui/Toast";
+import { CommentsSection } from "~/components/ui/interactive/CommentsSection";
 
 interface Article {
     id: number;
@@ -68,15 +69,27 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         `)
         .bind(article.category, article.id)
         .all();
+    
+    // 获取评论
+    const comments = await db
+        .prepare(`
+            SELECT id, author, content, created_at, is_danmaku, avatar_style
+            FROM comments
+            WHERE article_id = ? AND status = 'approved'
+            ORDER BY created_at DESC
+        `)
+        .bind(article.id)
+        .all();
 
     return {
         article,
         relatedArticles: relatedArticles.results || [],
+        comments: comments.results || [],
     };
 }
 
 export default function ArticleDetailPage() {
-    const { article, relatedArticles } = useLoaderData<typeof loader>();
+    const { article, relatedArticles, comments } = useLoaderData<typeof loader>();
 
     const formatDate = (timestamp: number) => {
         return new Date(timestamp * 1000).toLocaleDateString('zh-CN', {
@@ -276,6 +289,16 @@ export default function ArticleDetailPage() {
                         </div>
                     </motion.section>
                 )}
+
+                {/* 评论区 */}
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="px-4 md:px-0"
+                >
+                    <CommentsSection articleId={article.id} comments={comments as any} />
+                </motion.section>
             </div>
         </div>
     );

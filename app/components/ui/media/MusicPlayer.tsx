@@ -213,10 +213,10 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2.5rem] shadow-2xl transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[720px]' : 'w-[380px]'}`}
+            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2rem] shadow-2xl transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[720px]' : 'w-[360px]'}`}
           >
             {/* 头部装饰 */}
-            <div className="px-6 py-4 flex items-center justify-between border-b border-white/20 dark:border-white/5">
+            <div className="px-6 py-5 flex items-center justify-between border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-2">
                 <div className="px-2 py-1 bg-primary-start/10 rounded-lg">
                   <span className="text-[10px] font-black text-primary-start uppercase tracking-widest">Hi-Fi</span>
@@ -225,7 +225,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               </div>
               <button
                 onClick={toggleExpand}
-                className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center text-slate-500 dark:text-white/40 hover:bg-slate-300 dark:hover:bg-white/10 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:text-white/40 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
               >
                 <X size={16} />
               </button>
@@ -233,8 +233,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
             <div className="p-6 pt-8 flex gap-8">
               {/* 左侧：可视化唱片 */}
-              <div className="w-[280px] shrink-0 space-y-6">
-                <div className="relative flex justify-center mt-2 mb-2">
+              <div className="w-[312px] shrink-0 space-y-8">
+                <div className="relative flex justify-center mt-4 mb-6">
 
                   {/* 可视化器：抽出独立一层，使用极坐标中心原点渲染，避免和唱片同步公转且防止坐标由于高度变化崩碎 */}
                   {isPlaying && audioData && (
@@ -266,32 +266,36 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <motion.div
                     animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
                     transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: "linear" }}
-                    className="relative w-48 h-48 rounded-full bg-[#111] shadow-2xl ring-8 ring-white/10 dark:ring-white/5 group/vinyl overflow-hidden z-10"
+                    className="relative w-56 h-56 rounded-full bg-[#111] shadow-2xl ring-[10px] ring-black/5 dark:ring-white/5 group/vinyl overflow-hidden z-10"
                   >
-                    <div className="absolute inset-[12%] rounded-full overflow-hidden border-4 border-[#222]">
+                    <div className="absolute inset-[15%] rounded-full overflow-hidden border-4 border-[#222]">
                       <img src={currentSong?.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
                     </div>
                   </motion.div>
 
+                  {/* 悬臂与唱针 */}
                   <motion.div
                     animate={{
-                      rotate: stylusState === "playing" ? 30 : stylusState === "lifting" ? 15 : 0,
+                      rotate: stylusState === "playing" ? 26 : stylusState === "lifting" ? 10 : 0,
                     }}
-                    transition={{ type: "spring", stiffness: 50, damping: 15 }}
-                    className="absolute -top-4 right-10 w-8 h-44 origin-[16px_16px] z-10 pointer-events-none"
+                    transition={{ type: "spring", stiffness: 45, damping: 15 }}
+                    className="absolute -top-4 right-2 w-8 h-48 origin-[16px_16px] z-20 pointer-events-none drop-shadow-xl"
                   >
                     {/* 唱臂转轴 */}
-                    <div className="absolute top-0 left-0 w-8 h-8 rounded-full bg-gradient-to-br from-slate-300 via-slate-500 to-slate-100 border-2 border-slate-400 shadow-2xl z-20" />
+                    <div className="absolute top-0 left-0 w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-400 to-slate-200 border border-slate-300 shadow-md z-20" />
+                    <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-slate-500 border border-slate-600 z-30 shadow-inner" />
                     {/* 唱臂杆 */}
-                    <div className="absolute top-4 left-[14px] w-1.5 h-[140px] bg-gradient-to-b from-slate-400 via-slate-600 to-slate-200 rounded-full shadow-lg" />
+                    <div className="absolute top-4 left-[14px] w-1 h-[140px] bg-gradient-to-r from-slate-300 via-white to-slate-400 rounded-full shadow-sm" />
+                    {/* 唱针拾音头连接件 */}
+                    <div className="absolute top-[141px] left-[10px] w-2 h-4 bg-slate-400 rounded-sm rotate-[18deg]" />
                     {/* 唱针拾音头 */}
-                    <div className="absolute top-[138px] -left-1 w-3.5 h-6 bg-slate-500 rounded-sm rotate-[18deg] shadow-md border border-slate-400" />
+                    <div className="absolute top-[144px] -left-[3px] w-4 h-8 bg-gradient-to-b from-slate-600 to-slate-800 rounded-sm rotate-[18deg] shadow-lg border-t border-slate-500" />
                   </motion.div>
                 </div>
 
-                <div className="text-center space-y-1">
-                  <h3 className="text-lg font-black text-slate-800 dark:text-white truncate">{currentSong?.title || "未知曲目"}</h3>
-                  <p className="text-xs font-bold text-primary-start uppercase tracking-widest">{currentSong?.author || "Unknown Artist"}</p>
+                <div className="text-center space-y-1.5 px-4">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white truncate">{currentSong?.title || "未知曲目"}</h3>
+                  <p className="text-xs font-semibold text-primary-start/80 uppercase tracking-widest">{currentSong?.author || "Unknown Artist"}</p>
                 </div>
               </div>
 
@@ -320,46 +324,61 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             </div>
 
             {/* 底部控制 */}
-            <div className="px-6 pb-8 space-y-6">
+            <div className="px-6 pb-6 space-y-5">
               <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-white/30 px-1">
+                <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-white/40">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max={duration || 100}
-                  step="0.1"
-                  value={currentTime}
-                  onChange={(e) => handleSeek(Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-start"
-                />
+                <div className="relative group cursor-pointer h-2 flex items-center">
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    step="0.1"
+                    value={currentTime}
+                    onChange={(e) => handleSeek(Number(e.target.value))}
+                    className="absolute z-10 w-full opacity-0 cursor-pointer h-full"
+                  />
+                  <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
+                    <div 
+                      className="h-full bg-primary-start rounded-full transition-all duration-75 relative"
+                      style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between relative">
+              {/* 控件栏，摒弃绝对定位，采用安全 Flex 排版 */}
+              <div className="flex items-center justify-between">
+                {/* 播放列表开关 */}
                 <button
                   onClick={() => setShowPlaylist(!showPlaylist)}
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${showPlaylist ? 'bg-primary-start text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}
+                  className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center transition-all ${showPlaylist ? 'bg-primary-start text-white shadow-md' : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500'}`}
                 >
                   <ListMusic size={18} />
                 </button>
 
-                {/* 强化横向居中的中心坐标系限定 */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-10">
-                  <button onClick={handlePrev} className="text-slate-400 hover:text-primary-start transition-colors"><SkipBack size={24} className="fill-current" /></button>
+                {/* 核心播放控制 */}
+                <div className="flex items-center justify-center gap-6 flex-1 px-2">
+                  <button onClick={handlePrev} className="text-slate-400 hover:text-primary-start transition-colors shrink-0">
+                    <SkipBack size={24} className="fill-current" />
+                  </button>
                   <button
                     onClick={togglePlay}
-                    className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
+                    className="w-[60px] h-[60px] shrink-0 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
                   >
                     {isPlaying ? <Pause size={28} className="fill-current" /> : <Play size={28} className="fill-current ml-1" />}
                   </button>
-                  <button onClick={handleNext} className="text-slate-400 hover:text-primary-start transition-colors"><SkipForward size={24} className="fill-current" /></button>
+                  <button onClick={handleNext} className="text-slate-400 hover:text-primary-start transition-colors shrink-0">
+                    <SkipForward size={24} className="fill-current" />
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setIsMuted(!isMuted)} className="text-slate-500">
-                    {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                {/* 音量控制 */}
+                <div className="flex items-center gap-2 w-24 shrink-0 group">
+                  <button onClick={() => setIsMuted(!isMuted)} className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
+                    {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
                   </button>
                   <input
                     type="range"
@@ -372,7 +391,11 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                       setVolume(v);
                       if (v > 0) setIsMuted(false);
                     }}
-                    className="w-24 h-1 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-start"
+                    className="flex-1 w-full h-1 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer outline-none transition-all group-hover:h-1.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 group-hover:[&::-webkit-slider-thumb]:w-2.5 group-hover:[&::-webkit-slider-thumb]:h-2.5 group-hover:[&::-webkit-slider-thumb]:rounded-full group-hover:[&::-webkit-slider-thumb]:bg-primary-start"
+                    style={{
+                      background: `linear-gradient(to right, #FF7A00 ${(isMuted ? 0 : volume) * 100}%, transparent ${(isMuted ? 0 : volume) * 100}%)`,
+                      backgroundColor: 'rgba(148, 163, 184, 0.2)'
+                    }}
                   />
                 </div>
               </div>

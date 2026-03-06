@@ -57,6 +57,12 @@ export function OptimizedImage({
 
             <motion.img
                 src={finalSrc}
+                srcSet={
+                    !hasError && finalSrc && !finalSrc.startsWith('data:') 
+                    ? `${finalSrc}?w=400 400w, ${finalSrc}?w=800 800w, ${finalSrc} 1200w` 
+                    : undefined
+                }
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 alt={alt}
                 loading="lazy"
                 decoding="async"
