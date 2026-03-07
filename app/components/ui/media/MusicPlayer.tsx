@@ -146,6 +146,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
   const formatTime = (time: number) => {
+    if (time === Infinity || !isFinite(time)) return "LIVE";
     if (!time || isNaN(time)) return "0:00";
     const mins = Math.floor(time / 60);
     const secs = Math.floor(time % 60);
@@ -355,35 +356,41 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               )}
             </div>
 
-            {/* 底部控制 */}
+              {/* 底部控制 */}
             <div className="px-6 pb-6 space-y-5">
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-white/40">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
-                <div className="relative group cursor-pointer h-4 flex items-center mt-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration || 100}
-                    step="0.1"
-                    value={currentTime}
-                    onChange={(e) => handleSeek(Number(e.target.value))}
-                    className="absolute z-20 w-full opacity-0 cursor-pointer h-full"
-                  />
-                  {/* 显性底部轨道 */}
-                  <div className="w-full h-1.5 bg-slate-200/80 dark:bg-white/10 rounded-full relative overflow-visible">
-                    {/* 深色显式的已播放进度段 */}
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-primary-start rounded-full transition-all duration-75 min-w-[4px]"
-                      style={{ width: `${Math.min((currentTime / (duration || 1)) * 100, 100)}%` }}
-                    >
-                      {/* 清晰可见的白芯带环滑块，hover时放大突出 */}
-                      <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-[3px] border-primary-start scale-[0.6] opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all z-10" />
+                {(() => {
+                  const safeDuration = (duration && isFinite(duration) && !isNaN(duration) && duration > 0) ? duration : 100;
+                  const progressPercent = Math.max(0, Math.min((currentTime / safeDuration) * 100, 100)) || 0;
+                  return (
+                    <div className="relative group cursor-pointer h-4 flex items-center mt-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max={safeDuration}
+                        step="0.1"
+                        value={currentTime || 0}
+                        onChange={(e) => handleSeek(Number(e.target.value))}
+                        className="absolute z-20 w-full opacity-0 cursor-pointer h-full"
+                      />
+                      {/* 显性底部细灰色轨道 */}
+                      <div className="w-full h-1.5 bg-slate-200/80 dark:bg-white/10 rounded-full relative overflow-visible">
+                        {/* 绝对可视化的深色已播放段 (去除会导致渲染掉帧冲突的 transition-all 以保持拖拽即时反馈) */}
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-primary-start rounded-full min-w-[6px]"
+                          style={{ width: `${progressPercent}%` }}
+                        >
+                          {/* 永不消失的醒目点球指示针 */}
+                          <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md border-2 border-primary-start group-hover:scale-110 transition-transform z-10" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
 
               <div className="flex items-center justify-between relative">
