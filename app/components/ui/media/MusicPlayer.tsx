@@ -125,23 +125,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
     }
   }, [isPlaying]);
 
-  // 强制同步时钟守护线程 (rAF)：不依赖脆弱的 onTimeUpdate 以治愈进度条停摆顽疾
-  useEffect(() => {
-    let animationFrameId: number;
-    const syncAudioState = () => {
-      if (audioRef.current) {
-        if (!audioRef.current.paused) {
-          setCurrentTime(audioRef.current.currentTime);
-        }
-        if (audioRef.current.duration && audioRef.current.duration !== duration) {
-          setDuration(audioRef.current.duration);
-        }
-      }
-      animationFrameId = requestAnimationFrame(syncAudioState);
-    };
-    animationFrameId = requestAnimationFrame(syncAudioState);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [setCurrentTime, setDuration, duration]);
+  // Removed high-frequency requestAnimationFrame state sycn loop. Rely on standard native `<audio>` onTimeUpdate instead cleanly to prevent massive re-render queues.
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
@@ -376,12 +360,13 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                         value={currentTime || 0}
                         onChange={(e) => handleSeek(Number(e.target.value))}
                         className="absolute z-20 w-full opacity-0 cursor-pointer h-full"
+                        style={{ touchAction: 'none' }}
                       />
                       {/* 显性底部细灰色轨道 */}
                       <div className="w-full h-1.5 bg-slate-200/80 dark:bg-white/10 rounded-full relative overflow-visible">
-                        {/* 绝对可视化的深色已播放段 (去除会导致渲染掉帧冲突的 transition-all 以保持拖拽即时反馈) */}
+                        {/* 绝对可视化的深色已播放段 */}
                         <div 
-                          className="absolute top-0 left-0 h-full bg-primary-start rounded-full min-w-[6px]"
+                          className="absolute top-0 left-0 h-full bg-primary-start rounded-full min-w-[6px] transition-all duration-300 pointer-events-none"
                           style={{ width: `${progressPercent}%` }}
                         >
                           {/* 永不消失的醒目点球指示针 */}
