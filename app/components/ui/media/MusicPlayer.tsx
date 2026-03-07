@@ -239,7 +239,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2rem] shadow-2xl transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[720px]' : 'w-[360px]'}`}
+            className={`bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2rem] shadow-2xl transition-all duration-700 ${currentLyrics.length > 0 ? 'w-[680px]' : 'w-[320px]'}`}
           >
             {/* 头部装饰 */}
             <div className="px-6 py-5 flex items-center justify-between border-b border-black/5 dark:border-white/5">
@@ -257,46 +257,46 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
               </button>
             </div>
 
-            <div className="p-6 pt-8 flex gap-8">
+            <div className="p-6 pt-5 flex gap-8">
               {/* 左侧：可视化唱片 */}
-              <div className="w-[312px] shrink-0 space-y-8">
-                <div className="relative flex justify-center mt-4 mb-6">
+              <div className="w-[280px] shrink-0 space-y-8">
+                <div className="relative flex justify-center mt-2 mb-4">
 
-                  {/* 可视化器：全天候演进版多频复合水波纹呼吸动效 (防溃散截断限缩版) */}
+                  {/* 恢复为极简克制的原生同心圆跳动水波纹 */}
                   {isPlaying && audioData && (() => {
                     const lowFreq = Array.from(audioData.slice(0, 10)).reduce((a, b) => a + b, 0) / 10;
                     const midFreq = Array.from(audioData.slice(10, 22)).reduce((a, b) => a + b, 0) / 12;
                     const highFreq = Array.from(audioData.slice(22, 32)).reduce((a, b) => a + b, 0) / 10;
                     
-                    // 用 Math.min 牢牢锁死极值放大倍率，绝对不越界溢出组件甚至全屏
-                    const scaleL = 1 + Math.min(lowFreq / 400, 0.4); 
-                    const scaleM = 1 + Math.min(midFreq / 300, 0.35);
-                    const scaleH = 1 + Math.min(highFreq / 250, 0.3);
+                    // 把缩放限死在一个极为安全的区间（1倍到1.3倍之间），保证绝对不会大屏溢出
+                    const scaleL = 1 + Math.min(lowFreq / 500, 0.3); 
+                    const scaleM = 1 + Math.min(midFreq / 400, 0.25);
+                    const scaleH = 1 + Math.min(highFreq / 300, 0.15);
                     
                     return (
                       <div className="absolute top-1/2 left-1/2 w-0 h-0 z-0 pointer-events-none flex items-center justify-center">
-                        {/* 泛音流体波（最高频外扩最快） */}
+                        {/* 扩散高频环 */}
                         <div 
-                          className="absolute w-56 h-56 bg-primary-start/10 opacity-60 blur-xl transition-transform duration-75 animate-[spin_8s_linear_infinite]"
-                          style={{ borderRadius: '45% 55% 40% 60% / 55% 45% 60% 40%', transform: `scale(${scaleH * 1.05})` }}
+                          className="absolute w-52 h-52 rounded-full border border-primary-start/10 transition-transform duration-75"
+                          style={{ transform: `scale(${scaleH * 1.15})` }}
                         />
-                        {/* 中频流光电磁场 */}
+                        {/* 脉冲中频环 */}
                         <div 
-                          className="absolute w-48 h-48 border border-primary-start/30 opacity-60 transition-transform duration-100 animate-[spin_12s_linear_infinite_reverse]"
-                          style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%', transform: `scale(${scaleM * 1.02})` }}
+                          className="absolute w-44 h-44 rounded-full border border-primary-start/30 transition-transform duration-100"
+                          style={{ transform: `scale(${scaleM * 1.08})` }}
                         />
-                        {/* 低频深水激荡圈（缓慢呼吸的内层核心） */}
+                        {/* 深水低频实心柔和核 */}
                         <div 
-                          className="absolute w-52 h-52 border-2 border-primary-start/40 opacity-80 transition-transform duration-100 animate-[spin_18s_linear_infinite]"
-                          style={{ borderRadius: '60% 40% 30% 70% / 50% 60% 50% 40%', transform: `scale(${scaleL})` }}
+                          className="absolute w-40 h-40 rounded-full bg-primary-start/5 opacity-80 transition-transform duration-100"
+                          style={{ transform: `scale(${scaleL})` }}
                         />
                       </div>
                     );
                   })()}
 
-                  {/* CD 唱片图 (原生CSS平滑无限自转) */}
+                  {/* CD 唱片图 (调整为适中尺寸规避拥挤感) */}
                   <div
-                    className={`relative w-64 h-64 rounded-full bg-[#111] shadow-2xl overflow-hidden ring-[8px] ring-black/40 dark:ring-white/10 ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''} z-10`}
+                    className={`relative w-48 h-48 rounded-full bg-[#111] shadow-2xl overflow-hidden ring-[6px] ring-black/40 dark:ring-white/10 ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''} z-10`}
                   >
                     <div className="absolute inset-[15%] rounded-full overflow-hidden border-4 border-[#222]">
                       <img src={currentSong?.pic} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
@@ -362,7 +362,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
-                <div className="relative group cursor-pointer h-2 flex items-center">
+                <div className="relative group cursor-pointer h-4 flex items-center mt-2">
                   <input
                     type="range"
                     min="0"
@@ -370,13 +370,18 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                     step="0.1"
                     value={currentTime}
                     onChange={(e) => handleSeek(Number(e.target.value))}
-                    className="absolute z-10 w-full opacity-0 cursor-pointer h-full"
+                    className="absolute z-20 w-full opacity-0 cursor-pointer h-full"
                   />
-                  <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
+                  {/* 显性底部轨道 */}
+                  <div className="w-full h-1.5 bg-slate-200/80 dark:bg-white/10 rounded-full relative overflow-visible">
+                    {/* 深色显式的已播放进度段 */}
                     <div 
-                      className="h-full bg-primary-start rounded-full transition-all duration-75 relative"
-                      style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
-                    />
+                      className="absolute top-0 left-0 h-full bg-primary-start rounded-full transition-all duration-75 min-w-[4px]"
+                      style={{ width: `${Math.min((currentTime / (duration || 1)) * 100, 100)}%` }}
+                    >
+                      {/* 清晰可见的白芯带环滑块，hover时放大突出 */}
+                      <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-[3px] border-primary-start scale-[0.6] opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all z-10" />
+                    </div>
                   </div>
                 </div>
               </div>
