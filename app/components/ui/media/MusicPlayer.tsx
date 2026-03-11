@@ -127,6 +127,35 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
   // Removed high-frequency requestAnimationFrame state sycn loop. Rely on standard native `<audio>` onTimeUpdate instead cleanly to prevent massive re-render queues.
 
+  // 原生强制守护：跳过 React 脆弱的合成事件系统，直接对 `<audio>` 的物理属性进行底仓追踪监听
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    let lastTime = -1;
+    const handleTimeUpdate = () => {
+      // 降低 setState 频次：只在相差 0.2 秒以上时向 React 引爆重渲染
+      if (Math.abs(audio.currentTime - lastTime) > 0.2) {
+        lastTime = audio.currentTime;
+        setCurrentTime(audio.currentTime);
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setCurrentTime(audio.currentTime);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [audioRef.current, setCurrentTime, setDuration, isPlaying, currentSong]);
+
+
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
   const formatTime = (time: number) => {
@@ -147,8 +176,6 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
           src={currentSong.url} 
           preload="metadata" 
           crossOrigin="anonymous" 
-          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
           onEnded={handleNext}
         />
       )}
