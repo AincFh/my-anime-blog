@@ -46,6 +46,11 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
+  // === 跳过 React 调度用的原生操控句柄 ===
+  const progressFillRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLInputElement>(null);
+  const currentTimeRef = useRef<HTMLSpanElement>(null);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -127,33 +132,48 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
   // Removed high-frequency requestAnimationFrame state sycn loop. Rely on standard native `<audio>` onTimeUpdate instead cleanly to prevent massive re-render queues.
 
-  // 原生强制守护：跳过 React 脆弱的合成事件系统，直接对 `<audio>` 的物理属性进行底仓追踪监听
+  // 究极物理守护：完全跳过 React 状态树，使用 setInterval 每 250ms 直接拉取 audio 时钟并强行修改 DOM
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
     let lastTime = -1;
-    const handleTimeUpdate = () => {
-      // 降低 setState 频次：只在相差 0.2 秒以上时向 React 引爆重渲染
-      if (Math.abs(audio.currentTime - lastTime) > 0.2) {
+    const intervalId = setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio || audio.paused || isNaN(audio.duration)) return;
+
+      const safeDuration = audio.duration > 0 ? audio.duration : 100;
+      const progressPercent = Math.max(0, Math.min((audio.currentTime / safeDuration) * 100, 100)) || 0;
+
+      // 1. 无视 React，直接强改前端样式及 Input 值
+      if (progressFillRef.current) progressFillRef.current.style.width = `${progressPercent}%`;
+      if (progressBarRef.current) progressBarRef.current.value = String(audio.currentTime);
+
+      // 2. 左侧时间文本只在秒数跳动时修改以省资源
+      if (Math.abs(audio.currentTime - lastTime) >= 1) {
         lastTime = audio.currentTime;
+        
+        // 顺手格式化文本
+        if (currentTimeRef.current) {
+          const time = audio.currentTime;
+          if (time === Infinity || !isFinite(time)) {
+             currentTimeRef.current.innerText = "LIVE";
+          } else {
+             const mins = Math.floor(time / 60);
+             const secs = Math.floor(time % 60);
+             currentTimeRef.current.innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
+          }
+        }
+        
+        // 降低 React 状态更新至每秒 1 次 (歌词依然需要这个 state)
         setCurrentTime(audio.currentTime);
       }
-    };
+      
+      const currentDur = audio.duration;
+      if (currentDur && currentDur !== duration) {
+        setDuration(currentDur);
+      }
+    }, 250);
 
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setCurrentTime(audio.currentTime);
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-    };
-  }, [audioRef.current, setCurrentTime, setDuration, isPlaying, currentSong]);
+    return () => clearInterval(intervalId);
+  }, [audioRef, setCurrentTime, setDuration, duration]);
 
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
@@ -371,7 +391,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
             <div className="px-6 pb-6 space-y-5">
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-white/40">
-                  <span>{formatTime(currentTime)}</span>
+                  <span ref={currentTimeRef}>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
                 {(() => {
@@ -380,11 +400,12 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                   return (
                     <div className="relative group cursor-pointer h-4 flex items-center mt-2">
                       <input
+                        ref={progressBarRef}
                         type="range"
                         min="0"
                         max={safeDuration}
                         step="0.1"
-                        value={currentTime || 0}
+                        defaultValue={currentTime || 0}
                         onChange={(e) => handleSeek(Number(e.target.value))}
                         className="absolute z-20 w-full opacity-0 cursor-pointer h-full"
                         style={{ touchAction: 'none' }}
@@ -393,6 +414,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                       <div className="w-full h-1.5 bg-slate-200/80 dark:bg-white/10 rounded-full relative overflow-visible">
                         {/* 绝对可视化的深色已播放段 */}
                         <div 
+                          ref={progressFillRef}
                           className="absolute top-0 left-0 h-full bg-primary-start rounded-full min-w-[6px] transition-all duration-300 pointer-events-none"
                           style={{ width: `${progressPercent}%` }}
                         >
