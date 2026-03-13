@@ -156,6 +156,7 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
         togglePlay,
         handleNext,
         handlePrev,
+        currentTime,
         setCurrentTime,
         duration,
         setDuration,

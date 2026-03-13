@@ -7,6 +7,47 @@ import { useMusicPlayer, parseLRC } from "~/hooks/useMusicPlayer";
  * MusicPlayer - 专门针对桌面端/大屏幕优化
  * 包含完整的 Web Audio 可视化、Hi-Fi 动效和完整的歌词同步
  */
+
+// 智能预先提取视界内图片的骨架屏防糊组件
+const PreloadLazyImage = ({ src, alt, className, crossOrigin }: any) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    
+    // rootMargin '800px' (约 15 首歌的高度) 意味着滑动还不到它时就开始秘密后台下载该图片！
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      });
+    }, { rootMargin: '800px' });
+    
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [src]);
+
+  return (
+    <div ref={imgRef} className={`relative overflow-hidden bg-slate-200 dark:bg-white/5 shrink-0 ${className}`}>
+      {!isLoaded && <div className="absolute inset-0 animate-pulse bg-slate-300/30 dark:bg-white/10" />}
+      {shouldLoad && (
+        <img
+          src={src}
+          alt={alt}
+          crossOrigin={crossOrigin}
+          onLoad={() => setIsLoaded(true)}
+          className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        />
+      )}
+    </div>
+  );
+};
+
 export function MusicPlayer({ playlistId: externalId }: { playlistId?: string }) {
   const {
     songs,
@@ -494,7 +535,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
                         onClick={() => { setCurrentIndex(idx); setIsPlaying(true); }}
                         className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${currentIndex === idx ? 'bg-primary-start/10 text-primary-start' : 'hover:bg-slate-100 dark:hover:bg-white/5'}`}
                       >
-                        <img src={song.pic} alt="" className="w-10 h-10 rounded-lg object-cover" crossOrigin="anonymous" />
+                        <PreloadLazyImage src={song.pic} alt={song.title} className="w-10 h-10 rounded-lg object-cover" crossOrigin="anonymous" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold truncate">{song.title}</p>
                           <p className="text-[10px] opacity-60 truncate">{song.author}</p>
