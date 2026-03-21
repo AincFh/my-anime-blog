@@ -57,7 +57,7 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-white dark:bg-[#000000]">
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
             <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
 
             <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
@@ -67,11 +67,11 @@ export default function ForgotPassword() {
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
-                            Reset Password
+                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
+                            重置密码
                         </h1>
                         <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
-                            Let's get you back into your account
+                            验证您的邮箱以设置新密码
                         </p>
                     </div>
 
@@ -86,9 +86,9 @@ export default function ForgotPassword() {
 
                     <div className="mt-10 text-center">
                         <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
-                            Remembered your password?
+                            突然想起来了？
                             <Link to="/login" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
-                                Sign in
+                                返回登录
                             </Link>
                         </p>
                     </div>

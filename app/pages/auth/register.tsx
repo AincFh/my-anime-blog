@@ -59,7 +59,7 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-white dark:bg-[#000000]">
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
             <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
 
             <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
@@ -69,11 +69,11 @@ export default function Register() {
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
-                            Create Account
+                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
+                            注册账号
                         </h1>
                         <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
-                            Join our anime community
+                            开启您的次元之旅
                         </p>
                     </div>
 
@@ -88,9 +88,9 @@ export default function Register() {
 
                     <div className="mt-10 text-center">
                         <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
-                            Already have an account?
+                            已经有账号了？
                             <Link to="/login" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
-                                Sign in
+                                返回登录
                             </Link>
                         </p>
                     </div>

@@ -133,8 +133,8 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         enterKeyHint="next"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
-                        placeholder="Email Address"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300 disabled:opacity-50"
+                        placeholder="请输入电子邮箱地址"
                         disabled={showCaptcha}
                         required
                     />
@@ -150,8 +150,8 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         enterKeyHint="next"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
-                        placeholder="Password (min 8 chars)"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300 disabled:opacity-50"
+                        placeholder="请输入密码（至少 8 位）"
                         disabled={showCaptcha}
                         required
                     />
@@ -167,8 +167,8 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         enterKeyHint="next"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
-                        placeholder="Confirm Password"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300 disabled:opacity-50"
+                        placeholder="请确认密码"
                         disabled={showCaptcha}
                         required
                     />
@@ -183,16 +183,16 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         id="terms"
                         checked={formData.agreed}
                         onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
-                        className="peer h-[22px] w-[22px] cursor-pointer appearance-none rounded-full border-[1.5px] border-slate-300 dark:border-slate-600 transition-all checked:border-slate-900 checked:bg-slate-900 dark:checked:border-white dark:checked:bg-white hover:border-slate-400"
+                        className="peer h-[22px] w-[22px] cursor-pointer appearance-none rounded-full border-[1.5px] border-slate-300 dark:border-slate-500 transition-all checked:border-primary-start checked:bg-primary-start hover:border-primary-start"
                         disabled={showCaptcha}
                     />
-                    <CheckCircle className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white dark:text-black opacity-0 peer-checked:opacity-100" size={14} strokeWidth={3} />
+                    <CheckCircle className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={14} strokeWidth={3} />
                 </div>
                 <label htmlFor="terms" className="text-[13px] font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none leading-relaxed text-pretty">
-                    I agree to the
-                    <Link to="/terms" className="text-slate-900 dark:text-white hover:underline mx-1">Terms of Service</Link>
-                    and
-                    <Link to="/privacy" className="text-slate-900 dark:text-white hover:underline mx-1">Privacy Policy</Link>
+                    我已阅读并同意
+                    <Link to="/terms" className="text-primary-start hover:underline mx-1">服务条款</Link>
+                    与
+                    <Link to="/privacy" className="text-primary-start hover:underline mx-1">隐私政策</Link>
                 </label>
             </div>
 
@@ -205,10 +205,10 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         exit={{ opacity: 0 }}
                         type="button"
                         onClick={handleGetCaptcha}
-                        className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
+                        className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         disabled={isSendingCode}
                     >
-                        {isSendingCode ? <Loader2 className="animate-spin" size={20} /> : "Continue Setup"}
+                        {isSendingCode ? <Loader2 className="animate-spin" size={20} /> : "下一步，发送验证码"}
                         {!isSendingCode && <ArrowRight size={20} />}
                     </motion.button>
                 ) : (
@@ -222,8 +222,8 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         {/* 验证码输入区块改写 */}
                         <div className="flex flex-col gap-2">
                             <div className="flex gap-3">
-                                <div className="flex-shrink-0 px-4 flex items-center justify-center bg-slate-100 dark:bg-[#2C2C2E] rounded-[18px] font-mono text-[14px] font-bold text-slate-600 dark:text-slate-300 select-none">
-                                    AUTH
+                                <div className="flex-shrink-0 px-4 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-[18px] font-mono text-[14px] font-bold text-slate-600 dark:text-slate-300 select-none">
+                                    授权码
                                 </div>
                                 <input
                                     type="text"
@@ -232,7 +232,7 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                                     enterKeyHint="done"
                                     value={formData.captchaInput}
                                     onChange={(e) => setFormData({ ...formData, captchaInput: e.target.value })}
-                                    className="flex-1 px-5 py-[18px] w-full bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[18px] text-center font-mono font-bold tracking-[0.2em] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300"
+                                    className="flex-1 px-5 py-[18px] w-full bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[18px] text-center font-mono font-bold tracking-[0.2em] text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300"
                                     placeholder="000000"
                                     maxLength={6}
                                 />
@@ -240,8 +240,8 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                                     type="button"
                                     onClick={handleResendCode}
                                     disabled={countdown > 0 || isSendingCode}
-                                    className="px-4 flex items-center justify-center bg-slate-100 dark:bg-[#2C2C2E] hover:bg-slate-200 dark:hover:bg-[#3C3C3E] rounded-[18px] transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-300"
-                                    title="Resend Code"
+                                    className="px-4 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-[18px] transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-300"
+                                    title="重新发送"
                                 >
                                     {countdown > 0 ? <span className="text-[14px] font-bold font-mono">{countdown}s</span> : <RefreshCw size={18} />}
                                 </button>
@@ -251,18 +251,18 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         <button
                             type="submit"
                             disabled={isLoading || formData.captchaInput.length !== 6}
-                            className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
+                            className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Complete Registration"}
+                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "完成注册"}
                             {!isLoading && <ArrowRight size={20} />}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setShowCaptcha(false)}
-                            className="w-full py-4 text-[14px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                            className="w-full py-4 text-[14px] font-semibold text-slate-500 hover:text-primary-start transition-colors"
                         >
-                            Change Information
+                            上一步，重新填写信息
                         </button>
                     </motion.div>
                 )}

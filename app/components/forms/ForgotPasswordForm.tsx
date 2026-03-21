@@ -78,7 +78,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="block w-full pl-5 pr-[110px] py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
-                        placeholder="Email Address"
+                        placeholder="电子邮箱"
                         disabled={step !== "email" && step !== "verify"}
                     />
                     {step === "email" && (
@@ -88,7 +88,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                             disabled={isLoading || !formData.email}
                             className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-bold rounded-[14px] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={16} /> : "Get Code"}
+                            {isLoading ? <Loader2 className="animate-spin" size={16} /> : "获取验证码"}
                         </button>
                     )}
                     {step !== "email" && countdown > 0 && (
@@ -102,7 +102,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                             onClick={handleSendCode}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-slate-900 dark:text-white font-bold hover:underline"
                         >
-                            Resend
+                            重新发送
                         </button>
                     )}
                 </div>
@@ -135,7 +135,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                                     value={formData.newPassword}
                                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                                     className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
-                                    placeholder="New Password (min 6 chars)"
+                                    placeholder="新密码 (最少 6 位)"
                                 />
                             </div>
                         </div>
@@ -147,7 +147,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                     className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
-                                    placeholder="Confirm New Password"
+                                    placeholder="确认新密码"
                                 />
                             </div>
                         </div>
@@ -165,7 +165,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                             disabled={isLoading}
                             className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Reset Password"}
+                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "重置密码"}
                             {!isLoading && <ArrowRight size={20} />}
                         </button>
                     </motion.div>

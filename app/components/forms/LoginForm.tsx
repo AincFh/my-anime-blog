@@ -34,8 +34,8 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         enterKeyHint="next"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300"
-                        placeholder="Email Address"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300"
+                        placeholder="请输入电子邮箱"
                         required
                     />
                 </div>
@@ -50,15 +50,15 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         enterKeyHint="done"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300"
-                        placeholder="Password"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300"
+                        placeholder="请输入密码"
                         required
                     />
                 </div>
                 {/* 忘记密码 */}
                 <div className="flex justify-end pr-1 mt-1">
-                    <Link to="/forgot-password" className="text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
-                        Forgot Password?
+                    <Link to="/forgot-password" className="text-[13px] font-semibold text-slate-500 hover:text-primary-start dark:text-slate-400 transition-colors">
+                        忘记密码？
                     </Link>
                 </div>
             </div>
@@ -80,9 +80,9 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             <button
                 type="submit"
                 disabled={isLoading || !email || !password}
-                className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
+                className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
             >
-                {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Sign In"}
+                {isLoading ? <Loader2 className="animate-spin" size={20} /> : "立刻登录"}
                 {!isLoading && <ArrowRight size={20} />}
             </button>
         </form>

@@ -58,7 +58,7 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-white dark:bg-[#000000]">
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
             {/* 顶层极其微弱的光晕 */}
             <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
 
@@ -69,11 +69,11 @@ export default function Login() {
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
-                            Welcome
+                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
+                            欢迎回来
                         </h1>
                         <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
-                            Sign in to continue your journey
+                            登录以继续探索您的二次元世界
                         </p>
                     </div>
 
@@ -86,7 +86,7 @@ export default function Login() {
                                 className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-4 rounded-[16px] mb-8 flex items-center justify-center gap-2 text-[14px] font-bold"
                             >
                                 <CheckCircle size={18} />
-                                Login successful! Redirecting...
+                                登录成功！正在为您跳转...
                             </motion.div>
                         )}
 
@@ -98,7 +98,7 @@ export default function Login() {
                                 className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-4 rounded-[16px] mb-8 flex items-center gap-2 text-[14px] font-bold"
                             >
                                 <CheckCircle size={18} />
-                                Registered successfully. Please sign in.
+                                注册成功！请使用账号密码进行登录
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -114,9 +114,9 @@ export default function Login() {
 
                     <div className="mt-10 text-center">
                         <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
-                            Don't have an account?
+                            还没有账号？
                             <Link to="/register" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
-                                Sign up now
+                                立即注册
                             </Link>
                         </p>
                     </div>

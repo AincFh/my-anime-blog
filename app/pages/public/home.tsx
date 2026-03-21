@@ -147,9 +147,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             className="flex flex-wrap gap-4"
           >
             {[
-              { name: "Articles", path: "/articles", isPrimary: true },
-              { name: "Archive", path: "/archive", isPrimary: false },
-              { name: "Shop", path: "/shop", isPrimary: false },
+              { name: "全部文章", path: "/articles", isPrimary: true },
+              { name: "时光机", path: "/archive", isPrimary: false },
+              { name: "杂货铺", path: "/shop", isPrimary: false },
             ].map((item, index) => (
               <Link key={item.name} to={item.path}>
                 <div
@@ -184,7 +184,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
             <div className="absolute bottom-8 left-8 right-8 z-10 flex flex-col items-start">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-[10px] font-bold tracking-wider uppercase mb-3 border border-white/20">
-                Featured
+                编辑精选
               </span>
               <h3 className="text-white text-3xl font-black tracking-tight mb-2 leading-tight">次元倒影</h3>
               <p className="text-white/80 text-sm font-medium">每天发现不一样的梦境瞬间</p>
@@ -203,15 +203,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <div className="flex items-end justify-between mb-8 md:mb-12 px-2">
           <div>
             <h2 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-2">
-              Latest
+              最新文章
             </h2>
             <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">新世界的资讯</p>
           </div>
           <Link
             to="/articles"
-            className="text-slate-600 dark:text-slate-300 font-semibold hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[15px] bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full"
+            className="text-slate-600 dark:text-slate-300 font-semibold hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[15px] bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full border border-slate-200/50 dark:border-white/5"
           >
-            See All <span className="font-serif">→</span>
+            浏览全部 <span className="font-serif">→</span>
           </Link>
         </div>
 
@@ -288,15 +288,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <div className="flex items-end justify-between mb-8 md:mb-12 px-2">
             <div>
               <h2 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-2">
-                Watching
+                在看番剧
               </h2>
               <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">当前轨迹</p>
             </div>
             <Link
               to="/bangumi"
-              className="text-slate-600 dark:text-slate-300 font-semibold hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[15px] bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full"
+              className="text-slate-600 dark:text-slate-300 font-semibold hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[15px] bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full border border-slate-200/50 dark:border-white/5"
             >
-              See All <span className="font-serif">→</span>
+              所有番剧 <span className="font-serif">→</span>
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
