@@ -57,40 +57,43 @@ export default function ForgotPassword() {
     };
 
     return (
-        <>
-            <ResponsiveContainer maxWidth="sm" className="pt-16 pb-20">
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-white dark:bg-[#000000]">
+            <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
+
+            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-card p-8 md:p-10 relative overflow-hidden"
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-start/10 rounded-full blur-3xl -mr-10 -mt-10" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-end/10 rounded-full blur-3xl -ml-10 -mb-10" />
+                    <div className="text-center mb-10">
+                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+                            Reset Password
+                        </h1>
+                        <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
+                            Let's get you back into your account
+                        </p>
+                    </div>
 
-                    <div className="relative z-10">
-                        <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">重置密码</h1>
-                            <p className="text-slate-500 dark:text-slate-400">验证您的邮箱以设置新密码</p>
-                        </div>
-
+                    <div className="bg-white/50 dark:bg-[#1C1C1E]/30 p-1 rounded-[32px]">
                         <ForgotPasswordForm
                             onReset={handleReset}
                             onSendCode={handleSendCode}
                             isLoading={isLoading}
                             error={error}
                         />
+                    </div>
 
-                        <div className="mt-8 text-center">
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                想起来了？
-                                <Link to="/login" className="text-primary-start font-bold hover:underline ml-1">
-                                    返回登录
-                                </Link>
-                            </p>
-                        </div>
+                    <div className="mt-10 text-center">
+                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                            Remembered your password?
+                            <Link to="/login" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
+                                Sign in
+                            </Link>
+                        </p>
                     </div>
                 </motion.div>
             </ResponsiveContainer>
-        </>
+        </div>
     );
 }

@@ -70,19 +70,15 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">电子邮箱</label>
-                <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                    </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+                <div className="relative">
                     <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="block w-full pl-10 pr-24 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
-                        placeholder="your@email.com"
+                        className="block w-full pl-5 pr-[110px] py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                        placeholder="Email Address"
                         disabled={step !== "email" && step !== "verify"}
                     />
                     {step === "email" && (
@@ -90,13 +86,13 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                             type="button"
                             onClick={handleSendCode}
                             disabled={isLoading || !formData.email}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-xs font-bold rounded-lg hover:opacity-90 disabled:opacity-50 transition-all"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-bold rounded-[14px] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={14} /> : "获取验证码"}
+                            {isLoading ? <Loader2 className="animate-spin" size={16} /> : "Get Code"}
                         </button>
                     )}
                     {step !== "email" && countdown > 0 && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">
+                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[14px] text-slate-500 font-mono font-bold">
                             {countdown}s
                         </span>
                     )}
@@ -104,9 +100,9 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         <button
                             type="button"
                             onClick={handleSendCode}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-primary-start font-bold hover:underline"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-slate-900 dark:text-white font-bold hover:underline"
                         >
-                            重新发送
+                            Resend
                         </button>
                     )}
                 </div>
@@ -118,54 +114,46 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="space-y-6"
+                        className="flex flex-col gap-5 mt-2"
                     >
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">验证码</label>
+                        <div className="flex flex-col gap-2">
                             <input
                                 type="text"
+                                inputMode="numeric"
                                 value={formData.code}
                                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                                className="block w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start font-mono tracking-widest text-center text-lg transition-all duration-200"
+                                className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[18px] text-center font-mono font-bold tracking-[0.2em] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
                                 placeholder="000000"
                                 maxLength={6}
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">新密码</label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                                </div>
+                        <div className="flex flex-col gap-2">
+                            <div className="relative">
                                 <input
                                     type="password"
                                     value={formData.newPassword}
                                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                                    className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
-                                    placeholder="至少6位字符"
+                                    className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                                    placeholder="New Password (min 6 chars)"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">确认新密码</label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                                </div>
+                        <div className="flex flex-col gap-2">
+                            <div className="relative">
                                 <input
                                     type="password"
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                    className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
-                                    placeholder="再次输入新密码"
+                                    className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                                    placeholder="Confirm New Password"
                                 />
                             </div>
                         </div>
 
                         {/* Turnstile 验证 */}
-                        <div className="flex justify-center">
+                        <div className="flex justify-center mt-2">
                             <Turnstile
                                 siteKey={SITE_KEY}
                                 onVerify={setTurnstileToken}
@@ -175,10 +163,10 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-start/30 text-sm font-bold text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-primary-start/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-start disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all duration-200"
+                            className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={18} /> : "重置密码"}
-                            {!isLoading && <ArrowRight size={18} />}
+                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Reset Password"}
+                            {!isLoading && <ArrowRight size={20} />}
                         </button>
                     </motion.div>
                 )}
@@ -187,12 +175,12 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
             <AnimatePresence>
                 {(error || localError) && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg flex items-center gap-2 text-sm mt-4"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-[16px] flex items-center gap-3 text-[14px] font-bold mt-2"
                     >
-                        <AlertCircle size={16} />
+                        <AlertCircle size={18} className="flex-shrink-0" />
                         {error || localError}
                     </motion.div>
                 )}
