@@ -27,10 +27,20 @@ export async function loader({ context }: Route.LoaderArgs) {
             .all();
 
         // 合并并按时间排序
-        const activities = [
+        let activities = [
             ...(articlesResult.results || []),
             ...(animesResult.results || []),
         ].sort((a: any, b: any) => b.created_at - a.created_at);
+
+        // 如果没有数据，灌入二次元 Mock 数据帮助呈现排版预览
+        if (activities.length === 0) {
+            activities = [
+                { id: 1, title: '初次建立二次元部落！', type: 'article', description: '这是我建立的第一个博客文章，记录着建站所有的坎坷和快乐。基于 Remix 的征程正式开启。', created_at: Date.now()/1000 - 86400 * 10, category: 'life' },
+                { id: 2, title: '葬送的芙莉莲', type: 'anime', status: 'watching', created_at: Date.now()/1000 - 86400 * 5, cover_image: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-n1MjsNOhEcvT.jpg' },
+                { id: 3, title: '赛博朋克：边缘行者', type: 'anime', status: 'completed', created_at: Date.now()/1000 - 86400 * 25, cover_image: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx120377-5O0eJmS2NqA0.jpg' },
+                { id: 4, title: '博客功能逐步完善与主题设计迭代', type: 'article', description: '基于 Apple HIG 设计语言的一场重构，包括卡片边缘与暗黑环境色度算法等技术细节都在里面进行了解析。', created_at: Date.now()/1000 - 86400 * 2, category: 'tech' }
+            ].sort((a: any, b: any) => b.created_at - a.created_at);
+        }
 
         // 按年份分组
         const groupedByYear = activities.reduce((acc: any, activity: any) => {

@@ -3,49 +3,48 @@ import { GlassCard } from "~/components/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import type { Route } from "./+types/gallery";
 
-// 示例图片数据 - 实际应用中应该从数据库或API获取
 const sampleImages = [
   {
     id: 1,
-    url: "https://picsum.photos/seed/anime234/1200/800",
-    title: "夏日的回忆",
+    url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21519-XIr3PecXhhE2.png",
+    title: "你的名字。",
     category: "illustration",
-    date: "2023-11-20"
+    date: "2016-08-26"
   },
   {
     id: 2,
-    url: "https://picsum.photos/seed/anime145/1200/800",
-    title: "东京的夜晚",
-    category: "photography",
-    date: "2023-11-18"
+    url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73IhOXpJZiMF.jpg",
+    title: "进击的巨人",
+    category: "wallpaper",
+    date: "2013-04-07"
   },
   {
     id: 3,
-    url: "https://picsum.photos/seed/anime567/1200/800",
-    title: "宁静的海边",
-    category: "illustration",
-    date: "2023-11-15"
+    url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11061-sIpBprXpfioh.png",
+    title: "Hunter x Hunter",
+    category: "classic",
+    date: "2011-10-02"
   },
   {
     id: 4,
-    url: "https://picsum.photos/seed/anime890/1200/800",
-    title: "樱花车站",
-    category: "illustration",
-    date: "2023-11-10"
+    url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1-CXtrrkMtpe81.png",
+    title: "星际牛仔",
+    category: "classic",
+    date: "1998-04-03"
   },
   {
     id: 5,
-    url: "https://picsum.photos/seed/anime345/1200/800",
-    title: "雨后的城市",
-    category: "photography",
-    date: "2023-11-05"
+    url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-bbBWj4pEFseh.jpg",
+    title: "咒术回战",
+    category: "illustration",
+    date: "2020-10-03"
   },
   {
     id: 6,
-    url: "https://picsum.photos/seed/anime678/1200/800",
-    title: "星空露营",
+    url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-PEn1CTc93DQl.jpg",
+    title: "鬼灭之刃",
     category: "illustration",
-    date: "2023-11-01"
+    date: "2019-04-06"
   }
 ];
 

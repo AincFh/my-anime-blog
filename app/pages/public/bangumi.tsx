@@ -78,12 +78,16 @@ function AnimeCardItem({ anime, index, config }: { anime: any, index: number, co
       transition={{ duration: 0.6, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
       className="group cursor-pointer flex flex-col h-full relative"
     >
-      {/* 去除繁琐背景，裸露海报的现代质感 */}
-      <div className="relative aspect-[2/3] overflow-hidden rounded-[20px] md:rounded-[24px] bg-slate-100 dark:bg-slate-800/80 shadow-sm border border-slate-200/50 dark:border-white/5 mx-auto w-full group-hover:shadow-2xl transition-all duration-500">
+      {/* 修改卡片比例为 3/4 或 2/3 并增加苹果的轻薄边框和软高光反光效果 */}
+      <div className="relative aspect-[3/4] overflow-hidden rounded-[16px] md:rounded-[20px] bg-slate-100 dark:bg-slate-800 shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-black/5 dark:border-white/5 mx-auto w-full transition-all duration-300">
         {anime.cover_url ? (
-          <OptimizedImage
+          <img
             src={anime.cover_url}
             alt={anime.title}
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "https://placehold.co/400x600/1e293b/ffffff?text=No+Cover"
+            }}
             className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-700 ease-out"
           />
         ) : (

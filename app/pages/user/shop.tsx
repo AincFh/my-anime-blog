@@ -208,13 +208,13 @@ export default function ShopPage() {
             </ClientOnly>
             <NavMenu />
 
-            <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
-                <div className="w-full h-full max-w-[1400px] pointer-events-auto flex flex-col gap-8">
+            <div className="w-full max-w-[1400px] mx-auto pt-24 md:pt-32 pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col gap-8 min-h-screen">
+                <div className="w-full h-full flex flex-col gap-8">
                     {/* Header & Tabs - iOS 风格净化 */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
                         <div>
                             <h1 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-white mb-2">
-                                Store
+                                星尘集市
                             </h1>
                             <p className="text-lg text-white/50 font-medium">选购数字资产与权限</p>
                         </div>
@@ -424,7 +424,7 @@ export default function ShopPage() {
                                         `}>
                                             {tier.name === 'svip' && (
                                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white text-[11px] font-black tracking-widest px-4 py-2 rounded-full uppercase">
-                                                    Ultimate
+                                                    典藏版
                                                 </div>
                                             )}
 
@@ -460,8 +460,6 @@ export default function ShopPage() {
                                                 )}
                                             </div>
 
-                                            <button
-                                                onClick={() => handlePurchase(tier, "membership")}
                                                 className={`
                                                     w-full py-4 rounded-full font-bold text-[16px] transition-all duration-300
                                                     ${tier.name === 'svip'
@@ -470,7 +468,7 @@ export default function ShopPage() {
                                                     }
                                                 `}
                                             >
-                                                Subscribe Now
+                                                立即订阅
                                             </button>
                                         </div>
                                     ))}
@@ -500,7 +498,7 @@ export default function ShopPage() {
                             transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5 }}
                         >
                             <h2 className="text-2xl font-black text-white mb-8 tracking-tight text-center">
-                                {paymentStep === "confirm" ? "Confirm" : paymentStep === "processing" ? "Processing..." : "Success!"}
+                                {paymentStep === "confirm" ? "确认订单" : paymentStep === "processing" ? "处理中..." : "支付成功"}
                             </h2>
 
                             {paymentStep === "confirm" && selectedItem && (
@@ -515,12 +513,12 @@ export default function ShopPage() {
                                         </div>
                                         <div>
                                             <div className="font-bold text-white text-lg">{selectedItem.name || selectedItem.display_name}</div>
-                                            <div className="text-sm text-white/50">{selectedItem.description || "Digital Asset"}</div>
+                                            <div className="text-sm text-white/50">{selectedItem.description || "数字商品"}</div>
                                         </div>
                                     </div>
 
                                     <div className="flex flex-col items-center py-6 border-y border-white/5">
-                                        <span className="text-sm text-white/50 font-medium mb-1">Total</span>
+                                        <span className="text-sm text-white/50 font-medium mb-1">总计</span>
                                         <span className="text-4xl font-black tracking-tight text-white">
                                             {selectedItem.price_coins} <span className="text-xl font-bold opacity-50 font-sans">星尘</span>
                                         </span>
@@ -531,13 +529,13 @@ export default function ShopPage() {
                                             onClick={confirmPayment}
                                             className="w-full py-4 rounded-full bg-white text-black font-bold text-[15px] transition-colors hover:bg-white/90"
                                         >
-                                            Buy
+                                            立即支付
                                         </button>
                                         <button
                                             onClick={() => setPaymentModalOpen(false)}
                                             className="w-full py-4 rounded-full bg-transparent text-white/60 font-bold text-[15px] transition-colors hover:bg-white/5"
                                         >
-                                            Cancel
+                                            取消
                                         </button>
                                     </div>
                                 </div>
@@ -546,7 +544,7 @@ export default function ShopPage() {
                             {paymentStep === "processing" && (
                                 <div className="flex flex-col items-center justify-center py-12">
                                     <Loader2 size={40} strokeWidth={1.5} className="text-white animate-spin mb-6" />
-                                    <p className="text-white/50 font-medium">Validating transaction...</p>
+                                    <p className="text-white/50 font-medium">正在校验交易...</p>
                                 </div>
                             )}
 
@@ -555,7 +553,7 @@ export default function ShopPage() {
                                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-black mb-6">
                                         <CheckCircle size={36} strokeWidth={2} />
                                     </div>
-                                    <h3 className="text-2xl font-black tracking-tight text-white mb-2">Done</h3>
+                                    <h3 className="text-2xl font-black tracking-tight text-white mb-2">交易完成</h3>
                                 </div>
                             )}
                         </motion.div>
