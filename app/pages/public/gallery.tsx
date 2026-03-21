@@ -78,7 +78,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
         className="mb-12 md:mb-16"
       >
         <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
-          Gallery
+          相册
         </h1>
         <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
           生活切片与沿途风景
@@ -112,7 +112,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
               </p>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] uppercase tracking-wider font-semibold border border-white/20">
-                  {image.category || "Moment"}
+                  {image.category || "瞬间"}
                 </span>
                 <span className="text-white/70 text-xs font-medium font-mono drop-shadow-sm">
                   {image.date}

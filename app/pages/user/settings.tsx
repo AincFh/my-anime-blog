@@ -613,7 +613,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
     return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
             <div className="text-center p-8 bg-red-900/20 border border-red-500/50 rounded-2xl max-w-md">
-                <h1 className="text-2xl font-bold mb-4 text-red-500">SYSTEM ERROR</h1>
+                <h1 className="text-2xl font-bold mb-4 text-red-500">系统错误</h1>
                 <p className="text-white/80 mb-4">无法加载设置页面。</p>
                 <div className="bg-black/50 p-4 rounded text-left text-xs font-mono text-red-300 overflow-auto max-h-32 mb-6">
                     {error instanceof Error ? error.message : "Unknown Error"}

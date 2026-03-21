@@ -134,7 +134,7 @@ function DashboardContent() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">ACCESS DENIED</h1>
+          <h1 className="text-2xl font-bold mb-4">访问受限</h1>
           <p>请先登录以访问指挥中心</p>
           <button onClick={() => navigate("/login")} className="mt-4 px-6 py-2 bg-primary-500 rounded-full">登录</button>
         </div>
@@ -197,7 +197,7 @@ function DashboardContent() {
                   className="absolute -top-12 right-0 text-white/60 hover:text-white flex items-center gap-2 transition-colors"
                 >
                   <span className="text-2xl">✕</span>
-                  <span className="text-sm font-bold tracking-widest">CLOSE</span>
+                  <span className="text-sm font-bold tracking-widest">关闭</span>
                 </button>
                 <GachaMachine />
               </div>
