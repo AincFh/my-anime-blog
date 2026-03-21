@@ -124,7 +124,7 @@ export default function ArticlesPage() {
                     className="mb-10 md:mb-16"
                 >
                     <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
-                        Articles
+                        文章专栏
                     </h1>
                     <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
                         技术探索、动漫感想与生活志

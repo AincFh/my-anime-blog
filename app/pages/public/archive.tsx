@@ -99,7 +99,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
                 className="mb-16 md:mb-24"
             >
                 <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
-                    Archive
+                    时光机
                 </h1>
                 <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
                     时光卷轴的印记
