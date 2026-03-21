@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useRouteLoaderData } from "react-router";
 
 /**
  * 环境音效
@@ -19,7 +20,12 @@ const soundMap: Record<string, string> = {
 
 export function AmbientSound({ scene, volume = 0.15 }: AmbientSoundProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isEnabled, setIsEnabled] = useState(true);
+  
+  // 接入根级挂载的用户环境偏好
+  const rootData = useRouteLoaderData("root") as any;
+  const isGlobalSoundEnabled = rootData?.userPrefs?.personalization?.sound_effects !== false;
+  
+  const [isEnabled, setIsEnabled] = useState(isGlobalSoundEnabled);
 
   useEffect(() => {
     if (!isEnabled || !soundMap[scene]) return;

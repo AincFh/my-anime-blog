@@ -209,33 +209,44 @@ export default function ShopPage() {
             <NavMenu />
 
             <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
-                <div className="w-full h-full max-w-6xl pointer-events-auto flex flex-col gap-6">
-
-                    {/* Header & Tabs */}
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold text-white font-display tracking-wider flex items-center gap-3">
-                            <ShoppingBag className="text-yellow-500" />
-                            SUPPLY DEPOT
-                        </h1>
-                        <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-1 border border-white/10">
+                <div className="w-full h-full max-w-[1400px] pointer-events-auto flex flex-col gap-8">
+                    {/* Header & Tabs - iOS 风格净化 */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-white mb-2">
+                                Store
+                            </h1>
+                            <p className="text-lg text-white/50 font-medium">选购数字资产与权限</p>
+                        </div>
+                        
+                        {/* iOS Segmented Control */}
+                        <div className="inline-flex bg-[#1A1A1A]/80 backdrop-blur-xl rounded-full p-1.5 border border-white/5">
                             {[
-                                { id: "goods", label: "道具商店", icon: Star },
-                                { id: "recharge", label: "星尘充值", icon: Zap },
-                                { id: "membership", label: "会员订阅", icon: Crown },
+                                { id: "goods", label: "道具商店" },
+                                { id: "recharge", label: "星尘充值" },
+                                { id: "membership", label: "会员订阅" },
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`
-                                        flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all
+                                        relative px-6 py-2 rounded-full text-[14px] font-bold transition-all duration-300
                                         ${activeTab === tab.id
-                                            ? "bg-white text-slate-900 shadow-lg"
-                                            : "text-white/80 hover:text-white hover:bg-white/10"
+                                            ? "text-black"
+                                            : "text-white/60 hover:text-white"
                                         }
                                     `}
                                 >
-                                    <tab.icon size={16} />
-                                    {tab.label}
+                                    {activeTab === tab.id && (
+                                        <motion.div
+                                            layoutId="shopTabs"
+                                            className="absolute inset-0 bg-white rounded-full"
+                                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10 flex items-center gap-2">
+                                        {tab.label}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -245,39 +256,39 @@ export default function ShopPage() {
                     <AnimatePresence>
                         {showSuccess && (
                             <motion.div
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl flex items-center gap-3 font-bold"
+                                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-[#1A1A1A] border border-white/10 text-white px-6 py-4 rounded-2xl flex items-center gap-3 font-medium shadow-2xl"
                             >
-                                <CheckCircle size={20} />
+                                <CheckCircle size={20} className="text-white" />
                                 支付成功！物品已发放至您的账户。
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {/* Content Area */}
-                    <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 overflow-y-auto custom-scrollbar">
+                    {/* Content Area - 深空极简画廊 */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
                         <AnimatePresence mode="wait">
-
                             {/* GOODS TAB */}
                             {activeTab === "goods" && (
                                 <motion.div
                                     key="goods"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-6"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                    className="space-y-8"
                                 >
-                                    {/* 分类筛选标签 */}
+                                    {/* 优雅分类 */}
                                     <div className="flex gap-2 flex-wrap">
                                         {Object.entries(CATEGORY_MAP).map(([key, label]) => (
                                             <button
                                                 key={key}
                                                 onClick={() => setFilterCategory(key)}
-                                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${filterCategory === key
-                                                    ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white shadow-lg shadow-pink-500/20"
-                                                    : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                                                className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${filterCategory === key
+                                                    ? "bg-white text-black shadow-lg"
+                                                    : "bg-[#1A1A1A] text-white/50 hover:bg-[#2A2A2A] hover:text-white border border-white/5"
                                                     }`}
                                             >
                                                 {label}
@@ -285,78 +296,70 @@ export default function ShopPage() {
                                         ))}
                                     </div>
 
-                                    {/* 商品网格 - 移动端单列，避免卡片内容挤压变形 */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-                                        {filteredItems.map((item: any) => (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                        {filteredItems.map((item: any, index: number) => (
                                             <motion.div
                                                 key={item.id}
                                                 layout
-                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                className="group bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all hover:border-white/30 flex flex-col relative"
+                                                transition={{ delay: index * 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                                className="group bg-[#0A0A0A] rounded-[28px] p-5 hover:bg-[#121212] transition-colors duration-500 border border-white/5 hover:border-white/10 flex flex-col relative"
                                             >
-                                                {/* HOT 标签 */}
+                                                {/* 极简角标 */}
                                                 {item.is_featured === 1 && (
-                                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full z-10 shadow-lg">HOT</div>
+                                                    <div className="absolute top-4 left-4 bg-white text-black text-[10px] font-black px-3 py-1 rounded-full z-10 shadow-lg tracking-wider">FEATURED</div>
                                                 )}
-                                                {/* 折扣标签 */}
                                                 {item.original_price && item.original_price > item.price_coins && (
-                                                    <div className="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
-                                                        {Math.round((1 - item.price_coins / item.original_price) * 100)}% OFF
+                                                    <div className="absolute top-4 right-4 bg-[#1A1A1A] text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 z-10">
+                                                        -{Math.round((1 - item.price_coins / item.original_price) * 100)}%
                                                     </div>
                                                 )}
 
-                                                <div className="aspect-square rounded-xl bg-black/40 mb-3 flex items-center justify-center overflow-hidden relative group/img">
+                                                <div className="aspect-square rounded-[20px] bg-[#141414] mb-5 flex items-center justify-center overflow-hidden relative group/img">
                                                     {item.image_url ? (
                                                         <OptimizedImage
                                                             src={item.image_url}
                                                             alt={item.name}
                                                             aspectRatio="square"
-                                                            className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-500 p-4"
+                                                            className="w-[70%] h-[70%] object-contain group-hover/img:scale-110 transition-transform duration-700 ease-out"
                                                         />
                                                     ) : (
-                                                        <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br transition-all duration-500
-                                                            ${item.type === 'avatar_frame' ? 'from-purple-500/20 to-pink-500/20' :
-                                                                item.type === 'theme' ? 'from-blue-500/20 to-cyan-500/20' :
-                                                                    'from-yellow-500/20 to-orange-500/20'}
-                                                        `}>
-                                                            <div className="relative">
-                                                                <Star size={40} className="text-white/20 animate-pulse" />
-                                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                                    <span className="text-xl opacity-80">
-                                                                        {item.type === 'avatar_frame' ? '🖼️' : item.type === 'theme' ? '🎨' : '📦'}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
+                                                        <div className="w-full h-full flex items-center justify-center text-white/10 group-hover/img:text-white/30 transition-colors duration-500">
+                                                            <Star size={48} strokeWidth={1} />
                                                         </div>
                                                     )}
-                                                    {/* Shine Effect */}
-                                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover/img:translate-x-full transition-transform duration-1000" />
                                                 </div>
 
-                                                {/* 分类小标签 */}
-                                                <div className="mb-2">
-                                                    <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                                                <div className="mb-3">
+                                                    <span className="text-[11px] font-bold text-white/40 uppercase tracking-wider">
                                                         {CATEGORY_MAP[item.type] || item.type}
                                                     </span>
                                                 </div>
 
-                                                <h3 className="font-bold text-white text-sm mb-1 line-clamp-1">{item.name}</h3>
-                                                <p className="text-[11px] text-white/50 mb-3 line-clamp-2 flex-1">{item.description}</p>
+                                                <h3 className="font-bold text-white text-base mb-2 line-clamp-1">{item.name}</h3>
+                                                <p className="text-[13px] text-white/40 mb-6 line-clamp-2 flex-1 leading-relaxed">{item.description}</p>
 
                                                 <button
                                                     onClick={() => handlePurchase(item, "goods")}
-                                                    className="w-full py-2 bg-white/10 hover:bg-gradient-to-r hover:from-pink-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                                    className="w-full py-3.5 bg-[#1A1A1A] hover:bg-white text-white hover:text-black rounded-full font-bold text-[14px] transition-all duration-300 flex items-center justify-center gap-2 border border-white/5 hover:border-transparent"
                                                 >
                                                     {item.original_price && item.original_price > item.price_coins && (
-                                                        <span className="line-through text-white/30 text-xs">{item.original_price}</span>
+                                                        <span className="line-through opacity-40 text-xs px-1">{item.original_price}</span>
                                                     )}
-                                                    <span>{item.price_coins}</span>
-                                                    <Star size={12} className="fill-current text-yellow-400" />
+                                                    <span>{item.price_coins} 星尘</span>
                                                 </button>
                                             </motion.div>
                                         ))}
                                     </div>
+                                    {filteredItems.length === 0 && (
+                                         <div className="flex flex-col items-center justify-center py-20 text-center">
+                                            <div className="w-20 h-20 bg-[#1A1A1A] rounded-full flex items-center justify-center mb-6 border border-white/5">
+                                                <ShoppingBag className="text-white/20" size={32} />
+                                            </div>
+                                            <p className="text-white/40 font-medium text-lg">该分类下暂无商品</p>
+                                        </div>
+                                    )}
                                 </motion.div>
                             )}
 
@@ -364,36 +367,35 @@ export default function ShopPage() {
                             {activeTab === "recharge" && (
                                 <motion.div
                                     key="recharge"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="grid grid-cols-2 md:grid-cols-3 gap-5"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                                 >
-                                    {loaderData.rechargePackages.map((pkg: any) => (
-                                        <div key={pkg.id} className="group bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border border-yellow-500/20 rounded-2xl p-6 hover:border-yellow-500/50 transition-all flex flex-col items-center text-center relative overflow-hidden">
-                                            <div className="absolute inset-0 bg-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            {/* Tag 标签 */}
+                                    {loaderData.rechargePackages.map((pkg: any, index: number) => (
+                                        <div key={pkg.id} className="group bg-[#0A0A0A] border border-white/5 hover:border-white/20 rounded-[32px] p-8 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden">
+                                            {/* 钛金质感极简 Tag */}
                                             {pkg.tag && (
-                                                <div className={`absolute top-2 right-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full z-10 ${pkg.tag === '至尊' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black'
-                                                    : pkg.tag === '巨量' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
-                                                        : pkg.tag === '超值' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
-                                                            : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
-                                                    }`}>
+                                                <div className="absolute top-5 right-5 text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full z-10 bg-[#1A1A1A] text-white border border-white/10">
                                                     {pkg.tag}
                                                 </div>
                                             )}
-                                            <div className="w-14 h-14 rounded-full bg-yellow-500/20 flex items-center justify-center mb-3 text-yellow-400 group-hover:scale-110 transition-transform relative z-10">
-                                                <Zap size={28} />
+                                            
+                                            <div className="w-16 h-16 rounded-full bg-[#1A1A1A] flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform duration-500 ease-out border border-white/5">
+                                                <Zap size={24} strokeWidth={1.5} />
                                             </div>
-                                            <h3 className="text-2xl font-bold text-white mb-0.5 font-mono relative z-10">{pkg.coins}</h3>
+                                            <h3 className="text-4xl font-sans font-black tracking-tight text-white mb-2">{pkg.coins}</h3>
+                                            
                                             {pkg.bonus > 0 ? (
-                                                <p className="text-xs text-yellow-500/80 mb-4 font-bold relative z-10">+ {pkg.bonus} 赠送</p>
+                                                <p className="text-[13px] text-white/60 mb-8 font-medium bg-[#1A1A1A] px-3 py-1 rounded-full">+ {pkg.bonus} 额外星尘</p>
                                             ) : (
-                                                <p className="text-xs text-white/30 mb-4 relative z-10">基础包</p>
+                                                <p className="text-[13px] text-white/30 mb-8 font-medium px-3 py-1">基础包</p>
                                             )}
+                                            
                                             <button
                                                 onClick={() => handlePurchase(pkg, "recharge")}
-                                                className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold transition-colors relative z-10"
+                                                className="w-full py-4 bg-white hover:bg-white/90 text-black rounded-full font-bold text-[15px] transition-colors"
                                             >
                                                 {pkg.label}
                                             </button>
@@ -406,55 +408,54 @@ export default function ShopPage() {
                             {activeTab === "membership" && (
                                 <motion.div
                                     key="membership"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="grid grid-cols-1 md:grid-cols-3 gap-8"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                    className="grid grid-cols-1 lg:grid-cols-2 lg:max-w-4xl mx-auto gap-8"
                                 >
                                     {loaderData.tiers.filter((t: any) => t.name !== 'free').map((tier: any) => (
                                         <div key={tier.id} className={`
-                                            relative rounded-3xl p-8 border flex flex-col
+                                            relative rounded-[40px] p-10 flex flex-col transition-all duration-500
                                             ${tier.name === 'svip'
-                                                ? "bg-gradient-to-b from-slate-900 to-black border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.1)]"
-                                                : "bg-black/40 border-white/10"
+                                                ? "bg-white text-black scale-100 lg:scale-105 shadow-2xl z-10"
+                                                : "bg-[#0A0A0A] text-white border border-white/10"
                                             }
                                         `}>
                                             {tier.name === 'svip' && (
-                                                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-white/5 to-orange-500/10 opacity-30 animate-shimmer pointer-events-none" />
-                                            )}
-                                            {tier.name === 'svip' && (
-                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-black px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.5)] flex items-center gap-1 z-20">
-                                                    <Crown size={12} className="animate-bounce" /> COMMANDER'S CHOICE
+                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white text-[11px] font-black tracking-widest px-4 py-2 rounded-full uppercase">
+                                                    Ultimate
                                                 </div>
                                             )}
 
-                                            <div className="text-center mb-8">
-                                                <h3 className={`text-2xl font-bold mb-2 ${tier.name === 'svip' ? "text-yellow-400" : "text-white"}`}>
+                                            <div className="text-center mb-10">
+                                                <h3 className={`text-2xl font-black tracking-tight mb-4 ${tier.name === 'svip' ? "text-black" : "text-white"}`}>
                                                     {tier.display_name}
                                                 </h3>
-                                                <div className="text-3xl font-bold text-white font-mono">
-                                                    ¥{(tier.price_monthly / 100).toFixed(0)}<span className="text-sm text-white/40 font-normal">/mo</span>
+                                                <div className="flex items-baseline justify-center gap-1">
+                                                    <span className="text-2xl font-bold opacity-50">¥</span>
+                                                    <span className="text-6xl font-sans font-black tracking-tighter">{(tier.price_monthly / 100).toFixed(0)}</span>
+                                                    <span className={`text-base font-medium ${tier.name === 'svip' ? "text-black/50" : "text-white/40"}`}>/mo</span>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-4 flex-1 mb-8">
-                                                {/* Parse privileges JSON if needed, or hardcode for demo */}
-                                                <div className="flex items-center gap-3 text-sm text-white/80">
-                                                    <CheckCircle size={16} className="text-green-400" />
-                                                    <span>{tier.name === 'svip' ? "无限" : "50次"} AI 对话</span>
+                                            <div className="space-y-5 flex-1 mb-10">
+                                                <div className="flex items-center gap-4 text-[15px] font-medium opacity-80">
+                                                    <CheckCircle size={20} strokeWidth={1.5} className={tier.name === 'svip' ? "text-black" : "text-white"} />
+                                                    <span>{tier.name === 'svip' ? "无限次" : "50次"} AI 对话额度</span>
                                                 </div>
-                                                <div className="flex items-center gap-3 text-sm text-white/80">
-                                                    <CheckCircle size={16} className="text-green-400" />
-                                                    <span>{tier.name === 'svip' ? "2.0x" : "1.5x"} 积分倍率</span>
+                                                <div className="flex items-center gap-4 text-[15px] font-medium opacity-80">
+                                                    <CheckCircle size={20} strokeWidth={1.5} className={tier.name === 'svip' ? "text-black" : "text-white"} />
+                                                    <span>{tier.name === 'svip' ? "2.0x" : "1.5x"} 全局积分加成</span>
                                                 </div>
-                                                <div className="flex items-center gap-3 text-sm text-white/80">
-                                                    <CheckCircle size={16} className="text-green-400" />
-                                                    <span>专属身份徽章</span>
+                                                <div className="flex items-center gap-4 text-[15px] font-medium opacity-80">
+                                                    <CheckCircle size={20} strokeWidth={1.5} className={tier.name === 'svip' ? "text-black" : "text-white"} />
+                                                    <span>稀有身份徽章展示</span>
                                                 </div>
                                                 {tier.name === 'svip' && (
-                                                    <div className="flex items-center gap-3 text-sm text-white/80">
-                                                        <CheckCircle size={16} className="text-green-400" />
-                                                        <span>优先技术支持</span>
+                                                    <div className="flex items-center gap-4 text-[15px] font-medium opacity-80">
+                                                        <CheckCircle size={20} strokeWidth={1.5} className="text-black" />
+                                                        <span>优先技术支持与特权</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -462,85 +463,81 @@ export default function ShopPage() {
                                             <button
                                                 onClick={() => handlePurchase(tier, "membership")}
                                                 className={`
-                                                    w-full py-4 rounded-xl font-bold transition-all
+                                                    w-full py-4 rounded-full font-bold text-[16px] transition-all duration-300
                                                     ${tier.name === 'svip'
-                                                        ? "bg-gradient-to-r from-yellow-600 to-yellow-400 text-black hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]"
-                                                        : "bg-white text-black hover:bg-white/90"
+                                                        ? "bg-black text-white hover:bg-black/90"
+                                                        : "bg-[#1A1A1A] text-white hover:bg-white hover:text-black border border-white/10 hover:border-transparent"
                                                     }
                                                 `}
                                             >
-                                                立即开通
+                                                Subscribe Now
                                             </button>
                                         </div>
                                     ))}
                                 </motion.div>
                             )}
-
                         </AnimatePresence>
                     </div>
                 </div>
             </div>
 
-            {/* Payment Confirmation Modal - Only for GOODS purchases with coins */}
+            {/* Payment Confirmation Modal - 极简弹窗 */}
             <AnimatePresence>
                 {paymentModalOpen && selectedItem?.type === "goods" && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div
-                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                            className="absolute inset-0 bg-black/60 backdrop-blur-xl"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setPaymentModalOpen(false)}
                         />
                         <motion.div
-                            className="bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-md relative z-10 shadow-2xl"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[#121212] border border-white/10 rounded-[40px] p-10 w-full max-w-sm relative z-10 shadow-2xl"
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5 }}
                         >
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                                <CreditCard className="text-blue-400" />
-                                {paymentStep === "confirm" ? "确认订单" : paymentStep === "processing" ? "处理中..." : "支付成功"}
+                            <h2 className="text-2xl font-black text-white mb-8 tracking-tight text-center">
+                                {paymentStep === "confirm" ? "Confirm" : paymentStep === "processing" ? "Processing..." : "Success!"}
                             </h2>
 
                             {paymentStep === "confirm" && selectedItem && (
-                                <div className="space-y-6">
-                                    <div className="bg-white/5 rounded-xl p-4 flex items-center gap-4">
-                                        <div className="w-16 h-16 bg-black/40 rounded-lg flex items-center justify-center overflow-hidden">
+                                <div className="space-y-8">
+                                    <div className="flex flex-col items-center gap-4 text-center">
+                                        <div className="w-24 h-24 bg-[#1A1A1A] rounded-[24px] flex items-center justify-center overflow-hidden border border-white/5">
                                             {selectedItem.image_url ? (
-                                                <OptimizedImage src={selectedItem.image_url} alt={selectedItem.name} className="w-full h-full object-cover" />
+                                                <OptimizedImage src={selectedItem.image_url} alt={selectedItem.name} className="w-[70%] h-[70%] object-contain" />
                                             ) : (
-                                                <Zap className="text-yellow-500" />
+                                                <Star className="text-white/40 mb-1" size={32} />
                                             )}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-white">{selectedItem.name || selectedItem.display_name || `充值 ${selectedItem.coins} 星尘`}</div>
-                                            <div className="text-sm text-white/80">{selectedItem.description || "即时到账"}</div>
+                                            <div className="font-bold text-white text-lg">{selectedItem.name || selectedItem.display_name}</div>
+                                            <div className="text-sm text-white/50">{selectedItem.description || "Digital Asset"}</div>
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center text-sm text-white/80 py-4 border-y border-white/10">
-                                        <span>应付金额</span>
-                                        <span className="text-xl font-bold text-white">
-                                            {selectedItem.type === "goods"
-                                                ? `${selectedItem.price_coins} 积分`
-                                                : `¥ ${(selectedItem.price || selectedItem.price_monthly) / 100}`
-                                            }
+                                    <div className="flex flex-col items-center py-6 border-y border-white/5">
+                                        <span className="text-sm text-white/50 font-medium mb-1">Total</span>
+                                        <span className="text-4xl font-black tracking-tight text-white">
+                                            {selectedItem.price_coins} <span className="text-xl font-bold opacity-50 font-sans">星尘</span>
                                         </span>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button
-                                            onClick={() => setPaymentModalOpen(false)}
-                                            className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
-                                        >
-                                            取消
-                                        </button>
+                                    <div className="space-y-3">
                                         <button
                                             onClick={confirmPayment}
-                                            className="py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold transition-colors shadow-lg shadow-blue-500/20"
+                                            className="w-full py-4 rounded-full bg-white text-black font-bold text-[15px] transition-colors hover:bg-white/90"
                                         >
-                                            确认支付
+                                            Buy
+                                        </button>
+                                        <button
+                                            onClick={() => setPaymentModalOpen(false)}
+                                            className="w-full py-4 rounded-full bg-transparent text-white/60 font-bold text-[15px] transition-colors hover:bg-white/5"
+                                        >
+                                            Cancel
                                         </button>
                                     </div>
                                 </div>
@@ -548,18 +545,17 @@ export default function ShopPage() {
 
                             {paymentStep === "processing" && (
                                 <div className="flex flex-col items-center justify-center py-12">
-                                    <Loader2 size={48} className="text-blue-500 animate-spin mb-4" />
-                                    <p className="text-white/60">正在连接支付网关...</p>
+                                    <Loader2 size={40} strokeWidth={1.5} className="text-white animate-spin mb-6" />
+                                    <p className="text-white/50 font-medium">Validating transaction...</p>
                                 </div>
                             )}
 
                             {paymentStep === "success" && (
-                                <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 mb-4">
-                                        <CheckCircle size={32} />
+                                <div className="flex flex-col items-center justify-center py-10">
+                                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-black mb-6">
+                                        <CheckCircle size={36} strokeWidth={2} />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">购买成功!</h3>
-                                    <p className="text-white/80 text-center mb-6">物品已发送至您的账户</p>
+                                    <h3 className="text-2xl font-black tracking-tight text-white mb-2">Done</h3>
                                 </div>
                             )}
                         </motion.div>

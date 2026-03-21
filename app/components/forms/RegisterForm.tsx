@@ -122,14 +122,10 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* 邮箱输入 */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">电子邮箱</label>
-                <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                    </div>
+            <div className="flex flex-col gap-2">
+                <div className="relative">
                     <input
                         type="email"
                         inputMode="email"
@@ -137,72 +133,66 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         enterKeyHint="next"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
-                        placeholder="your@email.com"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                        placeholder="Email Address"
                         disabled={showCaptcha}
+                        required
                     />
                 </div>
             </div>
 
             {/* 密码输入 */}
-            <div className="space-y-2 relative z-20">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">设置密码</label>
-                <div className="relative group isolate">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                        <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                    </div>
+            <div className="flex flex-col gap-2">
+                <div className="relative">
                     <input
                         type="password"
                         autoComplete="new-password"
                         enterKeyHint="next"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
-                        placeholder="至少 8 位包含拼写的字符"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                        placeholder="Password (min 8 chars)"
                         disabled={showCaptcha}
+                        required
                     />
                 </div>
             </div>
 
             {/* 确认密码 */}
-            <div className="space-y-2 relative z-20">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">确认密码</label>
-                <div className="relative group isolate">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                        <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                    </div>
+            <div className="flex flex-col gap-2">
+                <div className="relative">
                     <input
                         type="password"
                         autoComplete="new-password"
                         enterKeyHint="next"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
-                        placeholder="再次输入密码"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                        placeholder="Confirm Password"
                         disabled={showCaptcha}
+                        required
                     />
                 </div>
             </div>
 
             {/* 条款同意 */}
-            <div className="flex items-start gap-3">
-                <div className="relative flex items-center">
+            <div className="flex items-start gap-4 mt-2 px-2">
+                <div className="relative flex items-center mt-0.5">
                     <input
                         type="checkbox"
                         id="terms"
                         checked={formData.agreed}
                         onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
-                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-primary-start checked:bg-primary-start hover:border-primary-start"
+                        className="peer h-[22px] w-[22px] cursor-pointer appearance-none rounded-full border-[1.5px] border-slate-300 dark:border-slate-600 transition-all checked:border-slate-900 checked:bg-slate-900 dark:checked:border-white dark:checked:bg-white hover:border-slate-400"
                         disabled={showCaptcha}
                     />
-                    <CheckCircle className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={12} />
+                    <CheckCircle className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white dark:text-black opacity-0 peer-checked:opacity-100" size={14} strokeWidth={3} />
                 </div>
-                <label htmlFor="terms" className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
-                    我已阅读并同意
-                    <Link to="/terms" className="text-primary-start hover:underline mx-1">服务条款</Link>
-                    、
-                    <Link to="/privacy" className="text-primary-start hover:underline mx-1">隐私政策</Link>
-                    及开启个性化服务
+                <label htmlFor="terms" className="text-[13px] font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none leading-relaxed text-pretty">
+                    I agree to the
+                    <Link to="/terms" className="text-slate-900 dark:text-white hover:underline mx-1">Terms of Service</Link>
+                    and
+                    <Link to="/privacy" className="text-slate-900 dark:text-white hover:underline mx-1">Privacy Policy</Link>
                 </label>
             </div>
 
@@ -215,11 +205,11 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         exit={{ opacity: 0 }}
                         type="button"
                         onClick={handleGetCaptcha}
-                        className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-start/30 text-sm font-bold text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-primary-start/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-start transform hover:-translate-y-0.5 transition-all duration-200"
+                        className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         disabled={isSendingCode}
                     >
-                        {isSendingCode ? <Loader2 className="animate-spin" size={18} /> : "获取并发送验证码"}
-                        {!isSendingCode && <ArrowRight size={18} />}
+                        {isSendingCode ? <Loader2 className="animate-spin" size={20} /> : "Continue Setup"}
+                        {!isSendingCode && <ArrowRight size={20} />}
                     </motion.button>
                 ) : (
                     <motion.div
@@ -227,24 +217,14 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="space-y-4"
+                        className="flex flex-col gap-5 mt-6"
                     >
-                        {/* 图形验证码 */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">验证码</label>
-                            <div className="flex gap-3 items-center">
-                                <div className="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 select-none">
-                                    邮件安全码
+                        {/* 验证码输入区块改写 */}
+                        <div className="flex flex-col gap-2">
+                            <div className="flex gap-3">
+                                <div className="flex-shrink-0 px-4 flex items-center justify-center bg-slate-100 dark:bg-[#2C2C2E] rounded-[18px] font-mono text-[14px] font-bold text-slate-600 dark:text-slate-300 select-none">
+                                    AUTH
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleResendCode}
-                                    disabled={countdown > 0 || isSendingCode}
-                                    className="p-2 text-slate-500 hover:text-primary-start disabled:opacity-50 transition-colors"
-                                    title="重新发送"
-                                >
-                                    {countdown > 0 ? <span className="text-xs font-bold">{countdown}s</span> : <RefreshCw size={18} />}
-                                </button>
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -252,28 +232,37 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                                     enterKeyHint="done"
                                     value={formData.captchaInput}
                                     onChange={(e) => setFormData({ ...formData, captchaInput: e.target.value })}
-                                    className="flex-1 px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start text-center font-mono text-lg transition-all duration-200 tracking-widest"
-                                    placeholder="代码"
+                                    className="flex-1 px-5 py-[18px] w-full bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[18px] text-center font-mono font-bold tracking-[0.2em] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300"
+                                    placeholder="000000"
                                     maxLength={6}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={handleResendCode}
+                                    disabled={countdown > 0 || isSendingCode}
+                                    className="px-4 flex items-center justify-center bg-slate-100 dark:bg-[#2C2C2E] hover:bg-slate-200 dark:hover:bg-[#3C3C3E] rounded-[18px] transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-300"
+                                    title="Resend Code"
+                                >
+                                    {countdown > 0 ? <span className="text-[14px] font-bold font-mono">{countdown}s</span> : <RefreshCw size={18} />}
+                                </button>
                             </div>
                         </div>
 
                         <button
                             type="submit"
-                            disabled={isLoading || !formData.captchaInput}
-                            className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-start/30 text-sm font-bold text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-primary-start/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-start disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all duration-200"
+                            disabled={isLoading || formData.captchaInput.length !== 6}
+                            className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={18} /> : "完成注册"}
-                            {!isLoading && <ArrowRight size={18} />}
+                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Complete Registration"}
+                            {!isLoading && <ArrowRight size={20} />}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setShowCaptcha(false)}
-                            className="w-full text-sm text-slate-500 hover:text-primary-start transition-colors"
+                            className="w-full py-4 text-[14px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
                         >
-                            ← 返回修改信息
+                            Change Information
                         </button>
                     </motion.div>
                 )}
@@ -282,12 +271,12 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
             <AnimatePresence>
                 {(error || localError) && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg flex items-center gap-2 text-sm"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-[16px] flex items-center gap-3 text-[14px] font-bold mt-2"
                     >
-                        <AlertCircle size={16} />
+                        <AlertCircle size={18} className="flex-shrink-0" />
                         {error || localError}
                     </motion.div>
                 )}

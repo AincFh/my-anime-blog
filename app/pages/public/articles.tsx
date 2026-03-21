@@ -114,31 +114,34 @@ export default function ArticlesPage() {
     };
 
     return (
-        <div className="w-full md:container mx-auto md:px-4 py-8 md:py-20">
-            <div className="max-w-6xl mx-auto">
-                {/* 标题区域 */}
+        <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+                {/* 标题区域 - Apple HIG 纯黑白超大字重 */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-12 md:mb-16 px-4 md:px-0"
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="mb-10 md:mb-16"
                 >
-                    <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-cyan-500 to-teal-500 bg-clip-text text-transparent">
-                        文章归档
+                    <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+                        Articles
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 text-lg">记录技术探索、动漫感想和生活随笔</p>
+                    <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
+                        技术探索、动漫感想与生活志
+                    </p>
                 </motion.div>
 
-                {/* 搜索和筛选 */}
+                {/* 搜索和筛选 - 高端磨砂极简条 */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="glass-card p-4 rounded-none md:rounded-2xl border-x-0 md:border-x mb-8"
+                    transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                    className="mb-12"
                 >
-                    <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center px-4 md:px-0">
-                        {/* 搜索框 */}
-                        <div className="relative flex-1 shrink-0">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+                        {/* iOS 风格全局搜索框 */}
+                        <div className="relative flex-1 md:max-w-md shrink-0">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                                 {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                             </div>
                             <input
@@ -146,19 +149,19 @@ export default function ArticlesPage() {
                                 placeholder="搜索文章..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start transition-all"
+                                className="w-full pl-11 pr-4 py-3.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-xl rounded-[20px] text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white transition-all border border-transparent dark:border-white/5"
                             />
                         </div>
 
-                        {/* 分类筛选 - 移动端横滑 */}
+                        {/* 极简胶囊分类筛选 */}
                         <div className="flex overflow-x-auto hide-scrollbar snap-x gap-2 pb-1 md:pb-0 md:flex-wrap">
                             {categories.map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => handleCategoryChange(cat)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${category === cat
-                                        ? 'bg-primary-start text-white shadow-lg shadow-blue-500/20'
-                                        : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    className={`px-5 py-3 rounded-[20px] text-[15px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap ${category === cat
+                                        ? 'bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900 dark:shadow-white/10'
+                                        : 'bg-slate-100/80 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80'
                                         }`}
                                 >
                                     {cat === 'all' ? '全部' : cat}
@@ -168,104 +171,82 @@ export default function ArticlesPage() {
                     </div>
                 </motion.div>
 
-                {/* 文章列表 */}
+                {/* 文章列表 - Apple 巨幕卡片流 */}
                 {articles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 md:gap-8 bg-slate-200/50 dark:bg-slate-800/50 md:bg-transparent pb-4 md:pb-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                         {articles.map((article, index) => (
                             <motion.article
                                 key={article.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + index * 0.05 }}
-                                whileHover={{ y: -5 }}
-                                className="glass-card rounded-none md:rounded-2xl border-x-0 md:border-x overflow-hidden group shadow-none md:shadow-lg"
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.8, delay: 0.15 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                                className="group relative flex flex-col bg-white dark:bg-slate-900/40 rounded-[32px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-white/5"
                             >
-                                {/* 封面图 */}
-                                <div className="aspect-video relative overflow-hidden bg-slate-200 dark:bg-slate-700">
+                                {/* 巨幕封套 */}
+                                <div className="aspect-[4/3] relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     {article.cover_image ? (
                                         <OptimizedImage
                                             src={article.cover_image}
                                             alt={article.title}
-                                            aspectRatio="video"
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                                         />
                                     ) : (
-                                        <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(article.category)} opacity-50 flex items-center justify-center`}>
-                                            <span className="text-4xl">📝</span>
+                                        <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(article.category)} opacity-30 flex items-center justify-center`}>
+                                            <span className="text-5xl opacity-50">📝</span>
                                         </div>
                                     )}
-                                    {/* 分类标签 */}
-                                    <div className="absolute top-3 left-3">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getCategoryColor(article.category)}`}>
+                                    
+                                    {/* 内侧顶部磨砂暗角 */}
+                                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
+                                    
+                                    {/* 角标 */}
+                                    <div className="absolute top-4 left-4">
+                                        <span className="px-3.5 py-1.5 rounded-full text-[11px] font-bold text-white uppercase tracking-wider bg-black/30 backdrop-blur-md border border-white/10">
                                             {article.category || '未分类'}
                                         </span>
                                     </div>
                                 </div>
 
-                                {/* 内容 */}
-                                <div className="p-5">
-                                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-2 line-clamp-2 group-hover:text-primary-start transition-colors">
-                                        <Link to={`/articles/${article.slug}`}>
-                                            {article.title}
-                                        </Link>
-                                    </h2>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
-                                        {getDescription(article.content)}
-                                    </p>
+                                {/* 纯净信息面板 */}
+                                <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+                                    <div className="mb-4">
+                                        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-800 dark:text-white mb-3 line-clamp-2 leading-snug group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors">
+                                            <Link to={`/articles/${article.slug}`} className="before:absolute before:inset-0">
+                                                {article.title}
+                                            </Link>
+                                        </h2>
+                                        <p className="text-[15px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-normal">
+                                            {getDescription(article.content)}
+                                        </p>
+                                    </div>
 
-                                    {/* 元信息 */}
-                                    <div className="flex items-center justify-between text-xs text-slate-400">
-                                        <div className="flex items-center gap-3">
-                                            <span className="flex items-center gap-1">
-                                                <Calendar className="w-3.5 h-3.5" />
-                                                {formatDate(article.created_at)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="flex items-center gap-1">
-                                                <Eye className="w-3.5 h-3.5" />
+                                    {/* 细节点微元 */}
+                                    <div className="flex items-center justify-between text-[13px] text-slate-400 font-medium">
+                                        <span>{formatDate(article.created_at)}</span>
+                                        <div className="flex items-center gap-4">
+                                            <span className="flex items-center gap-1.5">
+                                                <Eye className="w-4 h-4 opacity-70" />
                                                 {article.views || 0}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Heart className="w-3.5 h-3.5" />
-                                                {article.likes || 0}
                                             </span>
                                         </div>
                                     </div>
-
-                                    {/* 阅读更多 */}
-                                    <Link
-                                        to={`/articles/${article.slug}`}
-                                        className="mt-4 flex items-center gap-2 text-sm font-medium text-primary-start hover:gap-3 transition-all"
-                                    >
-                                        阅读全文 <ArrowRight className="w-4 h-4" />
-                                    </Link>
                                 </div>
                             </motion.article>
                         ))}
                     </div>
                 ) : (
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-center py-20"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex flex-col items-center justify-center py-32 text-center"
                     >
-                        <div className="text-6xl mb-4">📝</div>
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
-                            没有找到文章
-                        </h3>
-                        <p className="text-slate-500 dark:text-slate-400 mb-6">
-                            {q ? '没有找到匹配的文章，换个关键词试试？' : '还没有文章发布'}
+                        <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+                            <Search className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-700 dark:text-white mb-2">No Articles Found</h3>
+                        <p className="text-slate-500 max-w-sm mb-8">
+                            {q ? '未能找到符合搜索词的记录。探索一下其他领域的文章吧？' : '这里目前像宇宙一样空旷...'}
                         </p>
-                        {!q && (
-                            <Link
-                                to="/admin/article/new"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-start text-white rounded-xl hover:bg-primary-end transition-colors"
-                            >
-                                创建文章 <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        )}
                     </motion.div>
                 )}
             </div>

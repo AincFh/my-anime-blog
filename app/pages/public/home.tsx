@@ -104,222 +104,211 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="container mx-auto px-4 py-20">
-      {/* Hero Section */}
+    <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
+      {/* Hero Section - 极致留白与大呼吸感 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="flex flex-col lg:flex-row items-center justify-between min-h-[70vh] px-4"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col lg:flex-row items-center justify-between min-h-[50vh] md:min-h-[60vh] px-2 mb-20 md:mb-32 gap-16 lg:gap-8"
       >
-        {/* Left: Greeting Text */}
-        <div className="lg:w-1/2 mb-10 lg:mb-0 text-center lg:text-left">
+        {/* Left: 问候文本群 */}
+        <div className="lg:w-1/2 text-left w-full">
           <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-4 md:mb-6 bg-gradient-to-r from-primary-start to-primary-end bg-clip-text text-transparent break-words leading-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-5xl md:text-7xl lg:text-8xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-6 leading-[1.1]"
           >
             <GreetingText />
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-lg md:text-xl lg:text-2xl text-slate-700 max-w-2xl font-medium tracking-wide mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-xl md:text-3xl text-slate-500 dark:text-slate-400 font-medium tracking-tight mb-4"
           >
             在这里分享关于动漫、游戏和技术的一切
           </motion.p>
           <motion.p
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="text-base md:text-lg text-slate-600 max-w-xl font-light mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-lg text-slate-400 dark:text-slate-500 font-normal mb-12"
           >
-            沉浸在京阿尼/新海诚风格的世界中
+            沉浸在京阿尼与新海诚世界交错的平行线中。
           </motion.p>
 
-          {/* Navigation Links */}
+          {/* iOS 风格的胶囊入口按钮组 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6 }}
-            className="flex gap-4 flex-wrap justify-center lg:justify-start"
+            transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-wrap gap-4"
           >
             {[
-              { name: "文章", path: "/articles" },
-              { name: "归档", path: "/archive" },
-              { name: "商城", path: "/shop" },
+              { name: "Articles", path: "/articles", isPrimary: true },
+              { name: "Archive", path: "/archive", isPrimary: false },
+              { name: "Shop", path: "/shop", isPrimary: false },
             ].map((item, index) => (
-              <Link
-                key={item.name}
-                to={item.path}
-              >
-                <motion.div
-                  className="px-8 py-3 bg-gradient-to-r from-primary-start to-primary-end text-white rounded-full font-bold text-lg uppercase tracking-wider"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <Link key={item.name} to={item.path}>
+                <div
+                  className={`px-8 py-3.5 rounded-full font-bold text-[15px] transition-all duration-300 ${
+                    item.isPrimary
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:scale-[1.02]"
+                  }`}
                 >
                   {item.name}
-                </motion.div>
+                </div>
               </Link>
             ))}
           </motion.div>
         </div>
 
-        {/* Right: 3D Tilt Card */}
+        {/* Right: Apple Store 巨幕焦点图 */}
         <motion.div
-          initial={{ opacity: 0, y: 50, rotateY: 20 }}
-          animate={{ opacity: 1, y: 0, rotateY: 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-          className="lg:w-1/3 relative"
-          style={{ perspective: 1000 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:w-5/12 w-full max-w-md mx-auto relative group"
         >
-          <motion.div
-            className="glass-card rounded-3xl overflow-hidden shadow-xl"
-            whileHover={{ scale: 1.05, rotateY: 5, rotateX: 5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <div className="relative h-96">
-              <OptimizedImage
-                src="https://api.paugram.com/wallpaper/"
-                alt="Anime illustration"
-                className="w-full h-full object-cover"
-                aspectRatio="portrait"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-              <div className="absolute bottom-6 left-6 right-6 z-10">
-                <h3 className="text-white text-2xl font-bold mb-2">最新插画</h3>
-                <p className="text-white/80 text-sm">沉浸在美好的二次元世界中</p>
-              </div>
+          <div className="aspect-[4/5] rounded-[32px] md:rounded-[40px] overflow-hidden relative shadow-2xl shadow-indigo-500/10 dark:shadow-none border border-black/5 dark:border-white/10">
+            <OptimizedImage
+              src="https://api.paugram.com/wallpaper/"
+              alt="Anime illustration"
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+              aspectRatio="portrait"
+            />
+            {/* 渐变遮罩压身 */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+            <div className="absolute bottom-8 left-8 right-8 z-10 flex flex-col items-start">
+              <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-[10px] font-bold tracking-wider uppercase mb-3 border border-white/20">
+                Featured
+              </span>
+              <h3 className="text-white text-3xl font-black tracking-tight mb-2 leading-tight">次元倒影</h3>
+              <p className="text-white/80 text-sm font-medium">每天发现不一样的梦境瞬间</p>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       </motion.div>
 
-      {/* Latest Articles Section */}
+      {/* Latest Articles Section - iOS Matrix 卡片 */}
       <motion.section
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.8 }}
-        className="mt-16 md:mt-32 mb-16 md:mb-24"
+        transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-20 md:mb-32"
       >
-        <div className="flex items-center justify-between mb-8 md:mb-12 px-4 md:px-0">
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-            最新文章
-          </h2>
+        <div className="flex items-end justify-between mb-8 md:mb-12 px-2">
+          <div>
+            <h2 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-2">
+              Latest
+            </h2>
+            <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">新世界的资讯</p>
+          </div>
           <Link
             to="/articles"
-            className="text-slate-400 hover:text-pink-500 transition-colors flex items-center gap-2 text-sm md:text-base"
+            className="text-slate-600 dark:text-slate-300 font-semibold hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[15px] bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full"
           >
-            查看全部 <span>→</span>
+            See All <span className="font-serif">→</span>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {articles.map((article: any, index: number) => (
             <motion.div
               key={article.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 + index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Link to={`/articles/${article.slug}`} className="block">
-                <GlassCard
-                  className="h-full flex flex-col overflow-hidden"
-                  hoverEffect={false}
-                >
-                  {/* 封面图 - 占据卡片50%以上面积 */}
+              <Link to={`/articles/${article.slug}`} className="block h-full group">
+                <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900/40 rounded-[28px] md:rounded-[32px] overflow-hidden border border-slate-200/50 dark:border-white/5 transition-all duration-500 hover:shadow-xl hover:shadow-slate-200 dark:hover:shadow-none dark:hover:border-white/10">
+                  {/* 极简无界封面 */}
                   {article.cover_image && (
-                    <motion.div
-                      className="relative h-64 overflow-hidden rounded-t-3xl"
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.5 }}
-                    >
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <OptimizedImage
                         src={article.cover_image}
                         alt={article.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-700 ease-out"
                       />
-                      {/* 内部光泽效果 - 防止图片太白导致文字看不清 */}
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)',
-                          boxShadow: 'inset 0 0 60px rgba(0,0,0,0.2), inset 0 -20px 40px rgba(0,0,0,0.15)',
-                        }}
-                      />
-                      {/* 顶部高光，增加通透感 */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-                      {/* 分类标签 - 悬浮在封面图上 */}
                       <div className="absolute top-4 left-4 z-10">
-                        <span className="inline-block px-4 py-1 bg-white/80 backdrop-blur-sm text-primary-start rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                        <span className="px-3 py-1.5 bg-white/90 dark:bg-black/50 backdrop-blur-md text-slate-900 dark:text-white shadow-sm rounded-full text-[11px] font-bold uppercase tracking-wider">
                           {article.category}
                         </span>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
 
-                  <div className="p-4 md:p-6 flex-1 flex flex-col">
-                    {/* 标题 */}
-                    <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 line-clamp-2 text-slate-800 hover:text-primary-start transition-colors">
-                      {article.title}
-                    </h3>
+                  <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 line-clamp-2 leading-snug group-hover:text-amber-500 transition-colors">
+                        {article.title}
+                      </h3>
+                      {article.description && (
+                        <p className="text-[15px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-normal mb-8">
+                          {article.description}
+                        </p>
+                      )}
+                    </div>
 
-                    {/* 摘要 */}
-                    {article.description && (
-                      <p className="text-sm text-slate-600 line-clamp-3 mb-4 flex-1">
-                        {article.description}
-                      </p>
-                    )}
-
-                    {/* 底部信息 */}
-                    <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-200/50">
-                      <span>
-                        {new Date(article.created_at * 1000).toLocaleDateString("zh-CN")}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span>👁</span>
+                    <div className="flex items-center justify-between text-[13px] font-medium text-slate-400">
+                      <span>{new Date(article.created_at * 1000).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
+                        <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         {article.views || 0}
                       </span>
                     </div>
                   </div>
-                </GlassCard>
+                </div>
               </Link>
             </motion.div>
           ))}
         </div>
 
         {articles.length === 0 && (
-          <div className="text-center text-gray-500 py-20">
-            <p className="text-xl">还没有文章，去后台创建第一篇吧！</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+             <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+                 <span className="text-3xl opacity-50">📰</span>
+             </div>
+             <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">暂无文章记录</p>
           </div>
         )}
       </motion.section>
 
-      {/* Anime Section */}
+      {/* Anime Section - 稳固排列 */}
       {animes.length > 0 && (
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
+          transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 md:mb-24"
         >
-          <div className="flex items-center justify-between mb-8 md:mb-12 px-4 md:px-0">
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
-              追番记录
-            </h2>
+          <div className="flex items-end justify-between mb-8 md:mb-12 px-2">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-2">
+                Watching
+              </h2>
+              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">当前轨迹</p>
+            </div>
+            <Link
+              to="/bangumi"
+              className="text-slate-600 dark:text-slate-300 font-semibold hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[15px] bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full"
+            >
+              See All <span className="font-serif">→</span>
+            </Link>
           </div>
-          {/* 移动端分为1列，防止单列封面过巨或文字被挤压变形，平板2列，桌面4列 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
             {animes.map((anime: any, index: number) => (
               <motion.div
                 key={anime.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3 + index * 0.1, duration: 0.5 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 + index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="h-full"
               >
+                {/* 套用原先 AnimeCard，并将其隐匿在 Apple 包装下，此处复用我们改造 AnimeCard 之后的极简版本 */}
                 <AnimeCard {...anime} />
               </motion.div>
             ))}

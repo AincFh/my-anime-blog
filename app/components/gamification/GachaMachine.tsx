@@ -4,6 +4,8 @@ import { Sparkles, Coins, Gift } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
 import { useGamification } from "~/contexts/GamificationContext";
 
+import { useRouteLoaderData } from "react-router";
+
 const GACHA_COST = 100;
 
 const GACHA_POOL = [
@@ -19,6 +21,9 @@ export function GachaMachine() {
     const [isRolling, setIsRolling] = useState(false);
     const [result, setResult] = useState<typeof GACHA_POOL[0] | null>(null);
 
+    const rootData = useRouteLoaderData("root") as any;
+    const playAnim = rootData?.userPrefs?.personalization?.gacha_animation !== false;
+
     const handleGacha = () => {
         if (stats.coins < GACHA_COST) {
             toast.error("金币不足！");
@@ -26,9 +31,9 @@ export function GachaMachine() {
         }
 
         if (spendCoins(GACHA_COST)) {
-            setIsRolling(true);
+            if (playAnim) setIsRolling(true);
 
-            // 模拟抽奖动画
+            // 依据用户设置，开启等待特效或瞬间发卡
             setTimeout(() => {
                 const randomItem = GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)];
                 setResult(randomItem);
@@ -38,7 +43,7 @@ export function GachaMachine() {
                 });
                 unlockAchievement("gacha_master");
                 setIsRolling(false);
-            }, 2000);
+            }, playAnim ? 2000 : 0);
         }
     };
 

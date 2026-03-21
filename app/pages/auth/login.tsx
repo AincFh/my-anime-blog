@@ -58,64 +58,70 @@ export default function Login() {
     };
 
     return (
-        <>
-            <ResponsiveContainer maxWidth="sm" className="pt-16 pb-20">
-                <GlassCard
-                    initial={{ opacity: 0, y: 20 }}
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-white dark:bg-[#000000]">
+            {/* 顶层极其微弱的光晕 */}
+            <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
+
+            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-8 md:p-10 relative overflow-hidden"
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    <div className="relative z-10">
-                        <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">欢迎回来</h1>
-                            <p className="text-slate-500 dark:text-slate-400">登录以继续您的旅程</p>
-                        </div>
+                    <div className="text-center mb-10">
+                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+                            Welcome
+                        </h1>
+                        <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
+                            Sign in to continue your journey
+                        </p>
+                    </div>
 
-                        <AnimatePresence>
-                            {showLoginSuccess && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-3 rounded-lg mb-6 flex items-center gap-2 text-sm justify-center font-bold"
-                                >
-                                    <CheckCircle size={16} />
-                                    登录成功！正在跳转...
-                                </motion.div>
-                            )}
+                    <AnimatePresence>
+                        {showLoginSuccess && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-4 rounded-[16px] mb-8 flex items-center justify-center gap-2 text-[14px] font-bold"
+                            >
+                                <CheckCircle size={18} />
+                                Login successful! Redirecting...
+                            </motion.div>
+                        )}
 
-                            {showSuccess && !showLoginSuccess && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-3 rounded-lg mb-6 flex items-center gap-2 text-sm"
-                                >
-                                    <CheckCircle size={16} />
-                                    注册成功！请使用密码登录
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {showSuccess && !showLoginSuccess && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-4 rounded-[16px] mb-8 flex items-center gap-2 text-[14px] font-bold"
+                            >
+                                <CheckCircle size={18} />
+                                Registered successfully. Please sign in.
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
+                    <div className="bg-white/50 dark:bg-[#1C1C1E]/30 p-1 rounded-[32px]">
                         <LoginForm
                             onSubmit={handleLogin}
                             isLoading={isLoading}
                             error={error}
                             defaultEmail={defaultEmail}
                         />
-
-                        <div className="mt-8 text-center space-y-4">
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                还没有账号？
-                                <Link to="/register" className="text-primary-start font-bold hover:underline ml-1">
-                                    立即注册
-                                </Link>
-                            </p>
-
-                        </div>
                     </div>
-                </GlassCard>
+
+                    <div className="mt-10 text-center">
+                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                            Don't have an account?
+                            <Link to="/register" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
+                                Sign up now
+                            </Link>
+                        </p>
+                    </div>
+                </motion.div>
             </ResponsiveContainer>
-        </>
+        </div>
     );
 }

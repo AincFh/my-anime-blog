@@ -1,13 +1,18 @@
 import type { Route } from "./+types/api.comments";
-import { sanitizeComment, jsonWithSecurity } from "~/utils/security";
+import { sanitizeComment, jsonWithSecurity, verifySameOrigin } from "~/utils/security";
 import { getSessionId, verifySession } from '~/utils/auth';
 import { updateMissionProgress } from '~/services/membership/mission.server';
 
 /**
  * 评论API
- * 加固：防止 Turnstile 绕过与会话一致性锁定
+ * 加固：防止 Turnstile 绕过与会话一致性锁定 / 同源死锁防御CSRF
  */
 export async function action({ request, context }: Route.ActionArgs) {
+  // 0. CSRF 物理风控拦截
+  if (!verifySameOrigin(request)) {
+    return Response.json({ error: "非法的跨站请求" }, { status: 403 });
+  }
+
   const env = (context as any).cloudflare.env;
   const { anime_db } = env;
   const formData = await request.formData();

@@ -59,37 +59,43 @@ export default function Register() {
     };
 
     return (
-        <>
-            <ResponsiveContainer maxWidth="sm" className="pt-16 pb-20">
-                <GlassCard
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-8 md:p-10 relative overflow-hidden"
-                >
-                    <div className="relative z-10">
-                        <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">创建账号</h1>
-                            <p className="text-slate-500 dark:text-slate-400">加入我们的二次元社区</p>
-                        </div>
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-white dark:bg-[#000000]">
+            <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
 
+            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <div className="text-center mb-10">
+                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+                            Create Account
+                        </h1>
+                        <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
+                            Join our anime community
+                        </p>
+                    </div>
+
+                    <div className="bg-white/50 dark:bg-[#1C1C1E]/30 p-1 rounded-[32px]">
                         <RegisterForm
                             onRegister={handleRegister}
                             onSendCode={handleSendCode}
                             isLoading={isLoading}
                             error={error}
                         />
-
-                        <div className="mt-8 text-center">
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                已有账号？
-                                <Link to="/login" className="text-primary-start font-bold hover:underline ml-1">
-                                    立即登录
-                                </Link>
-                            </p>
-                        </div>
                     </div>
-                </GlassCard>
+
+                    <div className="mt-10 text-center">
+                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                            Already have an account?
+                            <Link to="/login" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
+                                Sign in
+                            </Link>
+                        </p>
+                    </div>
+                </motion.div>
             </ResponsiveContainer>
-        </>
+        </div>
     );
 }

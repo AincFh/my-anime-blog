@@ -90,129 +90,131 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
     const { articles, animes } = separateActivities();
 
     return (
-        <div ref={containerRef} className="container mx-auto px-4 py-20">
-            {/* 标题 */}
+        <div ref={containerRef} className="w-full max-w-[1000px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6">
+            {/* 极简标题 */}
             <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-16"
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-16 md:mb-24"
             >
-                <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
-                    时光机
+                <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+                    Archive
                 </h1>
-                <p className="text-slate-600 text-lg">像滚动卷轴一样展示你的数字人生</p>
+                <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
+                    时光卷轴的印记
+                </p>
             </motion.div>
 
-            {/* 左右分栏时间轴 */}
-            <div className="relative max-w-7xl mx-auto">
-                {/* 中央时间线 */}
+            {/* Apple 极简左置时轴 (单线程) */}
+            <div className="relative">
+                {/* 浅灰轨道 */}
                 <motion.div
                     style={{ y: timelineY }}
-                    className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-pink-500 via-purple-500 to-cyan-500 transform -translate-x-1/2 z-0"
+                    className="absolute left-[31px] md:left-[47px] top-10 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-800 z-0"
                 />
 
-                {/* 内容区域 */}
-                <div className="relative z-10">
-                    {/* 合并所有活动并按时间排序 */}
+                <div className="relative z-10 flex flex-col gap-16 md:gap-24">
                     {years.map((year, yearIdx) => {
                         const yearActivities = groupedByYear[year];
-                        return yearActivities.map((activity: any, idx: number) => {
-                            const isLeft = activity.type === "article";
-                            const totalIdx = yearIdx * 100 + idx;
-
-                            return (
+                        return (
+                            <div key={year} className="relative">
+                                {/* 年份节点头 */}
                                 <motion.div
-                                    key={`${activity.type}-${activity.id}`}
-                                    initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
+                                    initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: totalIdx * 0.05 }}
-                                    className={`relative mb-8 ${isLeft ? "pr-[52%] text-right" : "pl-[52%] text-left"}`}
+                                    transition={{ delay: yearIdx * 0.1 }}
+                                    className="flex items-center gap-6 md:gap-8 mb-8"
                                 >
-                                    {/* 时间线圆点 */}
-                                    <div className={`absolute top-4 ${isLeft ? "right-[48%]" : "left-[48%]"} w-4 h-4 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 border-4 border-white shadow-lg z-20`} />
-
-                                    {/* 内容卡片 */}
-                                    <GlassCard className={`p-6 hover:scale-[1.02] transition-transform ${isLeft ? "mr-8" : "ml-8"}`}>
-                                        <div className={`flex items-start justify-between mb-2 ${isLeft ? "flex-row-reverse" : ""}`}>
-                                            <div className={`flex items-center gap-2 ${isLeft ? "flex-row-reverse" : ""}`}>
-                                                {activity.type === "article" ? (
-                                                    <span className="text-2xl">📝</span>
-                                                ) : (
-                                                    <span className="text-2xl">🎬</span>
-                                                )}
-                                                <span className="text-xs text-slate-500 uppercase">
-                                                    {activity.type === "article" ? "文章" : "番剧"}
-                                                </span>
-                                            </div>
-                                            <span className="text-sm text-slate-400">{activity.formattedDate}</span>
-                                        </div>
-
-                                        {/* Cover Image */}
-                                        {activity.cover_image && (
-                                            <div className="mb-4 rounded-xl overflow-hidden aspect-[16/9] relative group">
-                                                <OptimizedImage
-                                                    src={activity.cover_image}
-                                                    alt={activity.title}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                    width={400}
-                                                />
-                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                                            </div>
-                                        )}
-
-                                        <h3 className={`text-xl font-bold mb-2 hover:text-pink-400 transition-colors ${isLeft ? "text-right" : "text-left"}`}>
-                                            {activity.title}
-                                        </h3>
-
-                                        {activity.type === "article" && activity.description && (
-                                            <p className={`text-sm text-slate-600 line-clamp-2 ${isLeft ? "text-right" : "text-left"}`}>
-                                                {activity.description}
-                                            </p>
-                                        )}
-
-                                        {activity.type === "anime" && activity.status && (
-                                            <p className={`text-sm ${isLeft ? "text-right" : "text-left"}`}>
-                                                <span className="text-slate-500">状态: </span>
-                                                <span
-                                                    className={
-                                                        activity.status === "completed"
-                                                            ? "text-green-400"
-                                                            : activity.status === "watching"
-                                                                ? "text-blue-400"
-                                                                : activity.status === "plan"
-                                                                    ? "text-purple-400"
-                                                                    : "text-gray-400"
-                                                    }
-                                                >
-                                                    {activity.status === "completed"
-                                                        ? "看完了"
-                                                        : activity.status === "watching"
-                                                            ? "在追"
-                                                            : activity.status === "plan"
-                                                                ? "想看"
-                                                                : "弃番"}
-                                                </span>
-                                            </p>
-                                        )}
-
-                                        {activity.category && (
-                                            <div className={`mt-3 ${isLeft ? "text-right" : "text-left"}`}>
-                                                <span className="inline-block px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
-                                                    {activity.category}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </GlassCard>
+                                    <div className="w-16 h-16 md:w-24 md:h-24 shrink-0 bg-slate-100 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-white/5 rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-sm z-10">
+                                        <span className="text-xl md:text-3xl font-black tracking-tighter text-slate-800 dark:text-white">{year}</span>
+                                    </div>
+                                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800/50" />
                                 </motion.div>
-                            );
-                        });
+
+                                {/* 这一年的记录群 */}
+                                <div className="flex flex-col gap-8 md:gap-12 pl-[31px] md:pl-[47px]">
+                                    {yearActivities.map((activity: any, idx: number) => {
+                                        const typeColor = activity.type === "article" 
+                                            ? "bg-slate-800 dark:bg-slate-200" 
+                                            : "bg-slate-400 dark:bg-slate-500";
+                                            
+                                        return (
+                                            <motion.div
+                                                key={`${activity.type}-${activity.id}`}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.1 + idx * 0.05 }}
+                                                className="relative pl-8 md:pl-16 group"
+                                            >
+                                                {/* 时轴连接点 (极简圆环) */}
+                                                <div className="absolute left-[-5px] top-6 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-[3px] border-slate-300 dark:border-slate-600 group-hover:border-slate-800 dark:group-hover:border-white transition-colors duration-300 z-20" />
+                                                
+                                                {/* 主卡片 */}
+                                                <div className="bg-white dark:bg-slate-900/40 rounded-[28px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100 dark:border-white/5 flex flex-col md:flex-row p-4 md:p-6 gap-6">
+                                                    {/* 海报区 - 使用更雅致的裁切 */}
+                                                    {activity.cover_image && (
+                                                        <div className="w-full md:w-64 shrink-0 aspect-video md:aspect-square rounded-[20px] md:rounded-[24px] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                                                            <OptimizedImage
+                                                                src={activity.cover_image}
+                                                                alt={activity.title}
+                                                                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                                                width={400}
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/5" />
+                                                        </div>
+                                                    )}
+
+                                                    {/* 内容介绍区 */}
+                                                    <div className="flex-1 flex flex-col justify-center gap-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-2xl">{activity.type === "article" ? "📝" : "🎬"}</span>
+                                                            <span className="text-sm font-semibold text-slate-400 dark:text-slate-500 tracking-wide uppercase">
+                                                                {activity.formattedDate}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">
+                                                            {activity.title}
+                                                        </h3>
+                                                        
+                                                        {activity.type === "article" && activity.description && (
+                                                            <p className="text-[15px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl line-clamp-2">
+                                                                {activity.description}
+                                                            </p>
+                                                        )}
+
+                                                        {/* 精致的标签群 */}
+                                                        <div className="flex items-center gap-2 mt-2">
+                                                            {activity.type === "anime" && activity.status && (
+                                                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-white/5">
+                                                                    {activity.status === "completed" ? "看过" : activity.status === "watching" ? "在追" : activity.status === "plan" ? "想看" : "弃番"}
+                                                                </span>
+                                                            )}
+                                                            {activity.category && (
+                                                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-white/5">
+                                                                    {activity.category}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
                     })}
                 </div>
             </div>
 
             {years.length === 0 && (
-                <div className="text-center text-slate-500 py-20">
-                    <p className="text-xl">还没有任何活动记录</p>
+                <div className="flex flex-col items-center justify-center py-32 text-center">
+                    <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+                        <span className="text-4xl opacity-50">🕰️</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-700 dark:text-white mb-2">记录为空</h3>
+                    <p className="text-slate-500">时空的尽头，暂时没有任何波纹产生。</p>
                 </div>
             )}
         </div>

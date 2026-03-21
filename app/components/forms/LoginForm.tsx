@@ -23,14 +23,10 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* 邮箱输入 */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">电子邮箱</label>
-                <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                    </div>
+            <div className="flex flex-col gap-2">
+                <div className="relative">
                     <input
                         type="email"
                         inputMode="email"
@@ -38,35 +34,31 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         enterKeyHint="next"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200"
-                        placeholder="your@email.com"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300"
+                        placeholder="Email Address"
                         required
                     />
                 </div>
             </div>
 
             {/* 密码输入 */}
-            <div className="space-y-2 relative z-20">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">密码</label>
-                <div className="relative group isolate">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                        <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-primary-start transition-colors" />
-                    </div>
+            <div className="flex flex-col gap-2">
+                <div className="relative">
                     <input
                         type="password"
                         autoComplete="current-password"
                         enterKeyHint="done"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-4 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white/50 dark:bg-slate-800/50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-start/50 focus:border-primary-start sm:text-sm transition-all duration-200 relative z-20"
-                        placeholder="请输入密码"
+                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300"
+                        placeholder="Password"
                         required
                     />
                 </div>
-                {/* 忘记密码链接 - 移到密码框下方 */}
-                <div className="flex justify-end">
-                    <Link to="/forgot-password" className="text-xs text-primary-start hover:underline font-medium">
-                        忘记密码？
+                {/* 忘记密码 */}
+                <div className="flex justify-end pr-1 mt-1">
+                    <Link to="/forgot-password" className="text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+                        Forgot Password?
                     </Link>
                 </div>
             </div>
@@ -74,12 +66,12 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             <AnimatePresence>
                 {error && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg flex items-center gap-2 text-sm"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-[16px] flex items-center gap-3 text-[14px] font-bold mt-2"
                     >
-                        <AlertCircle size={16} />
+                        <AlertCircle size={18} className="flex-shrink-0" />
                         {error}
                     </motion.div>
                 )}
@@ -88,10 +80,10 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             <button
                 type="submit"
                 disabled={isLoading || !email || !password}
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-start/30 text-sm font-bold text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-primary-start/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-start disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all duration-200"
+                className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
             >
-                {isLoading ? <Loader2 className="animate-spin" size={18} /> : "登录"}
-                {!isLoading && <ArrowRight size={18} />}
+                {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Sign In"}
+                {!isLoading && <ArrowRight size={20} />}
             </button>
         </form>
     );

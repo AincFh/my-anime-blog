@@ -183,58 +183,62 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
 
     return (
         <div className="min-h-screen relative overflow-hidden -mt-20 md:-mt-24">
-            {/* 背景大图 (模糊) */}
-            <div className="absolute inset-0 -z-10">
+            {/* 深邃质感背景模糊层 */}
+            <div className="absolute inset-0 -z-10 pointer-events-none">
                 <OptimizedImage
                     src={cover}
                     alt=""
-                    className="w-full h-full object-cover blur-3xl opacity-40 scale-110"
+                    className="w-full h-full object-cover blur-[100px] opacity-30 md:opacity-20 scale-125 saturate-150"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/50 to-transparent dark:from-slate-950 dark:via-slate-950/50 dark:to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent dark:from-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent dark:from-[#0A0A0A] dark:via-[#0A0A0A]/80 dark:to-transparent" />
+                <div className="absolute inset-0 bg-white/20 dark:bg-black/40 backdrop-blur-[2px]" />
             </div>
 
-            <div className="container mx-auto px-4 py-12">
-                {/* 返回按钮 */}
+            <div className="container max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-32">
+                {/* 极简返回栏 */}
                 <Link
                     to="/bangumi"
-                    className="inline-flex items-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 mb-8 transition-colors group bg-white/30 dark:bg-black/30 backdrop-blur-md px-4 py-2 rounded-full"
+                    className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors mb-12"
                 >
-                    <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
-                    返回番剧列表
+                    <span className="text-lg leading-none mt-[-2px] tracking-tighter">←</span>
+                    Bangumi
                 </Link>
 
-                <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-12">
-                    {/* 左侧：封面与评分 */}
+                <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
+                    {/* 左侧：封面与评分中枢 */}
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="space-y-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className="w-full lg:w-[320px] flex-shrink-0 space-y-6"
                     >
-                        <GlassCard className="p-2 overflow-hidden rounded-xl border-white/40 dark:border-white/10 shadow-2xl">
+                        {/* 震撼海报 */}
+                        <div className="relative aspect-[3/4] rounded-[32px] overflow-hidden shadow-2xl shadow-indigo-500/10 dark:shadow-white/5 ring-1 ring-slate-200 dark:ring-white/10">
                             <OptimizedImage
                                 src={cover}
                                 alt={title}
-                                className="w-full h-auto rounded-lg shadow-inner"
+                                className="w-full h-full object-cover"
                             />
-                        </GlassCard>
+                        </div>
 
-                        {/* 评分卡片 - 异步加载 */}
-                        <GlassCard className="p-6 text-center border-t-4 border-t-yellow-400 min-h-[140px] flex flex-col justify-center">
-                            <Suspense fallback={<div className="animate-pulse flex flex-col items-center"><div className="h-4 w-20 bg-slate-200 rounded mb-2"></div><div className="h-10 w-16 bg-slate-200 rounded"></div></div>}>
-                                <Await resolve={bangumiData} errorElement={<p className="text-red-500 text-sm">评分加载失败</p>}>
+                        {/* HIG 极简评分台 */}
+                        <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-[24px] p-6 text-center border border-slate-200/50 dark:border-white/5 content-center min-h-[140px]">
+                            <Suspense fallback={<div className="animate-pulse space-y-3 flex flex-col items-center"><div className="h-3 w-16 bg-slate-300 dark:bg-slate-700 rounded-full"></div><div className="h-10 w-24 bg-slate-300 dark:bg-slate-700 rounded-lg"></div></div>}>
+                                <Await resolve={bangumiData} errorElement={<p className="text-red-500 text-sm font-medium">评分加载失败</p>}>
                                     {(data) => {
                                         const rating = data?.subject?.rating?.score || localAnime.rating;
                                         const rank = data?.subject?.rating?.rank;
                                         return (
                                             <>
-                                                <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-2">Bangumi 评分</h3>
-                                                <div className="flex items-center justify-center gap-2 mb-2">
-                                                    <span className="text-5xl font-black text-slate-800 dark:text-white">{rating}</span>
-                                                    <span className="text-xl text-slate-400">/ 10</span>
+                                                <h3 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-3">
+                                                    Bangumi Rating
+                                                </h3>
+                                                <div className="flex items-baseline justify-center gap-1 mb-3">
+                                                    <span className="text-[48px] leading-none font-black text-slate-900 dark:text-white tracking-tighter">{rating}</span>
+                                                    <span className="text-[18px] font-bold text-slate-400">/ 10</span>
                                                 </div>
                                                 {rank && (
-                                                    <div className="inline-block bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-xs font-mono text-slate-500">
+                                                    <div className="inline-block bg-slate-200/50 dark:bg-white/10 px-3 py-1.5 rounded-full text-[12px] font-bold tracking-tight text-slate-700 dark:text-slate-300">
                                                         Rank #{rank}
                                                     </div>
                                                 )}
@@ -243,107 +247,117 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                                     }}
                                 </Await>
                             </Suspense>
-                        </GlassCard>
+                        </div>
 
-                        {/* 本地状态 */}
-                        <GlassCard className="p-6">
-                            <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-4">我的进度</h3>
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-slate-700 dark:text-slate-300 font-bold">状态</span>
-                                <span className="capitalize px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-bold">{localAnime.status}</span>
+                        {/* 状态与进度台 */}
+                        <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-[24px] p-6 border border-slate-200/50 dark:border-white/5">
+                            <h3 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">
+                                My Status
+                            </h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-[14px] text-slate-600 dark:text-slate-400 font-semibold">Status</span>
+                                <span className="capitalize px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-full text-[12px] font-black tracking-wide">
+                                    {localAnime.status}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-700 dark:text-slate-300 font-bold">进度</span>
-                                <span className="font-mono">{localAnime.progress}</span>
+                                <span className="text-[14px] text-slate-600 dark:text-slate-400 font-semibold">Progress</span>
+                                <span className="text-[15px] font-mono font-bold text-slate-900 dark:text-white tracking-tight">{localAnime.progress}</span>
                             </div>
-                        </GlassCard>
+                        </div>
 
-                        {/* 我的短评 */}
+                        {/* 个人评价台 */}
                         {(localAnime.rating > 0 || localAnime.review) && (
-                            <GlassCard className="p-6">
-                                <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-4">我的短评</h3>
+                            <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-[24px] p-6 border border-slate-200/50 dark:border-white/5">
+                                <h3 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-5">
+                                    My Review
+                                </h3>
                                 {localAnime.rating > 0 && (
-                                    <div className="mb-4">
-                                        <div className="flex items-center gap-1 mb-1">
-                                            {Array.from({ length: 5 }).map((_, i) => {
-                                                const filled = localAnime.rating / 2;
-                                                return (
-                                                    <svg key={i} className={`w-5 h-5 ${i < Math.floor(filled) ? 'text-amber-400' : i < filled ? 'text-amber-400/50' : 'text-slate-300 dark:text-slate-600'}`} fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                    </svg>
-                                                );
-                                            })}
-                                            <span className="ml-2 text-lg font-bold text-slate-800 dark:text-white">{localAnime.rating}</span>
-                                        </div>
+                                    <div className="flex items-center gap-1.5 mb-5">
+                                        {Array.from({ length: 5 }).map((_, i) => {
+                                            const filled = localAnime.rating / 2;
+                                            return (
+                                                <svg key={i} className={`w-5 h-5 ${i < Math.floor(filled) ? 'text-amber-500' : i < filled ? 'text-amber-500/50' : 'text-slate-200 dark:text-slate-700'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            );
+                                        })}
+                                        <span className="ml-2 pl-2 border-l border-slate-200 dark:border-slate-700 text-[16px] font-black text-slate-900 dark:text-white">{localAnime.rating}</span>
                                     </div>
                                 )}
                                 {localAnime.review && (
-                                    <blockquote className="border-l-4 border-amber-400 pl-4 py-2 bg-amber-50/50 dark:bg-amber-900/10 rounded-r-lg">
-                                        <p className="text-slate-700 dark:text-slate-300 text-sm italic leading-relaxed">
-                                            「{localAnime.review}」
+                                    <blockquote className="relative">
+                                        <span className="absolute -top-3 -left-3 text-4xl text-slate-200 dark:text-white/10 font-serif">"</span>
+                                        <p className="relative text-[14px] text-slate-700 dark:text-slate-300 font-medium leading-relaxed z-10">
+                                            {localAnime.review}
                                         </p>
                                     </blockquote>
                                 )}
-                            </GlassCard>
+                            </div>
                         )}
                     </motion.div>
 
-                    {/* 右侧：详细信息 */}
+                    {/* 右侧：纵深元数据与图谱 */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex-1"
                     >
-                        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2">{title}</h1>
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-2 tracking-tight text-pretty">
+                            {title}
+                        </h1>
 
-                        <Suspense fallback={<div className="animate-pulse space-y-4 mt-8"><div className="h-8 w-1/3 bg-slate-200 rounded"></div><div className="h-32 bg-slate-200 rounded"></div></div>}>
+                        <Suspense fallback={<div className="animate-pulse space-y-4 mt-12"><div className="h-10 w-1/3 bg-slate-200 dark:bg-slate-800 rounded-xl"></div><div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div></div>}>
                             <Await resolve={bangumiData}>
                                 {(data: BangumiFullData | null) => (
-                                    <>
+                                    <div className="mt-4">
                                         {data?.subject?.name && data.subject.name !== title && (
-                                            <h2 className="text-xl text-slate-500 mb-6 font-light">{data.subject.name}</h2>
+                                            <h2 className="text-[18px] text-slate-500 dark:text-slate-400 font-medium mb-8">
+                                                {data.subject.name}
+                                            </h2>
                                         )}
 
-                                        {/* 标签云 */}
-                                        <div className="flex flex-wrap gap-2 mb-8">
+                                        {/* 元标签阵列 */}
+                                        <div className="flex flex-wrap gap-2.5 mb-12">
                                             {(data?.subject?.tags || []).slice(0, 8).map((tag: any) => (
                                                 <span
                                                     key={tag.name}
-                                                    className="px-3 py-1 bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300"
+                                                    className="px-4 py-2 bg-slate-100 dark:bg-[#151515] hover:bg-slate-200 dark:hover:bg-[#222] rounded-full text-[13px] font-bold tracking-tight text-slate-600 dark:text-slate-300 transition-colors cursor-default"
                                                 >
                                                     {tag.name}
                                                 </span>
                                             ))}
                                         </div>
 
-                                        {/* 简介 */}
-                                        <div className="prose prose-lg dark:prose-invert max-w-none mb-12">
-                                            <h3 className="text-2xl font-bold mb-4 border-l-4 border-blue-500 pl-4">剧情简介</h3>
-                                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                                                {data?.subject?.summary || "暂无简介"}
+                                        {/* 大段落简介区域 */}
+                                        <div className="mb-16">
+                                            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-6">Synopsis</h3>
+                                            <p className="text-[16px] md:text-[18px] text-slate-600 dark:text-slate-300 leading-relaxed max-w-6xl text-pretty font-medium opacity-90">
+                                                {data?.subject?.summary || "No synopsis available."}
                                             </p>
                                         </div>
 
-                                        {/* 角色列表 */}
+                                        {/* 沉浸式横轴：人物卡 */}
                                         {data?.characters && data.characters.length > 0 && (
-                                            <div className="mb-12">
-                                                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                                                    <span>👥</span> 登场角色
-                                                </h3>
-                                                <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+                                            <div className="mb-16">
+                                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-8">Characters</h3>
+                                                <div className="flex overflow-x-auto pb-6 gap-6 scrollbar-hide -mx-5 px-5 sm:mx-0 sm:px-0">
                                                     {data.characters.map((char) => (
-                                                        <div key={char.id} className="flex-shrink-0 w-32 group">
-                                                            <div className="w-32 h-32 rounded-full overflow-hidden mb-2 border-2 border-white/20 shadow-md relative">
+                                                        <div key={char.id} className="flex-shrink-0 w-[120px] group flex flex-col items-center">
+                                                            <div className="w-[100px] h-[100px] rounded-full overflow-hidden mb-4 shadow-xl dark:shadow-white/5 ring-1 ring-slate-100 dark:ring-white/10 relative">
                                                                 <OptimizedImage
                                                                     src={char.images?.grid || "https://bgm.tv/img/no_icon_subject.png"}
                                                                     alt={char.name}
-                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                                                 />
                                                             </div>
-                                                            <p className="text-sm font-bold text-center truncate text-slate-800 dark:text-slate-200">{char.name}</p>
-                                                            <p className="text-xs text-center truncate text-slate-500 dark:text-slate-400">{char.role_name}</p>
+                                                            <p className="text-[14px] font-bold text-center w-full truncate text-slate-900 dark:text-white tracking-tight">{char.name}</p>
+                                                            <p className="text-[12px] text-center w-full truncate text-slate-500 font-medium mb-0.5">{char.role_name}</p>
                                                             {char.actors && char.actors[0] && (
-                                                                <p className="text-[10px] text-center truncate text-blue-500">CV: {char.actors[0].name}</p>
+                                                                <p className="text-[11px] text-center w-full truncate text-indigo-500 dark:text-indigo-400 font-bold tracking-tight">
+                                                                    {char.actors[0].name}
+                                                                </p>
                                                             )}
                                                         </div>
                                                     ))}
@@ -351,25 +365,23 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                                             </div>
                                         )}
 
-                                        {/* 制作人员 */}
+                                        {/* 模块化矩阵：幕后制作团队 */}
                                         {data?.persons && data.persons.length > 0 && (
-                                            <div className="mb-12">
-                                                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                                                    <span>🎬</span> 制作团队
-                                                </h3>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            <div className="mb-16">
+                                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-8">Staff</h3>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                                                     {data.persons.slice(0, 9).map((person) => (
-                                                        <div key={person.id} className="flex items-center gap-3 bg-white/40 dark:bg-slate-800/40 p-2 rounded-lg backdrop-blur-sm">
-                                                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 relative">
+                                                        <div key={person.id} className="flex items-center gap-4 bg-slate-50/80 dark:bg-[#151515] p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+                                                            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-slate-200 dark:bg-slate-800">
                                                                 <OptimizedImage
                                                                     src={person.images?.grid || "https://bgm.tv/img/no_icon_subject.png"}
                                                                     alt={person.name}
                                                                     className="w-full h-full object-cover"
                                                                 />
                                                             </div>
-                                                            <div className="overflow-hidden">
-                                                                <p className="text-sm font-bold truncate text-slate-800 dark:text-slate-200">{person.name}</p>
-                                                                <p className="text-xs truncate text-slate-500 dark:text-slate-400">{person.type}</p>
+                                                            <div className="overflow-hidden flex-1">
+                                                                <p className="text-[14px] font-bold truncate text-slate-900 dark:text-white tracking-tight">{person.name}</p>
+                                                                <p className="text-[12px] font-medium truncate text-slate-500">{person.type}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -377,36 +389,36 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                                             </div>
                                         )}
 
-                                        {/* 关联条目 */}
+                                        {/* 列表：关联矩阵 */}
                                         {data?.relations && data.relations.length > 0 && (
-                                            <div className="mb-12">
-                                                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                                                    <span>🔗</span> 关联作品
-                                                </h3>
-                                                <div className="space-y-3">
+                                            <div className="mb-16">
+                                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-6">Relations</h3>
+                                                <div className="flex flex-col gap-3">
                                                     {data.relations.map((rel) => (
-                                                        <div key={rel.id} className="flex items-center justify-between p-3 bg-white/30 dark:bg-slate-800/30 rounded-xl border border-white/10 hover:bg-white/50 transition-colors">
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="px-2 py-1 bg-blue-500/10 text-blue-600 text-xs rounded font-bold">{rel.relation}</span>
-                                                                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{rel.name_cn || rel.name}</span>
+                                                        <div key={rel.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-2xl border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-[#1A1A1A] transition-colors gap-3">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                                                <span className="w-fit px-3 py-1 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-[11px] rounded-md font-black uppercase tracking-widest whitespace-nowrap">
+                                                                    {rel.relation}
+                                                                </span>
+                                                                <span className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">{rel.name_cn || rel.name}</span>
                                                             </div>
-                                                            <span className="text-xs text-slate-400">{rel.type}</span>
+                                                            <span className="text-[13px] font-medium text-slate-500 whitespace-nowrap">{rel.type}</span>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                         )}
 
-                                        {/* 更多信息 */}
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-slate-200 dark:border-slate-800">
+                                        {/* 附加参数 */}
+                                        <div className="pt-8 border-t border-slate-100 dark:border-white/5 flex gap-12">
                                             {data?.subject?.date && (
                                                 <div>
-                                                    <h4 className="text-sm text-slate-400 font-bold uppercase mb-1">放送日期</h4>
-                                                    <p className="text-slate-800 dark:text-slate-200">{data.subject.date}</p>
+                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Aired Date</h4>
+                                                    <p className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">{data.subject.date}</p>
                                                 </div>
                                             )}
                                         </div>
-                                    </>
+                                    </div>
                                 )}
                             </Await>
                         </Suspense>

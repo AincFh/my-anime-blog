@@ -1,4 +1,4 @@
-﻿import { Form, redirect, useActionData, useNavigation } from "react-router";
+import { Form, redirect, useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/admin.login";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -11,24 +11,14 @@ import { Eye, EyeOff, Lock, User, Shield } from "lucide-react";
  */
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  // 如果已登录，重定向到后台
-  const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
-  if (sessionId) {
-    // 验证 session 是否有效
-    const { getDBSafe } = await import("~/utils/db");
-    const db = getDBSafe(context);
-    if (db) {
-      try {
-        const session = await db.prepare(
-          "SELECT * FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-        ).bind(sessionId).first();
-        if (session) {
-          throw redirect("/admin");
-        }
-      } catch (e) {
-        if (e instanceof Response) throw e;
-        // session 无效，继续显示登录页
-      }
+  // 如果已登录并具有管理员权限，重定向到后台
+  const { getDBSafe } = await import("~/utils/db");
+  const db = getDBSafe(context);
+  if (db) {
+    const { requireAdmin } = await import("~/utils/auth");
+    const session = await requireAdmin(request, db);
+    if (session) {
+      throw redirect("/admin");
     }
   }
   return null;
@@ -54,7 +44,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       const token = crypto.randomUUID();
       throw redirect("/admin", {
         headers: {
-          "Set-Cookie": `admin_session=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`,
+          "Set-Cookie": `session=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`,
         },
       });
     }
@@ -62,10 +52,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   try {
-    // 查询管理员账号
+    // 从 users 表查询管理员账号 (role = 'admin')
     const admin = await db.prepare(
-      "SELECT * FROM admins WHERE username = ?"
-    ).bind(username).first() as { id: number; username: string; password_hash: string } | null;
+      "SELECT * FROM users WHERE (email = ? OR username = ?) AND role = 'admin'"
+    ).bind(username, username).first() as { id: number; username: string; password_hash: string } | null;
 
     if (!admin) {
       return { success: false, error: "用户名或密码错误" };
@@ -82,16 +72,18 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     // 创建会话
     const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    // sessions 表需要 INTEGER 类型的 Unix 时间戳
+    const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+    const userAgent = request.headers.get("User-Agent") || "Unknown Browser";
 
     await db.prepare(
-      "INSERT INTO admin_sessions (admin_id, token, expires_at) VALUES (?, ?, ?)"
-    ).bind(admin.id, token, expiresAt).run();
+      "INSERT INTO sessions (user_id, token, expires_at, user_agent) VALUES (?, ?, ?, ?)"
+    ).bind(admin.id, token, expiresAt, userAgent).run();
 
     // 设置 Cookie 并重定向
     throw redirect("/admin", {
       headers: {
-        "Set-Cookie": `admin_session=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`,
+        "Set-Cookie": `session=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`,
       },
     });
   } catch (e) {

@@ -73,69 +73,65 @@ function StarRating({ rating }: { rating: number }) {
 function AnimeCardItem({ anime, index, config }: { anime: any, index: number, config: any }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -8, scale: 1.05 }}
-      className="group cursor-pointer"
+      transition={{ duration: 0.6, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+      className="group cursor-pointer flex flex-col h-full relative"
     >
-      <GlassCard className="overflow-hidden p-0 h-full">
-        {/* 封面图 */}
-        <div className="relative aspect-[2/3] overflow-hidden">
-          {anime.cover_url ? (
-            <OptimizedImage
-              src={anime.cover_url}
-              alt={anime.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-purple-900/30 to-pink-900/30 flex items-center justify-center text-6xl opacity-20">
-              🎬
-            </div>
-          )}
-
-          {/* 状态标签 */}
-          <div className={`absolute top-2 right-2 px-2 py-1 rounded-full ${config.bgColor} backdrop-blur-sm border ${config.borderColor}`}>
-            <span className={`text-xs font-bold ${config.color}`}>{config.label}</span>
+      {/* 去除繁琐背景，裸露海报的现代质感 */}
+      <div className="relative aspect-[2/3] overflow-hidden rounded-[20px] md:rounded-[24px] bg-slate-100 dark:bg-slate-800/80 shadow-sm border border-slate-200/50 dark:border-white/5 mx-auto w-full group-hover:shadow-2xl transition-all duration-500">
+        {anime.cover_url ? (
+          <OptimizedImage
+            src={anime.cover_url}
+            alt={anime.title}
+            className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+          />
+        ) : (
+          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-4xl opacity-50">
+            🎬
           </div>
+        )}
 
-          {/* 评分悬浮显示 */}
-          {anime.rating && (
-            <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-sm rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <StarRating rating={anime.rating} />
-            </div>
-          )}
+        {/* 悬浮黑色渐变压暗层（仅悬停显现） */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-          {/* 渐变遮罩 */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* 顶部微状态徽章 (极简) */}
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-[10px] bg-white/20 dark:bg-black/30 backdrop-blur-md border border-white/20">
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${config.color.replace('text-', 'text-white drop-shadow-sm ')}`}>
+            {config.label}
+          </span>
         </div>
 
-        {/* 标题和进度 */}
-        <div className="p-3">
-          <h3 className="text-sm font-bold text-slate-800 mb-1 line-clamp-2 group-hover:text-primary-start transition-colors">
-            {anime.title}
-          </h3>
-          {anime.progress && (
-            <p className="text-xs text-slate-500 mb-2">
-              进度: <span className="text-slate-700 font-medium">{anime.progress}</span>
-            </p>
-          )}
-          {anime.rating && (
-            <div className="hidden group-hover:block">
-              <StarRating rating={anime.rating} />
-            </div>
-          )}
-        </div>
-
-        {/* 短评（悬浮时显示） */}
+        {/* 隐藏的悬浮短评 */}
         {anime.review && (
-          <div className="px-3 pb-3 opacity-0 group-hover:opacity-100 transition-opacity">
-            <p className="text-xs text-slate-600 line-clamp-2 italic">
-              "{anime.review}"
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+            <p className="text-white text-xs font-medium leading-relaxed drop-shadow-md line-clamp-3">
+              {anime.review}
             </p>
           </div>
         )}
-      </GlassCard>
+      </div>
+
+      {/* 底部信息裸露，苹果系最常用的去卡片化布局 */}
+      <div className="pt-3 px-1 flex-1 flex flex-col">
+        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1 line-clamp-1 group-hover:text-blue-500 transition-colors">
+            {anime.title}
+        </h3>
+        
+        <div className="flex items-center justify-between mt-auto">
+            {anime.progress && (
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {anime.progress}
+            </span>
+            )}
+            
+            {anime.rating && (
+            <div className="scale-90 origin-right opacity-80 group-hover:opacity-100 transition-opacity">
+                <StarRating rating={anime.rating} />
+            </div>
+            )}
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -181,28 +177,31 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
 
   return (
-    <div className="w-full md:container mx-auto md:px-4 py-8 md:py-20">
-      {/* 标题 */}
+    <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
+      {/* 极简标题 */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-10 md:mb-16 px-4 md:px-0"
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-10 md:mb-16"
       >
-        <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-          我的番剧墙
+        <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+          Bangumi
         </h1>
-        <p className="text-slate-600 text-lg">记录每一个追番的瞬间</p>
+        <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
+          被框在屏幕里的二次元轨迹
+        </p>
       </motion.div>
 
-      {/* 筛选和排序工具栏 */}
+      {/* 筛选和排序工具栏 - Apple Segmented Control Style */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 md:mb-12 bg-white/5 dark:bg-black/20 backdrop-blur-md p-3 md:p-4 rounded-none md:rounded-[2rem] border-y md:border border-white/10"
+        transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 mb-12"
       >
-        {/* 状态筛选 - 移动端横滑 */}
-        <div className="flex overflow-x-auto hide-scrollbar snap-x gap-2 pb-1 md:pb-0 md:flex-wrap px-4 md:px-0">
+        {/* 状态筛选 - iOS 风格切换器 */}
+        <div className="flex overflow-x-auto hide-scrollbar p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-[20px] md:max-w-fit shadow-inner">
           {[
             { id: 'all', label: '全部' },
             { id: 'watching', label: '在看' },
@@ -213,9 +212,9 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
             <button
               key={status.id}
               onClick={() => setFilterStatus(status.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterStatus === status.id
-                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                : 'bg-white/10 text-slate-600 dark:text-slate-400 hover:bg-white/20'
+              className={`px-5 py-2.5 rounded-[14px] text-[15px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap flex-1 md:flex-none ${filterStatus === status.id
+                ? 'bg-white text-slate-900 shadow-md dark:bg-slate-700 dark:text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
             >
               {status.label}
@@ -223,8 +222,8 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
           ))}
         </div>
 
-        {/* 排序方式 */}
-        <div className="flex items-center gap-2 bg-white/10 md:rounded-xl p-1 overflow-x-auto hide-scrollbar px-4 md:px-1">
+        {/* 排序方式 - Apple 极简胶囊 */}
+        <div className="flex items-center gap-1.5 self-end md:self-auto overflow-x-auto hide-scrollbar">
           {[
             { id: 'default', label: '默认', icon: Filter },
             { id: 'rating', label: '评分', icon: Star },
@@ -233,12 +232,12 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
             <button
               key={sort.id}
               onClick={() => setSortBy(sort.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${sortBy === sort.id
-                ? 'bg-white shadow-sm text-slate-800'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-[16px] text-sm font-semibold transition-all duration-300 ${sortBy === sort.id
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
             >
-              <sort.icon size={14} />
+              <sort.icon size={16} className={sortBy === sort.id ? "" : "opacity-70"} />
               {sort.label}
             </button>
           ))}
@@ -247,7 +246,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
       {/* 番剧墙 - 海报流布局 */}
       {/* 内容区域：分组视图 或 扁平视图 */}
-      <div className="space-y-12">
+      <div className="space-y-16 md:space-y-20">
         {sortBy === "default" ? (
           // 分组视图 (保持原有逻辑)
           Object.entries(groupedAnimes).map(([status, statusAnimes]) => {
@@ -258,15 +257,18 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
                 key={status}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-12"
               >
-                <div className="flex items-center gap-4 mb-4 md:mb-6 px-4 md:px-0">
-                  <h2 className={`text-xl md:text-2xl font-bold ${config.color}`}>{config.label}</h2>
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-30" style={{ color: config.color }} />
-                  <span className="text-sm text-slate-500">{(statusAnimes as any[]).length} 部</span>
+                {/* 状态分割标题 */}
+                <div className="flex items-baseline gap-4 mb-6 md:mb-8">
+                  <h2 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {config.label}
+                  </h2>
+                  <span className="text-sm font-semibold text-slate-400 dark:text-slate-500">
+                    {(statusAnimes as any[]).length} 部
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
                   {(statusAnimes as any[]).map((anime: any, index: number) => (
                     <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} />
                   ))}
@@ -276,7 +278,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
           })
         ) : (
           // 扁平视图 (排序后)
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
             {processedAnimes.map((anime: any, index: number) => {
               const status = anime.status || 'plan';
               const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.plan;

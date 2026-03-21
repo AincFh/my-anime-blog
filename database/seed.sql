@@ -1,5 +1,30 @@
 -- 填充更多测试数据 (Seed Data)
 
+-- 0. 初始用户与最高权限管理凭据 (Initial Auth Records)
+-- 管理员账号: admin@admin.com / admin123
+-- 普通用户账号: user@test.com / 123456
+INSERT INTO users (email, password_hash, username, avatar_url, role, level, exp, coins) VALUES 
+(
+    'admin@admin.com', 
+    'd633f277fb25af93e6869dc4bee25ca6:4f69272be59c8604d046e3c767c2a8bc154e407776bed657cf322b2bc76b8dc6', 
+    '超级管理员', 
+    'https://images.unsplash.com/photo-1544197150-b99a580bbcbf?w=800&q=80', 
+    'admin', 
+    99, 
+    99999, 
+    999999
+),
+(
+    'user@test.com', 
+    '0aa6f53f7441b0cc354eb3944ea863de:2b9d4cf3d0221bb1a61a2b579b56d8b9e5321c58a1ed7cc7b59acec37dda865a', 
+    '测试旅行者', 
+    'https://images.unsplash.com/photo-1535905557558-afc4877a26fc?w=800&q=80', 
+    'user', 
+    1, 
+    0, 
+    100
+);
+
 -- 1. 文章数据 (Articles)
 INSERT INTO articles (slug, title, description, content, category, cover_image, tags, mood_color, views, likes, created_at) VALUES 
 (

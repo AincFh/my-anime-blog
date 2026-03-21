@@ -12,6 +12,7 @@ import {
 import { GlassCard } from "~/components/layout/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { getSessionToken, verifySession } from "~/services/auth.server";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -147,7 +148,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const themeSessionResolver = createDynamicThemeSessionResolver(secret, isProd);
   const { getTheme } = await themeSessionResolver(request);
 
+  let userPrefs = null;
   let musicPlaylistId = "13641046209"; // Fallback
+  
   try {
     const settingsResult = await env.anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
     if (settingsResult && (settingsResult as any).config_json) {
@@ -160,24 +163,55 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // ignore
   }
 
+  try {
+    const token = getSessionToken(request);
+    if (token) {
+      const sessionResult = await verifySession(token, env.anime_db);
+      if (sessionResult.valid && sessionResult.user && sessionResult.user.preferences) {
+        userPrefs = typeof sessionResult.user.preferences === 'string' 
+          ? JSON.parse(sessionResult.user.preferences) 
+          : sessionResult.user.preferences;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
   return {
     theme: getTheme(),
-    musicPlaylistId
+    musicPlaylistId,
+    userPrefs
   };
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
-  const { theme, musicPlaylistId } = loaderData;
+  const { theme, musicPlaylistId, userPrefs } = loaderData;
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
   }, []);
 
+  // 提取用户首选的前台强调整色 (Accent Color) = `#3b82f6` -> `var(--color-blue-500)`
+  const userColor = userPrefs?.personalization?.theme_color || '#FF9F43';
+
   return (
     <ThemeProviderWrapper specifiedTheme={theme} themeAction="/action/set-theme">
+      {/* ⚠️ 结界铸造：仅在公域生效的主题色核欺骗变轨层 */}
+      {userPrefs?.personalization?.theme_color && !isAdmin && (
+        <style dangerouslySetInnerHTML={{ __html: `
+          .public-layout-wrapper {
+             --color-blue-500: ${userColor};
+             --color-blue-400: ${userColor}E6;
+             --color-blue-600: ${userColor}CC;
+             --color-at-orange: ${userColor};
+             --color-primary-start: ${userColor};
+          }
+        `}} />
+      )}
+      
       <ToastContainer />
       <ModalContainer />
 
@@ -203,9 +237,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
           <Outlet />
         </AdminLayout>
       ) : (
-        <PublicLayout>
-          <Outlet />
-        </PublicLayout>
+        <div className="public-layout-wrapper">
+          <PublicLayout>
+            <Outlet />
+          </PublicLayout>
+        </div>
       )}
 
       {/* ==================== 桌面端延迟加载 — 增强体验组件 ==================== */}

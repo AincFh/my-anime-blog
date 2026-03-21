@@ -48,21 +48,42 @@ export function jsonWithSecurity(data: unknown, init?: ResponseInit): Response {
   return addSecurityHeaders(response);
 }
 
-/**
- * 清理评论内容，移除潜在危险字符
- */
 export function sanitizeComment(content: string): string {
   if (!content) return '';
 
-  return content
-    .trim()
-    // 移除HTML标签
-    .replace(/<[^>]*>/g, '')
-    // 移除script相关内容
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+=/gi, '')
-    // 限制长度
-    .slice(0, 2000);
+  const trimmed = content.trim().slice(0, 2000);
+  
+  // 极限防护：废弃弱正则过滤，采取全量的实体化转义策略。
+  // 任何尖括号或实体字符都将被转义，彻底免除恶意 SVG / Base64 Payload 穿透
+  return trimmed
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * 军工级同源拦截 (CSRF防波堤)
+ * 检测所有突变型 POST 请求是否由当前站点自身发出
+ */
+export function verifySameOrigin(request: Request): boolean {
+  const origin = request.headers.get("Origin");
+  const referer = request.headers.get("Referer");
+  
+  if (!origin && !referer) {
+    // 拒绝无头跨站静默发包
+    return false;
+  }
+  
+  try {
+    const url = new URL(request.url);
+    if (origin && origin !== url.origin) return false;
+    if (referer && new URL(referer).origin !== url.origin) return false;
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
