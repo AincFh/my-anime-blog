@@ -27,7 +27,7 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors">
                         <ShoppingBag className="w-5 h-5" />
                     </div>
-                </motion.button>
+                </button>
 
                 {/* 扭蛋按钮 */}
                 <button
@@ -38,7 +38,7 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white group-hover:border-purple-400 transition-colors">
                         <Sparkles className="w-5 h-5" />
                     </div>
-                </motion.button>
+                </button>
             </div>
 
             {/* 2. 主要操作按钮 (签到/开始) */}
