@@ -1,11 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-<<<<<<< HEAD
-import { musicPlayerToggle } from "~/hooks/useMusicPlayer";
-=======
 import { musicPlayerToggle } from "~/components/media/MusicPlayer";
->>>>>>> fa3b8d87cdad5a01093a6a62cd98951ec745a581
 
 /**
  * 全局指令终端 (Omni-Command)
@@ -77,13 +73,12 @@ export function OmniCommand() {
         const body = document.body;
         body.style.filter = "hue-rotate(90deg)";
         body.style.animation = "glitch 0.3s";
-
+        
         setTimeout(() => {
           body.style.filter = "";
           body.style.animation = "";
           // 跳转到随机风景图
-          window.open("https://picsum.photos/1920/1080", "_blank");
-
+          window.open("https://images.unsplash.com/photo-1616486339569-9c4050911745?q=80&w=2070", "_blank");
         }, 500);
         setIsOpen(false);
       },
@@ -100,7 +95,7 @@ export function OmniCommand() {
         toast.className = "fixed top-20 right-8 z-50 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-xl border border-white/20";
         toast.textContent = "给站长倒了一杯卡布奇诺 ☕";
         document.body.appendChild(toast);
-
+        
         setTimeout(() => {
           toast.remove();
         }, 3000);
@@ -237,10 +232,11 @@ export function OmniCommand() {
                   filteredCommands.map((command, index) => (
                     <motion.div
                       key={command.id}
-                      className={`px-4 py-3 cursor-pointer transition-colors ${index === selectedIndex
-                        ? "bg-white/20"
-                        : "hover:bg-white/10"
-                        }`}
+                      className={`px-4 py-3 cursor-pointer transition-colors ${
+                        index === selectedIndex
+                          ? "bg-white/20"
+                          : "hover:bg-white/10"
+                      }`}
                       onClick={() => command.action()}
                       whileHover={{ x: 4 }}
                     >

@@ -417,8 +417,11 @@ MIT License © 2024-2026 Project A.T. Field (绝对领域)
 
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=8B5CF6&height=120&section=footer" width="100%" />
+<<<<<<< HEAD
 </p>
 
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=8B5CF6&height=120&section=footer" width="100%" />
+=======
+>>>>>>> fa3b8d87cdad5a01093a6a62cd98951ec745a581
 </p>
