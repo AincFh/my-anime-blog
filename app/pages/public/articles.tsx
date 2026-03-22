@@ -116,18 +116,18 @@ export default function ArticlesPage() {
     return (
         <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                {/* 标题区域 - Apple HIG 纯黑白超大字重 */}
+                {/* 标题区域 - Apple HIG 纯黑白优雅字重 */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="mb-10 md:mb-16"
+                    className="mb-8 md:mb-12"
                 >
-                    <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+                    <h1 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
                         文章专栏
                     </h1>
-                    <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
-                        技术探索、动漫感想与生活志
+                    <p className="text-lg md:text-xl font-medium text-slate-500 dark:text-slate-400 tracking-tight">
+                        技术探索、动漫感想与生活日志
                     </p>
                 </motion.div>
 
@@ -195,16 +195,16 @@ export default function ArticlesPage() {
                                     </div>
                                     
                                     <Link to={`/articles/${article.slug}`} className="block">
-                                        <h3 className="text-2xl md:text-[28px] leading-snug font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        <h3 className="text-xl md:text-2xl leading-snug font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                             {article.title}
                                         </h3>
                                     </Link>
                                     
-                                    <p className="text-[15px] md:text-base text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 md:line-clamp-3 mb-5">
+                                    <p className="text-sm md:text-[15px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 md:line-clamp-3 mb-5">
                                         {getDescription(article.content)}
                                     </p>
 
-                                    <div className="flex items-center gap-5 mt-auto text-sm text-slate-400 dark:text-slate-500 font-medium font-mono">
+                                    <div className="flex items-center gap-5 mt-auto text-xs md:text-sm text-slate-400 dark:text-slate-500 font-medium font-mono">
                                         <div className="flex items-center gap-1.5 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
                                             <Eye className="w-4 h-4" />
                                             {article.views}

@@ -21,11 +21,11 @@ export function DynamicBackground({ images }: DynamicBackgroundProps) {
 
   // Unsplash 高清动漫/风景壁纸作为默认背景
   const backgrounds = [
-    'https://picsum.photos/seed/bg234/1920/1080',
-    'https://picsum.photos/seed/bg145/1920/1080',
-    'https://picsum.photos/seed/bg567/1920/1080',
-    'https://picsum.photos/seed/bg890/1920/1080',
-    'https://picsum.photos/seed/bg345/1920/1080',
+    'https://api.paugram.com/wallpaper/',
+    'https://api.paugram.com/wallpaper/',
+    'https://api.paugram.com/wallpaper/',
+    'https://api.paugram.com/wallpaper/',
+    'https://api.paugram.com/wallpaper/',
   ];
 
   const imageList = images && images.length > 0 ? images : backgrounds;

@@ -171,23 +171,26 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="lg:w-5/12 w-full max-w-md mx-auto relative group"
+          className="lg:w-1/2 w-full max-w-2xl mx-auto relative group flex items-center justify-center"
         >
-          <div className="aspect-[4/5] rounded-[32px] md:rounded-[40px] overflow-hidden relative shadow-2xl shadow-indigo-500/10 dark:shadow-none border border-black/5 dark:border-white/10">
-            <OptimizedImage
-              src="https://api.paugram.com/wallpaper/"
-              alt="Anime illustration"
-              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
-              aspectRatio="portrait"
-            />
+          {/* 取消了锁死的 4/5 比例，改为自适应或横向偏好的流体边框，防止原生大图被暴力覆盖与裁切 */}
+          <div className="w-full relative rounded-[32px] md:rounded-[40px] overflow-hidden shadow-2xl shadow-indigo-500/10 dark:shadow-none border border-black/5 dark:border-white/10 group-hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-700">
+            {/* 使用 aspect-video 或宽幅比例更适合二次元插画的展示而不丢失头部 */}
+            <div className="relative aspect-auto md:aspect-video w-full min-h-[300px]">
+                <OptimizedImage
+                src="https://api.paugram.com/wallpaper/"
+                alt="Anime illustration"
+                className="absolute inset-0 w-full h-full object-cover md:object-contain bg-slate-100 dark:bg-[#0A0A0A] transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+                />
+            </div>
             {/* 渐变遮罩压身 */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
-            <div className="absolute bottom-8 left-8 right-8 z-10 flex flex-col items-start">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none opacity-80" />
+            <div className="absolute bottom-8 left-8 right-8 z-10 flex flex-col items-start translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-[10px] font-bold tracking-wider uppercase mb-3 border border-white/20">
                 编辑精选
               </span>
-              <h3 className="text-white text-3xl font-black tracking-tight mb-2 leading-tight">次元倒影</h3>
-              <p className="text-white/80 text-sm font-medium">每天发现不一样的梦境瞬间</p>
+              <h3 className="text-white text-2xl md:text-3xl font-black tracking-tight mb-2 leading-tight drop-shadow-lg">次元倒影</h3>
+              <p className="text-white/80 text-sm md:text-base font-medium drop-shadow-md">每天发现不一样的梦境瞬间</p>
             </div>
           </div>
         </motion.div>

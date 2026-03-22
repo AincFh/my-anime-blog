@@ -7,22 +7,22 @@ import { Suspense } from "react";
 
 // 复制一份数据用于查找 (在实际项目中应该从数据库或共享模块获取)
 const sampleAnimes = [
-    { id: 1, bangumi_id: 296517, title: "葬送的芙莉莲", cover_url: "https://picsum.photos/seed/anime101/600/800", status: "watching", progress: "24/28", rating: 9.5, review: "平淡中见真章，这才是真正的神作。", created_at: 1704067200 },
-    { id: 2, bangumi_id: 253046, title: "进击的巨人 最终季", cover_url: "https://picsum.photos/seed/anime102/600/800", status: "completed", progress: "完结", rating: 10, review: "献出心脏！跨越十年的史诗。", created_at: 1701388800 },
-    { id: 3, bangumi_id: 314463, title: "间谍过家家", cover_url: "https://picsum.photos/seed/anime103/600/800", status: "watching", progress: "12/24", rating: 8.5, review: "哇库哇库！", created_at: 1696118400 },
-    { id: 4, bangumi_id: 236819, title: "鬼灭之刃", cover_url: "https://picsum.photos/seed/anime104/600/800", status: "plan", progress: "0/26", rating: 0, review: "", created_at: 1680307200 },
-    { id: 5, bangumi_id: 265, title: "新世纪福音战士", cover_url: "https://picsum.photos/seed/anime105/600/800", status: "completed", progress: "完结", rating: 10, review: "勇敢的少年啊，快去创造奇迹！", created_at: 1672531200 },
-    { id: 6, bangumi_id: 253041, title: "咒术回战", cover_url: "https://picsum.photos/seed/anime106/600/800", status: "completed", progress: "完结", rating: 9.0, review: "领域展开！", created_at: 1698796800 },
-    { id: 7, bangumi_id: 386809, title: "我推的孩子", cover_url: "https://picsum.photos/seed/anime107/600/800", status: "completed", progress: "完结", rating: 9.2, review: "偶像的谎言是爱。", created_at: 1681257600 },
-    { id: 8, bangumi_id: 321885, title: "电锯人", cover_url: "https://picsum.photos/seed/anime108/600/800", status: "completed", progress: "完结", rating: 8.8, review: "好耶！", created_at: 1665446400 },
-    { id: 9, bangumi_id: 332591, title: "孤独摇滚", cover_url: "https://picsum.photos/seed/anime109/600/800", status: "completed", progress: "完结", rating: 9.8, review: "社恐人的共鸣。", created_at: 1665187200 },
-    { id: 10, bangumi_id: 309486, title: "边缘行者", cover_url: "https://picsum.photos/seed/anime110/600/800", status: "completed", progress: "完结", rating: 9.6, review: "赛博朋克的浪漫与悲剧。", created_at: 1663027200 },
-    { id: 11, bangumi_id: 364450, title: "莉科丽丝", cover_url: "https://picsum.photos/seed/anime111/600/800", status: "dropped", progress: "8/13", rating: 6.5, review: "高开低走，可惜了。", created_at: 1656720000 },
-    { id: 12, bangumi_id: 296620, title: "国王排名", cover_url: "https://picsum.photos/seed/anime112/600/800", status: "completed", progress: "完结", rating: 8.0, review: "波吉王子加油！", created_at: 1634256000 },
-    { id: 13, bangumi_id: 302636, title: "86 -不存在的战区-", cover_url: "https://picsum.photos/seed/anime113/600/800", status: "plan", progress: "0/23", rating: 0, review: "", created_at: 1618099200 },
-    { id: 14, bangumi_id: 292275, title: "无职转生", cover_url: "https://picsum.photos/seed/anime114/600/800", status: "watching", progress: "10/24", rating: 9.0, review: "异世界天花板。", created_at: 1610236800 },
-    { id: 15, bangumi_id: 4933, title: "命运石之门", cover_url: "https://picsum.photos/seed/anime115/600/800", status: "completed", progress: "完结", rating: 10, review: "这一切都是命运石之门的选择。", created_at: 1301961600 },
-    { id: 16, bangumi_id: 1386, title: "CLANNAD", cover_url: "https://picsum.photos/seed/anime116/600/800", status: "plan", progress: "0/48", rating: 0, review: "", created_at: 1191456000 },
+    { id: 1, bangumi_id: 296517, title: "葬送的芙莉莲", cover_url: "https://api.paugram.com/wallpaper/", status: "watching", progress: "24/28", rating: 9.5, review: "平淡中见真章，这才是真正的神作。", created_at: 1704067200 },
+    { id: 2, bangumi_id: 253046, title: "进击的巨人 最终季", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 10, review: "献出心脏！跨越十年的史诗。", created_at: 1701388800 },
+    { id: 3, bangumi_id: 314463, title: "间谍过家家", cover_url: "https://api.paugram.com/wallpaper/", status: "watching", progress: "12/24", rating: 8.5, review: "哇库哇库！", created_at: 1696118400 },
+    { id: 4, bangumi_id: 236819, title: "鬼灭之刃", cover_url: "https://api.paugram.com/wallpaper/", status: "plan", progress: "0/26", rating: 0, review: "", created_at: 1680307200 },
+    { id: 5, bangumi_id: 265, title: "新世纪福音战士", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 10, review: "勇敢的少年啊，快去创造奇迹！", created_at: 1672531200 },
+    { id: 6, bangumi_id: 253041, title: "咒术回战", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.0, review: "领域展开！", created_at: 1698796800 },
+    { id: 7, bangumi_id: 386809, title: "我推的孩子", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.2, review: "偶像的谎言是爱。", created_at: 1681257600 },
+    { id: 8, bangumi_id: 321885, title: "电锯人", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 8.8, review: "好耶！", created_at: 1665446400 },
+    { id: 9, bangumi_id: 332591, title: "孤独摇滚", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.8, review: "社恐人的共鸣。", created_at: 1665187200 },
+    { id: 10, bangumi_id: 309486, title: "边缘行者", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.6, review: "赛博朋克的浪漫与悲剧。", created_at: 1663027200 },
+    { id: 11, bangumi_id: 364450, title: "莉科丽丝", cover_url: "https://api.paugram.com/wallpaper/", status: "dropped", progress: "8/13", rating: 6.5, review: "高开低走，可惜了。", created_at: 1656720000 },
+    { id: 12, bangumi_id: 296620, title: "国王排名", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 8.0, review: "波吉王子加油！", created_at: 1634256000 },
+    { id: 13, bangumi_id: 302636, title: "86 -不存在的战区-", cover_url: "https://api.paugram.com/wallpaper/", status: "plan", progress: "0/23", rating: 0, review: "", created_at: 1618099200 },
+    { id: 14, bangumi_id: 292275, title: "无职转生", cover_url: "https://api.paugram.com/wallpaper/", status: "watching", progress: "10/24", rating: 9.0, review: "异世界天花板。", created_at: 1610236800 },
+    { id: 15, bangumi_id: 4933, title: "命运石之门", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 10, review: "这一切都是命运石之门的选择。", created_at: 1301961600 },
+    { id: 16, bangumi_id: 1386, title: "CLANNAD", cover_url: "https://api.paugram.com/wallpaper/", status: "plan", progress: "0/48", rating: 0, review: "", created_at: 1191456000 },
 ];
 
 interface BangumiSubject {

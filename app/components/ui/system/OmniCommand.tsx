@@ -82,7 +82,7 @@ export function OmniCommand() {
           body.style.filter = "";
           body.style.animation = "";
           // 跳转到随机风景图
-          window.open("https://picsum.photos/1920/1080", "_blank");
+          window.open("https://api.paugram.com/wallpaper/", "_blank");
 
         }, 500);
         setIsOpen(false);

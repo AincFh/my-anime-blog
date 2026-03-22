@@ -20,7 +20,7 @@ export function GachaEntryCard({ onOpen }: GachaEntryCardProps) {
             <div className="absolute inset-0 bg-black/60 z-0" />
             {/* 装饰性背景 */}
             <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/gacha333/800/600')] bg-cover bg-center opacity-30 mix-blend-overlay group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-[url('https://api.paugram.com/wallpaper/')] bg-cover bg-center opacity-30 mix-blend-overlay group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
             </div>
 
