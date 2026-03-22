@@ -206,33 +206,33 @@ function DashboardContent() {
         )}
       </AnimatePresence>
 
-      {/* 5. Dashboard Widgets Grid */}
-      <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
-        <div className="w-full h-full max-w-6xl pointer-events-auto grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-6">
+      {/* 5. Dashboard Widgets Grid - UI UX PRO MAX 流体排版 */}
+      <div className="w-full max-w-[1400px] mx-auto pt-24 md:pt-32 pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col min-h-screen">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
           {/* Top Left: Mission Board */}
           <motion.div
-            className="md:col-span-2 row-span-1"
+            className="lg:col-span-2 flex flex-col h-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <MissionBoard missions={loaderData.missions} />
           </motion.div>
 
           {/* Top Right: Server Status */}
           <motion.div
-            className="md:col-span-1 row-span-1"
+            className="lg:col-span-1 flex flex-col h-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <ServerStatus />
           </motion.div>
 
           {/* Bottom: Activity Log */}
           <motion.div
-            className="md:col-span-3 row-span-1 h-48 md:h-auto"
+            className="lg:col-span-3 flex flex-col h-full md:h-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}

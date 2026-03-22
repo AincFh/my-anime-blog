@@ -223,8 +223,8 @@ export default function SettingsPage() {
             </ClientOnly>
             <NavMenu />
 
-            <div className="absolute inset-0 flex items-center justify-center pl-4 md:pl-24 pr-4 md:pr-8 pt-[calc(env(safe-area-inset-top)+5rem)] md:pt-24 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-8 pointer-events-none">
-                <div className="w-full h-full max-w-6xl pointer-events-auto flex flex-col md:flex-row gap-4 md:gap-8">
+            <div className="w-full max-w-[1400px] mx-auto pt-[calc(env(safe-area-inset-top)+5rem)] md:pt-32 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col min-h-screen">
+                <div className="w-full h-full flex flex-col md:flex-row gap-4 md:gap-8 flex-1">
 
                     {/* Sidebar / Topbar on Mobile */}
                     <div className="w-full md:w-64 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 custom-scrollbar pb-2 md:pb-0">
@@ -279,7 +279,7 @@ export default function SettingsPage() {
                                                 {avatarPreview ? (
                                                     <OptimizedImage src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" width={100} />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl">👤</div>
+                                                    <div className="w-full h-full flex items-center justify-center bg-white/5 text-white/20"><User size={40} /></div>
                                                 )}
                                             </div>
                                             <div>

@@ -27,19 +27,19 @@ export function ServerStatus() {
             <div className="flex items-center justify-between mb-4 relative z-10">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Server className="text-blue-500" size={20} />
-                    SYSTEM STATUS
+                    核心终端状态
                 </h3>
                 <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-mono text-green-400">ONLINE</span>
+                    <span className="text-xs font-mono text-green-400 tracking-widest">在线</span>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6 relative z-10">
                 {/* CPU Load */}
                 <div className="space-y-2">
-                    <div className="flex justify-between text-xs font-mono text-white/60">
-                        <span>CPU LOAD</span>
+                    <div className="flex justify-between text-xs font-mono text-white/60 font-bold tracking-wider">
+                        <span>系统负载</span>
                         <span>{load.toFixed(1)}%</span>
                     </div>
                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -58,7 +58,7 @@ export function ServerStatus() {
                             <Users size={16} />
                         </div>
                         <div>
-                            <div className="text-xs text-white/40 font-bold">ACTIVE USERS</div>
+                            <div className="text-xs text-white/40 font-bold">活跃连接数</div>
                             <div className="text-lg font-mono font-bold text-white">{users}</div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@ export function ServerStatus() {
                             <Wifi size={16} />
                         </div>
                         <div>
-                            <div className="text-xs text-white/40 font-bold">LATENCY</div>
+                            <div className="text-xs text-white/40 font-bold">网络通讯延迟</div>
                             <div className="text-lg font-mono font-bold text-white">{ping}ms</div>
                         </div>
                     </div>

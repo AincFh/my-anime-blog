@@ -11,10 +11,10 @@ interface LogEntry {
 
 export function ActivityLog() {
     const [logs, setLogs] = useState<LogEntry[]>([
-        { id: 1, timestamp: "10:24:01", message: "System initialized...", type: "info" },
-        { id: 2, timestamp: "10:24:02", message: "User profile loaded successfully.", type: "success" },
-        { id: 3, timestamp: "10:24:05", message: "Connecting to secure server...", type: "info" },
-        { id: 4, timestamp: "10:24:08", message: "Connection established.", type: "success" },
+        { id: 1, timestamp: "10:24:01", message: "核心子系统初始化完成...", type: "info" },
+        { id: 2, timestamp: "10:24:02", message: "用户终端档案加载完毕。", type: "success" },
+        { id: 3, timestamp: "10:24:05", message: "正在建立高强度加密隧道...", type: "info" },
+        { id: 4, timestamp: "10:24:08", message: "安全连接已确立。", type: "success" },
     ]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -28,13 +28,13 @@ export function ActivityLog() {
     // Simulate incoming logs
     useEffect(() => {
         const messages = [
-            "Scanning for updates...",
-            "Syncing inventory data...",
-            "Checking daily rewards...",
-            "Optimizing background processes...",
-            "Ping response: 24ms",
-            "Data integrity check passed.",
-            "New notification received.",
+            "正在扫描安全层更新点...",
+            "自动校验并同步本地资产数据...",
+            "校验本日活跃点奖励发放状态...",
+            "分配系统内存并重组游离进程...",
+            "反馈心跳节点应答包：24ms",
+            "全量缓存加密流验证通过。",
+            "捕获到未知的新维度通讯电波。",
         ];
 
         const interval = setInterval(() => {
@@ -55,7 +55,7 @@ export function ActivityLog() {
         <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 h-full flex flex-col font-mono text-xs">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5 text-white/40 uppercase tracking-wider font-bold">
                 <Terminal size={14} />
-                System Activity Log
+                全局系统活动监听日志
             </div>
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar space-y-1">

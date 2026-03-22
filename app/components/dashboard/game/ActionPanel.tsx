@@ -19,10 +19,9 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
             {/* 1. 次要操作组 (商城 & 扭蛋) */}
             <div className="flex flex-col gap-4 mb-2">
                 {/* 商城按钮 */}
-                <motion.button
+                <button
                     onClick={onShop}
-                    className="group flex items-center justify-end gap-3"
-                    whileHover={{ x: -10 }}
+                    className="group flex items-center justify-end gap-3 cursor-pointer"
                 >
                     <span className="text-white/80 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">商城</span>
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors">
@@ -31,10 +30,9 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
                 </motion.button>
 
                 {/* 扭蛋按钮 */}
-                <motion.button
+                <button
                     onClick={onGacha}
-                    className="group flex items-center justify-end gap-3"
-                    whileHover={{ x: -10 }}
+                    className="group flex items-center justify-end gap-3 cursor-pointer"
                 >
                     <span className="text-white/80 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">祈愿</span>
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white group-hover:border-purple-400 transition-colors">
@@ -48,10 +46,10 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
                 onClick={onSignIn}
                 disabled={signInStatus.hasSignedIn || signInStatus.isSubmitting}
                 className={`
-            relative group overflow-hidden rounded-full pl-8 pr-2 py-2 flex items-center gap-4
+            relative group overflow-hidden rounded-full pl-8 pr-2 py-2 flex items-center gap-4 cursor-pointer
             ${signInStatus.hasSignedIn
-                        ? "bg-slate-800/80 border border-white/10 cursor-default"
-                        : "bg-white text-slate-900 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.6)]"
+                        ? "bg-slate-800/80 border border-white/10 cursor-not-allowed"
+                        : "bg-white text-slate-900 shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.6)] hover:bg-white/90"
                     }
             transition-all duration-300
         `}
@@ -60,12 +58,12 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
                 transition={{ delay: 0.4, type: "spring" }}
             >
                 {/* 按钮文字 */}
-                <div className="flex flex-col items-start">
+                <div className="flex flex-col items-start translate-y-[-1px]">
                     <span className={`text-2xl font-black font-display tracking-widest ${signInStatus.hasSignedIn ? "text-white/50" : "text-slate-900"}`}>
-                        {signInStatus.hasSignedIn ? "COMPLETED" : "SIGN IN"}
+                        {signInStatus.hasSignedIn ? "已打卡" : "执行签到"}
                     </span>
                     <span className={`text-[10px] font-bold tracking-[0.2em] ${signInStatus.hasSignedIn ? "text-white/30" : "text-slate-500"}`}>
-                        {signInStatus.hasSignedIn ? "已完成今日签到" : "点击领取今日奖励"}
+                        {signInStatus.hasSignedIn ? "已完成今日打卡" : "点击领取今日奖励"}
                     </span>
                 </div>
 
