@@ -62,7 +62,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
             <OptimizedImage
               src={image.url}
               alt={image.note || image.title}
-              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+              className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 ease-out"
             />
             
             {/* 深邃悬停蒙版 */}

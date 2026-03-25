@@ -67,7 +67,7 @@ export function OptimizedImage({
                 loading="lazy"
                 decoding="async"
                 className={cn(
-                    "w-full h-full object-cover transition-opacity duration-500",
+                    "w-full h-full object-cover object-center transition-opacity duration-500",
                     isLoaded ? "opacity-100" : "opacity-0"
                 )}
                 onLoad={handleLoad}

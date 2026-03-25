@@ -89,7 +89,7 @@ function AnimeCardItem({ anime, index, config, onClick }: { anime: any, index: n
             onError={(e) => {
               (e.target as HTMLImageElement).src = "https://placehold.co/400x600/1e293b/ffffff?text=No+Cover"
             }}
-            className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover object-[center_top] transform group-hover:scale-[1.03] transition-transform duration-700 ease-out"
           />
         ) : (
           <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-4xl opacity-50">
@@ -327,7 +327,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
                 <img 
                   src={selectedAnime.cover_url} 
                   alt={selectedAnime.title} 
-                  className="absolute inset-0 w-full h-full object-cover" 
+                  className="absolute inset-0 w-full h-full object-cover object-center" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent sm:hidden" />
                 <button
