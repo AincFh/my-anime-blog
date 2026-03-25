@@ -218,15 +218,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {/* ==================== 桌面端专属组件 ==================== */}
       {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
-          {/* 自定义光标 — 仅桌面端 (音乐播放器已根据指令强制下线) */}
           <CustomCursor />
+          <MusicPlayer playlistId={musicPlaylistId} />
         </Suspense>
       )}
 
-      {/* ==================== 移动端专属组件 (音乐随身听已下线清除) ==================== */}
+      {/* ==================== 移动端专属组件 ==================== */}
       {!isAdmin && isMobile && (
         <Suspense fallback={null}>
-          {/* <MusicPlayerMobile playlistId={musicPlaylistId} /> */}
+          <MusicPlayerMobile playlistId={musicPlaylistId} />
         </Suspense>
       )}
 
@@ -247,14 +247,14 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
-            {/* <Live2D /> 看板娘模型按要求裁撤以彻底净化版面 */}
+            <Live2D />
             <OmniCommand />
             <AchievementSystem />
           </DelayedSuspense>
 
           <DelayedSuspense delayMs={3000}>
             <TheatricalMode />
-            <AmbientSound scene="default" />
+            {/* <AmbientSound scene="default" /> 环境白噪音旋转图标依照主理人指令彻底铲除 */}
             <KonamiCode />
             <TitleChanger />
             <CopyAttribution />
