@@ -218,16 +218,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {/* ==================== 桌面端专属组件 ==================== */}
       {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
-          {/* 自定义光标 + Hi-Fi 播放器 — 仅桌面端 */}
+          {/* 自定义光标 — 仅桌面端 (音乐播放器已根据指令强制下线) */}
           <CustomCursor />
-          <MusicPlayer playlistId={musicPlaylistId} />
         </Suspense>
       )}
 
-      {/* ==================== 移动端专属组件 ==================== */}
+      {/* ==================== 移动端专属组件 (音乐随身听已下线清除) ==================== */}
       {!isAdmin && isMobile && (
         <Suspense fallback={null}>
-          <MusicPlayerMobile playlistId={musicPlaylistId} />
+          {/* <MusicPlayerMobile playlistId={musicPlaylistId} /> */}
         </Suspense>
       )}
 
@@ -248,7 +247,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
-            <Live2D />
+            {/* <Live2D /> 看板娘模型按要求裁撤以彻底净化版面 */}
             <OmniCommand />
             <AchievementSystem />
           </DelayedSuspense>

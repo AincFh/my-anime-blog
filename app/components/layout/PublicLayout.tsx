@@ -23,7 +23,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <div ref={ref} className="relative min-h-screen overflow-hidden font-round text-slate-800 selection:bg-primary-start selection:text-white">
+        <div ref={ref} className="relative min-h-screen overflow-hidden font-round text-slate-800 dark:text-slate-200 selection:bg-primary-start selection:text-white">
             {/* 动态全屏背景系统 */}
             <div className="absolute inset-0 z-0" data-background-layer>
                 <motion.div
