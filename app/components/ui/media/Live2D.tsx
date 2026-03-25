@@ -40,7 +40,7 @@ export function Live2D() {
                         position: 'right',
                         width: UI_CONSTANTS.live2d.width,
                         height: UI_CONSTANTS.live2d.height,
-                        hOffset: 0,
+                        hOffset: 30,
                         vOffset: -20,
                     },
                     mobile: { show: false },
@@ -51,8 +51,8 @@ export function Live2D() {
                     dialog: {
                         enable: true,
                         scripts: {
-                            welcome: ['欢迎来到我的博客！', '今天也要元气满满哦~'],
-                            click: ['哎呀，你戳我干嘛？', 'Master，有什么事吗？', '好痒~'],
+                            welcome: ['长官好！舰队 Z16 就绪！', '前方海域看起来很安全呢！', '需要我为您记录些什么吗？'],
+                            click: ['哎呀！长官，突袭是不可以的！', '呜...不要一直盯着我看啦。', '全副武装！啊，什么都没有发生。', '长官有什么新指示吗？'],
                         },
                     },
                 };
