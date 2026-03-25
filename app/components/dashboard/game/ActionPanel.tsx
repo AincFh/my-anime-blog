@@ -3,7 +3,6 @@ import { Calendar, Sparkles, ShoppingBag, ChevronRight } from "lucide-react";
 
 interface ActionPanelProps {
     onSignIn: () => void;
-    onGacha: () => void;
     onShop: () => void;
     signInStatus: {
         hasSignedIn: boolean;
@@ -12,11 +11,10 @@ interface ActionPanelProps {
     };
 }
 
-export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionPanelProps) {
+export function ActionPanel({ onSignIn, onShop, signInStatus }: ActionPanelProps) {
     return (
         <div className="absolute bottom-8 right-8 flex items-end gap-6 z-20">
 
-            {/* 1. 次要操作组 (商城 & 扭蛋) */}
             <div className="flex flex-col gap-4 mb-2">
                 {/* 商城按钮 */}
                 <button
@@ -26,17 +24,6 @@ export function ActionPanel({ onSignIn, onGacha, onShop, signInStatus }: ActionP
                     <span className="text-white/80 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">商城</span>
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors">
                         <ShoppingBag className="w-5 h-5" />
-                    </div>
-                </button>
-
-                {/* 扭蛋按钮 */}
-                <button
-                    onClick={onGacha}
-                    className="group flex items-center justify-end gap-3 cursor-pointer"
-                >
-                    <span className="text-white/80 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">祈愿</span>
-                    <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white group-hover:border-purple-400 transition-colors">
-                        <Sparkles className="w-5 h-5" />
                     </div>
                 </button>
             </div>

@@ -43,43 +43,59 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         throw new Response("文章不存在", { status: 404 });
     }
 
-    // 增加阅读量
-    await db
-        .prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
-        .bind(article.id)
-        .run();
+    // 增加阅读量及附属功能务必使用 try-catch 以防阻塞主文章加载
+    try {
+        await db
+            .prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
+            .bind(article.id)
+            .run();
 
-    // 更新任务进度：阅读 (仅对登录用户)
-    const { getSessionToken, verifySession } = await import('~/services/auth.server');
-    const { updateMissionProgress } = await import('~/services/membership/mission.server');
-    const token = getSessionToken(request);
-    const { valid, user } = await verifySession(token, db);
-    if (valid && user) {
-        await updateMissionProgress(db, user.id, 'article_read');
+        // 更新任务进度：阅读 (仅对登录用户)
+        const { getSessionToken, verifySession } = await import('~/services/auth.server');
+        const { updateMissionProgress } = await import('~/services/membership/mission.server');
+        const token = getSessionToken(request);
+        if (token) {
+            const { valid, user } = await verifySession(token, db);
+            if (valid && user) {
+                await updateMissionProgress(db, user.id, 'article_read');
+            }
+        }
+    } catch (err) {
+        console.error("Non-fatal error updating views or mission:", err);
     }
 
     // 获取相关文章
-    const relatedArticles = await db
-        .prepare(`
-            SELECT id, slug, title, cover_image, category, created_at
-            FROM articles 
-            WHERE category = ? AND id != ? AND (status = 'published' OR status IS NULL)
-            ORDER BY created_at DESC
-            LIMIT 3
-        `)
-        .bind(article.category, article.id)
-        .all();
+    let relatedArticles = { results: [] };
+    try {
+        relatedArticles = (await db
+            .prepare(`
+                SELECT id, slug, title, cover_image, category, created_at
+                FROM articles 
+                WHERE category = ? AND id != ? AND (status = 'published' OR status IS NULL)
+                ORDER BY created_at DESC
+                LIMIT 3
+            `)
+            .bind(article.category, article.id)
+            .all()) as any;
+    } catch (err) {
+        console.error("Failed to fetch related articles:", err);
+    }
     
     // 获取评论
-    const comments = await db
-        .prepare(`
-            SELECT id, author, content, created_at, is_danmaku, avatar_style
-            FROM comments
-            WHERE article_id = ? AND status = 'approved'
-            ORDER BY created_at DESC
-        `)
-        .bind(article.id)
-        .all();
+    let comments = { results: [] };
+    try {
+        comments = (await db
+            .prepare(`
+                SELECT id, author, content, created_at, is_danmaku, avatar_style
+                FROM comments
+                WHERE article_id = ? AND status = 'approved'
+                ORDER BY created_at DESC
+            `)
+            .bind(article.id)
+            .all()) as any;
+    } catch (err) {
+        console.error("Failed to fetch comments for article:", err);
+    }
 
     return {
         article,
@@ -184,19 +200,14 @@ export default function ArticleDetailPage() {
                     </motion.div>
                 )}
 
-                {/* 核心阅读区无边框流 */}
-                <motion.article
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="mb-16 md:mb-24"
-                >
+                {/* 核心阅读区无边框流 (剥离动画避免字体发虚模糊) */}
+                <article className="mb-16 md:mb-24">
                     <div
-                        className="prose prose-slate md:prose-lg max-w-none dark:prose-invert
+                        className="prose prose-slate md:prose-xl max-w-none dark:prose-invert antialiased tracking-wide
                             prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white
                             prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-3xl
                             prose-h3:text-2xl
-                            prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-8
+                            prose-p:text-slate-700 dark:prose-p:text-slate-200 prose-p:leading-relaxed prose-p:mb-8 font-medium
                             prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
                             prose-code:bg-slate-100 dark:prose-code:bg-slate-800/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-lg prose-code:text-[0.9em] prose-code:font-medium
                             prose-pre:bg-slate-900 dark:prose-pre:bg-[#0A0A0A] prose-pre:border prose-pre:border-slate-800 dark:prose-pre:border-white/5 prose-pre:rounded-2xl prose-pre:shadow-2xl
@@ -206,7 +217,7 @@ export default function ArticleDetailPage() {
                             __html: article.content?.replace(/\n/g, '<br>') || ''
                         }}
                     />
-                </motion.article>
+                </article>
 
                 {/* 底部交互组 */}
                 <div className="pt-8 border-t border-slate-100 dark:border-white/5 mb-16 md:mb-24">

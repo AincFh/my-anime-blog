@@ -1,0 +1,17 @@
+INSERT INTO animes (title, cover_url, status, progress, rating, review, created_at) VALUES
+('EVA：终', 'https://api.paugram.com/wallpaper/?seed=eva', 'completed', '完结', 9.8, '永别了，所有的Evangelion', strftime('%s', 'now', '-1 days')),
+('葬送的芙莉莲', 'https://api.paugram.com/wallpaper/?seed=frieren', 'watching', '14/28', 9.9, '仅仅十年的羁绊，为何会留下如此深刻回忆', strftime('%s', 'now', '-2 days')),
+('孤独摇滚!', 'https://api.paugram.com/wallpaper/?seed=bocchi', 'completed', '12/12', 9.5, '社恐的神作，波奇酱天下第一！', strftime('%s', 'now', '-3 days')),
+('命运石之门', 'https://api.paugram.com/wallpaper/?seed=steins', 'plan', '0/24', 9.7, '这一切都是命运石之门的选择', strftime('%s', 'now', '-4 days')),
+('紫罗兰永恒花园', 'https://api.paugram.com/wallpaper/?seed=violet', 'completed', '13/13', 9.6, '用信件传达思念，极致的美学享受', strftime('%s', 'now', '-5 days')),
+('利兹与青鸟', 'https://api.paugram.com/wallpaper/?seed=liz', 'completed', '1/1', 9.4, '伞木霙与铠冢霙之间那无声的交响曲令人窒息般的美丽...', strftime('%s', 'now', '-6 days')),
+('进击的巨人', 'https://api.paugram.com/wallpaper/?seed=aot', 'completed', '完结', 9.8, '海的那边，是敌人吗？史诗级的落幕', strftime('%s', 'now', '-7 days')),
+('电锯人', 'https://api.paugram.com/wallpaper/?seed=csm', 'watching', '12/12', 9.0, '这是我见过的最自由的主角', strftime('%s', 'now', '-8 days')),
+('星际牛仔', 'https://api.paugram.com/wallpaper/?seed=bebop', 'completed', '26/26', 9.7, 'See you space cowboy...', strftime('%s', 'now', '-9 days')),
+('咒术回战', 'https://api.paugram.com/wallpaper/?seed=jjk', 'plan', '0/24', 9.2, '领域展开！', strftime('%s', 'now', '-10 days')),
+('鬼灭之刃', 'https://api.paugram.com/wallpaper/?seed=ds', 'watching', '11/11', 9.1, '经费在燃烧！视觉冲击拉满', strftime('%s', 'now', '-11 days')),
+('你的名字。', 'https://api.paugram.com/wallpaper/?seed=yn', 'completed', '1/1', 9.5, '哪怕只要一点点时间，也想与你相见', strftime('%s', 'now', '-12 days')),
+('冰菓', 'https://api.paugram.com/wallpaper/?seed=hyouka', 'completed', '22/22', 9.3, '我很好奇！', strftime('%s', 'now', '-13 days')),
+('言叶之庭', 'https://api.paugram.com/wallpaper/?seed=kotonoha', 'completed', '1/1', 9.4, '隐约雷鸣，阴霾天空', strftime('%s', 'now', '-14 days')),
+('斩服少女', 'https://api.paugram.com/wallpaper/?seed=kill', 'completed', '24/24', 9.4, '绝对的燃放自我', strftime('%s', 'now', '-15 days')),
+('钢之炼金术师 FA', 'https://api.paugram.com/wallpaper/?seed=fma', 'completed', '64/64', 9.9, '没有牺牲就什么都得不到，为了得到什么东西，就需要付出同等的代价。', strftime('%s', 'now', '-16 days'));

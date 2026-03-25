@@ -114,7 +114,7 @@ export default function ArticlesPage() {
     };
 
     return (
-        <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-20 md:pb-24 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* 标题区域 - Apple HIG 纯黑白优雅字重 */}
                 <motion.div
@@ -215,10 +215,10 @@ export default function ArticlesPage() {
                                         </div>
                                         <Link 
                                             to={`/articles/${article.slug}`} 
-                                            className="ml-auto flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold hover:gap-2 transition-all opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0"
+                                            className="ml-auto flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 antialiased"
                                         >
                                             阅读全文
-                                            <ArrowRight className="w-4 h-4" />
+                                            <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </div>
                                 </div>

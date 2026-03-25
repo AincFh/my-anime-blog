@@ -1,11 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-<<<<<<< HEAD
 import { musicPlayerToggle } from "~/hooks/useMusicPlayer";
-=======
-import { musicPlayerToggle } from "~/components/media/MusicPlayer";
->>>>>>> fa3b8d87cdad5a01093a6a62cd98951ec745a581
 
 /**
  * 全局指令终端 (Omni-Command)

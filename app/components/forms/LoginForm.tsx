@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 interface LoginFormProps {
     onSubmit: (data: FormData) => Promise<void>;
@@ -13,6 +13,7 @@ interface LoginFormProps {
 export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: LoginFormProps) {
     const [email, setEmail] = useState(defaultEmail);
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,7 +35,7 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         enterKeyHint="next"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300"
+                        className="block w-full pl-5 pr-12 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-[20px] text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
                         placeholder="请输入电子邮箱"
                         required
                     />
@@ -45,19 +46,26 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             <div className="flex flex-col gap-2">
                 <div className="relative">
                     <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         enterKeyHint="done"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-slate-800 border border-transparent rounded-[18px] text-[15px] font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-start/20 transition-all duration-300"
+                        className="block w-full pl-5 pr-16 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-[20px] text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
                         placeholder="请输入密码"
                         required
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors p-2"
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                 </div>
                 {/* 忘记密码 */}
-                <div className="flex justify-end pr-1 mt-1">
-                    <Link to="/forgot-password" className="text-[13px] font-semibold text-slate-500 hover:text-primary-start dark:text-slate-400 transition-colors">
+                <div className="flex justify-end pr-1 mt-1 z-10 cursor-pointer">
+                    <Link to="/forgot-password" className="text-[13px] font-black text-white/50 hover:text-white transition-colors drop-shadow-sm">
                         忘记密码？
                     </Link>
                 </div>

@@ -1,0 +1,17 @@
+INSERT INTO gallery (url, title, note, category, created_at) VALUES 
+('https://api.paugram.com/wallpaper/?seed=3w1', '夏日的天空', '云朵与蔚蓝交织', 'scenery', strftime('%s', 'now', '-1 days')),
+('https://api.paugram.com/wallpaper/?seed=1q2', '机械降神', '巨物恐惧与科幻之美', 'scenery', strftime('%s', 'now', '-2 days')),
+('https://api.paugram.com/wallpaper/?seed=b30', '废土余红', '末日之下', 'concept', strftime('%s', 'now', '-3 days')),
+('https://api.paugram.com/wallpaper/?seed=4cx', '宇宙航线', '跃迁准备', 'concept', strftime('%s', 'now', '-4 days')),
+('https://api.paugram.com/wallpaper/?seed=a51', '冬日花火', '那年灿烂盛放', 'life', strftime('%s', 'now', '-5 days')),
+('https://api.paugram.com/wallpaper/?seed=x62', '魔女之旅', '骑着扫帚穿透云层', 'concept', strftime('%s', 'now', '-6 days')),
+('https://api.paugram.com/wallpaper/?seed=d7q', '星海', '仰望夜空的瞬间', 'scenery', strftime('%s', 'now', '-7 days')),
+('https://api.paugram.com/wallpaper/?seed=u8w', '雨后街道', '霓虹倒影', 'scenery', strftime('%s', 'now', '-8 days')),
+('https://api.paugram.com/wallpaper/?seed=o9e', '神隐', '进入迷失的长廊', 'concept', strftime('%s', 'now', '-9 days')),
+('https://api.paugram.com/wallpaper/?seed=j10', '终点站', '等待发车的列车', 'scenery', strftime('%s', 'now', '-10 days')),
+('https://api.paugram.com/wallpaper/?seed=f11', '春之始', '樱花雨', 'life', strftime('%s', 'now', '-11 days')),
+('https://api.paugram.com/wallpaper/?seed=k12', '遗迹', '古文明的残片', 'scenery', strftime('%s', 'now', '-12 days')),
+('https://api.paugram.com/wallpaper/?seed=23n', '放学后', '空无一人的教室', 'life', strftime('%s', 'now', '-13 days')),
+('https://api.paugram.com/wallpaper/?seed=v14', '灯塔', '守望波涛的孤光', 'scenery', strftime('%s', 'now', '-14 days')),
+('https://api.paugram.com/wallpaper/?seed=9m5', '微光森林', '点点萤火', 'scenery', strftime('%s', 'now', '-15 days')),
+('https://api.paugram.com/wallpaper/?seed=1k6', '晨曦', '破晓将至', 'scenery', strftime('%s', 'now', '-16 days'));

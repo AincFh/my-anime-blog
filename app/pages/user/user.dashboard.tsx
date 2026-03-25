@@ -3,9 +3,7 @@ import { useState, useEffect } from "react";
 import { useFetcher, useNavigate, useLoaderData } from "react-router";
 import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLayout";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
-import { NavMenu } from "~/components/dashboard/game/NavMenu";
 import { ActionPanel } from "~/components/dashboard/game/ActionPanel";
-import { GachaMachine } from "~/components/gamification/GachaMachine";
 import { GamificationProvider, useGamification } from "~/contexts/GamificationContext";
 import { useUser } from "~/hooks/useUser";
 import { ClientOnly } from "~/components/common/ClientOnly";
@@ -94,7 +92,6 @@ function DashboardContent() {
   const loaderData = useLoaderData<typeof loader>();
   const { user: clientUser, loading } = useUser(); // 客户端 user 状态 (用于更新)
   const { stats: clientStats } = useGamification(); // 客户端 gamification 状态
-  const [isGachaOpen, setIsGachaOpen] = useState(false);
   const navigate = useNavigate();
   const fetcher = useFetcher();
 
@@ -159,13 +156,9 @@ function DashboardContent() {
         {() => <StatusHUD user={{ ...userData, tier: loaderData.tier }} stats={{ coins: stats.coins }} />}
       </ClientOnly>
 
-      {/* 2. 导航菜单 */}
-      <NavMenu />
-
-      {/* 3. 动作面板 */}
+      {/* 2. 动作面板 */}
       <ActionPanel
         onSignIn={handleSignIn}
-        onGacha={() => setIsGachaOpen(true)}
         onShop={() => navigate("/shop")}
         signInStatus={{
           hasSignedIn: isDone,
@@ -174,39 +167,7 @@ function DashboardContent() {
         }}
       />
 
-      {/* 4. 扭蛋机模态框 */}
-      <AnimatePresence>
-        {isGachaOpen && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsGachaOpen(false)}
-            />
-            <motion.div
-              className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none"
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            >
-              <div className="w-full max-w-md pointer-events-auto relative">
-                <button
-                  onClick={() => setIsGachaOpen(false)}
-                  className="absolute -top-12 right-0 text-white/60 hover:text-white flex items-center gap-2 transition-colors"
-                >
-                  <span className="text-2xl">✕</span>
-                  <span className="text-sm font-bold tracking-widest">关闭</span>
-                </button>
-                <GachaMachine />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* 5. Dashboard Widgets Grid - UI UX PRO MAX 流体排版 */}
+      {/* 3. Dashboard Widgets Grid - UI UX PRO MAX 流体排版 */}
       <div className="w-full max-w-[1400px] mx-auto pt-24 md:pt-32 pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col min-h-screen">
         <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 

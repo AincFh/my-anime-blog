@@ -141,5 +141,16 @@ CREATE TABLE ai_usage (
     created_at INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
-CREATE INDEX IF NOT EXISTS idx_ai_usage_user_created ON ai_usage(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage(feature);
+
+-- 9. 图库表 (Memories)
+DROP TABLE IF EXISTS gallery;
+CREATE TABLE gallery (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url TEXT NOT NULL,
+    title TEXT,
+    note TEXT,
+    category TEXT,
+    created_at INTEGER DEFAULT (unixepoch())
+);
+CREATE INDEX IF NOT EXISTS idx_gallery_created ON gallery(created_at);

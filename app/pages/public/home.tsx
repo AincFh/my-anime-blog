@@ -105,12 +105,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
-      {/* Hero Section - 极致留白与大呼吸感 */}
+      {/* Hero Section - 沉浸式全屏首屏 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col lg:flex-row items-center justify-between min-h-[50vh] md:min-h-[60vh] px-2 mb-20 md:mb-32 gap-16 lg:gap-8"
+        className="flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-14rem)] px-2 mb-20 md:mb-32 gap-16 lg:gap-8"
       >
         {/* Left: 问候文本群 */}
         <div className="lg:w-1/2 text-left w-full">

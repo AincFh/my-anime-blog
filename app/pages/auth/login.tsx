@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-// PublicLayout is already provided by root.tsx, no need to import
 import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
 import { CheckCircle } from "lucide-react";
 import { LoginForm } from "~/components/forms/LoginForm";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -58,21 +57,30 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
-            {/* 顶层极其微弱的光晕 */}
-            <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-black transition-colors duration-500 border-none">
+            {/* 顶层唯美二次元壁纸 */}
+            <div className="absolute inset-0 z-0">
+                <OptimizedImage
+                    src="https://api.paugram.com/wallpaper/?seed=login_screen"
+                    alt="Login Background"
+                    className="w-full h-full object-cover scale-105"
+                />
+                {/* 深邃毛玻璃遮罩 */}
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-[4px] transition-all duration-700 pointer-events-none" />
+            </div>
 
-            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
+            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[440px] mx-auto px-4 sm:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-black/40"
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
+                        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight drop-shadow-md">
                             欢迎回来
                         </h1>
-                        <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
+                        <p className="text-[15px] font-bold text-white/70 drop-shadow-sm">
                             登录以继续探索您的二次元世界
                         </p>
                     </div>
@@ -83,9 +91,9 @@ export default function Login() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-4 rounded-[16px] mb-8 flex items-center justify-center gap-2 text-[14px] font-bold"
+                                className="bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-white p-4 rounded-[20px] mb-8 flex items-center justify-center gap-2 text-[14px] font-bold shadow-lg"
                             >
-                                <CheckCircle size={18} />
+                                <CheckCircle size={18} className="text-emerald-400" />
                                 登录成功！正在为您跳转...
                             </motion.div>
                         )}
@@ -95,15 +103,15 @@ export default function Login() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-4 rounded-[16px] mb-8 flex items-center gap-2 text-[14px] font-bold"
+                                className="bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-white p-4 rounded-[20px] mb-8 flex items-center gap-2 text-[14px] font-bold shadow-lg"
                             >
-                                <CheckCircle size={18} />
-                                注册成功！请使用账号密码进行登录
+                                <CheckCircle size={18} className="text-emerald-400" />
+                                注册成功！请使用账号密码登录
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    <div className="bg-white/50 dark:bg-[#1C1C1E]/30 p-1 rounded-[32px]">
+                    <div className="mt-2">
                         <LoginForm
                             onSubmit={handleLogin}
                             isLoading={isLoading}
@@ -112,10 +120,10 @@ export default function Login() {
                         />
                     </div>
 
-                    <div className="mt-10 text-center">
-                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                    <div className="mt-10 text-center relative z-20">
+                        <p className="text-[14px] font-bold text-white/70">
                             还没有账号？
-                            <Link to="/register" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
+                            <Link to="/register" className="ml-2 text-white font-black hover:text-primary-300 hover:underline drop-shadow-md transition-colors relative z-30 pointer-events-auto">
                                 立即注册
                             </Link>
                         </p>

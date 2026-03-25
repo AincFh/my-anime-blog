@@ -268,7 +268,7 @@ export default function ShopPage() {
                     </AnimatePresence>
 
                     {/* Content Area - 深空极简画廊 */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
+                    <div className="flex-1 pt-4 pb-12">
                         <AnimatePresence mode="wait">
                             {/* GOODS TAB */}
                             {activeTab === "goods" && (
@@ -460,6 +460,8 @@ export default function ShopPage() {
                                                 )}
                                             </div>
 
+                                            <button
+                                                onClick={() => handlePurchase(tier, "membership")}
                                                 className={`
                                                     w-full py-4 rounded-full font-bold text-[16px] transition-all duration-300
                                                     ${tier.name === 'svip'

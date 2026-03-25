@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
 import { RegisterForm } from "~/components/forms/RegisterForm";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 export default function Register() {
     const navigate = useNavigate();
@@ -59,25 +59,35 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
-            <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-black transition-colors duration-500 border-none">
+            {/* 顶层唯美二次元壁纸 */}
+            <div className="absolute inset-0 z-0">
+                 <OptimizedImage
+                    src="https://api.paugram.com/wallpaper/?seed=register_screen"
+                    alt="Register Background"
+                    className="w-full h-full object-cover scale-105"
+                />
+                {/* 深邃毛玻璃遮罩 */}
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-[4px] transition-all duration-700 pointer-events-none" />
+            </div>
 
-            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
+            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[440px] mx-auto px-4 sm:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-black/40"
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
+                        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight drop-shadow-md">
                             注册账号
                         </h1>
-                        <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
+                        <p className="text-[15px] font-bold text-white/70 drop-shadow-sm">
                             开启您的次元之旅
                         </p>
                     </div>
 
-                    <div className="bg-white/50 dark:bg-[#1C1C1E]/30 p-1 rounded-[32px]">
+                    <div className="mt-2">
                         <RegisterForm
                             onRegister={handleRegister}
                             onSendCode={handleSendCode}
@@ -86,10 +96,10 @@ export default function Register() {
                         />
                     </div>
 
-                    <div className="mt-10 text-center">
-                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                    <div className="mt-10 text-center relative z-20">
+                        <p className="text-[14px] font-bold text-white/70">
                             已经有账号了？
-                            <Link to="/login" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
+                            <Link to="/login" className="ml-2 text-white font-black hover:text-primary-300 hover:underline drop-shadow-md transition-colors relative z-30 pointer-events-auto">
                                 返回登录
                             </Link>
                         </p>

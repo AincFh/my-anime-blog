@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { GlassCard } from "~/components/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { useState, useMemo } from "react";
-import { Filter, SortDesc, Calendar, Star } from "lucide-react";
+import { Filter, SortDesc, Calendar, Star, X } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import type { Route } from "./+types/bangumi";
 
 /**
@@ -33,9 +34,8 @@ export async function loader({ context }: Route.LoaderArgs) {
       )
       .all();
 
-    return {
-      animes: animesResult.results || [],
-    };
+    let animes = animesResult.results || [];
+    return { animes };
   } catch (error) {
     console.error("Failed to fetch animes:", error);
     return { animes: [] };
@@ -70,12 +70,13 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 // 提取的单个番剧卡片组件
-function AnimeCardItem({ anime, index, config }: { anime: any, index: number, config: any }) {
+function AnimeCardItem({ anime, index, config, onClick }: { anime: any, index: number, config: any, onClick: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+      onClick={onClick}
       className="group cursor-pointer flex flex-col h-full relative"
     >
       {/* 修改卡片比例为 3/4 或 2/3 并增加苹果的轻薄边框和软高光反光效果 */}
@@ -144,6 +145,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
   const { animes } = loaderData || { animes: [] };
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"default" | "rating" | "date">("default");
+  const [selectedAnime, setSelectedAnime] = useState<any>(null);
 
   // Process data based on filter and sort
   const processedAnimes = useMemo(() => {
@@ -181,7 +183,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-20 md:pb-24 px-4 sm:px-6 lg:px-8">
       {/* 极简标题 */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -274,7 +276,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
                   {(statusAnimes as any[]).map((anime: any, index: number) => (
-                    <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} />
+                    <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} onClick={() => setSelectedAnime(anime)} />
                   ))}
                 </div>
               </motion.section>
@@ -286,18 +288,108 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
             {processedAnimes.map((anime: any, index: number) => {
               const status = anime.status || 'plan';
               const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.plan;
-              return <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} />;
+              return <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} onClick={() => setSelectedAnime(anime)} />;
             })}
           </div>
         )}
       </div>
 
       {animes.length === 0 && (
-        <div className="text-center text-slate-500 py-20">
-          <p className="text-xl mb-4">还没有番剧记录</p>
-          <p className="text-sm">去后台添加你的第一部番剧吧！</p>
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+            <span className="text-4xl opacity-50">📺</span>
+          </div>
+          <h3 className="text-2xl font-bold text-slate-700 dark:text-white mb-2">还未收录任何番剧</h3>
+          <p className="text-slate-500 max-w-sm">去后台添加你的第一部番剧吧！</p>
         </div>
       )}
+
+      {/* 沉浸式番剧详情视窗 */}
+      <AnimatePresence>
+        {selectedAnime && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-[env(safe-area-inset-bottom)]">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedAnime(null)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white dark:bg-[#0A0A0A] rounded-[32px] overflow-hidden shadow-2xl flex flex-col sm:flex-row z-10 border border-slate-200 dark:border-white/10"
+            >
+              {/* Cover Area */}
+              <div className="w-full sm:w-2/5 md:w-1/2 h-[30vh] sm:h-auto min-h-[250px] relative shrink-0">
+                <img 
+                  src={selectedAnime.cover_url} 
+                  alt={selectedAnime.title} 
+                  className="absolute inset-0 w-full h-full object-cover" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent sm:hidden" />
+                <button
+                  onClick={() => setSelectedAnime(null)}
+                  className="absolute top-4 right-4 sm:hidden p-2 bg-black/40 backdrop-blur-md border border-white/20 hover:bg-black/60 rounded-full transition-colors z-20 text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto relative flex flex-col selection:bg-blue-500/30">
+                <button
+                  onClick={() => setSelectedAnime(null)}
+                  className="hidden sm:block absolute top-6 right-6 p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors z-10"
+                >
+                  <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                </button>
+
+                <div className="mb-6 sm:mb-8 mt-2 sm:mt-0 relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`px-3 py-1 text-[11px] font-bold rounded-full uppercase tracking-wider ${
+                      (statusConfig as any)[selectedAnime.status]?.bgColor || 'bg-slate-100'
+                    } ${
+                      (statusConfig as any)[selectedAnime.status]?.color || 'text-slate-500'
+                    }`}>
+                      {(statusConfig as any)[selectedAnime.status]?.label || '未知状态'}
+                    </span>
+                    {selectedAnime.progress && (
+                      <span className="text-[13px] font-bold text-slate-400">
+                        {selectedAnime.progress}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+                    {selectedAnime.title}
+                  </h2>
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-400">
+                    <Calendar className="w-4 h-4 opacity-70" />
+                    {new Date(selectedAnime.created_at * 1000).toLocaleDateString()}
+                  </div>
+                </div>
+
+                {selectedAnime.rating && (
+                  <div className="mb-6 sm:mb-8 p-5 bg-slate-50 dark:bg-white/[0.03] rounded-2xl border border-slate-100 dark:border-white/5">
+                    <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">总体评价</div>
+                    <StarRating rating={selectedAnime.rating} />
+                  </div>
+                )}
+
+                <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  {selectedAnime.review ? (
+                    <p className="text-[15px] sm:text-[16px] whitespace-pre-wrap">{selectedAnime.review}</p>
+                  ) : (
+                    <p className="italic opacity-50">暂无任何评语留下...</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

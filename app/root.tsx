@@ -148,13 +148,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const themeSessionResolver = createDynamicThemeSessionResolver(secret, isProd);
   const { getTheme } = await themeSessionResolver(request);
 
-<<<<<<< HEAD
   let userPrefs = null;
   let musicPlaylistId = "13641046209"; // Fallback
   
-=======
-  let musicPlaylistId = "13641046209"; // Fallback
->>>>>>> fa3b8d87cdad5a01093a6a62cd98951ec745a581
   try {
     const settingsResult = await env.anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
     if (settingsResult && (settingsResult as any).config_json) {
@@ -167,7 +163,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // ignore
   }
 
-<<<<<<< HEAD
   try {
     const token = getSessionToken(request);
     if (token) {
@@ -186,23 +181,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     theme: getTheme(),
     musicPlaylistId,
     userPrefs
-=======
-  return {
-    theme: getTheme(),
-    musicPlaylistId
->>>>>>> fa3b8d87cdad5a01093a6a62cd98951ec745a581
   };
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
-<<<<<<< HEAD
   const { theme, musicPlaylistId, userPrefs } = loaderData;
   const [isMobile, setIsMobile] = useState(false);
-=======
-  const { theme, musicPlaylistId } = loaderData;
->>>>>>> fa3b8d87cdad5a01093a6a62cd98951ec745a581
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);

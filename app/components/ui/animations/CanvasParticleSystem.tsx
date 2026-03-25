@@ -39,7 +39,7 @@ const SAKURA_COLOR = 'rgba(255, 182, 193, 0.6)';
 export function CanvasParticleSystem({
     enableDust = true,
     enableSakura = true,
-    maxParticles = 30,
+    maxParticles = 120, // 显著提升樱花和星尘密度
 }: CanvasParticleSystemProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<Particle[]>([]);
