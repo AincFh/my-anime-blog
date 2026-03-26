@@ -104,7 +104,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto pt-[90px] md:pt-[120px] pb-24 md:pb-32 px-6 sm:px-10 lg:px-16 2xl:px-24">
+    <div className="w-full max-w-[1920px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-32 px-6 sm:px-10 lg:px-16 2xl:px-24">
       {/* Hero Section - 超广角巨幕沉浸系 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

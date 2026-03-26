@@ -114,7 +114,7 @@ export default function ArticlesPage() {
     };
 
     return (
-        <div className="w-full max-w-[1920px] mx-auto pt-[90px] md:pt-[120px] pb-24 md:pb-24 px-6 sm:px-10 lg:px-16 2xl:px-24">
+        <div className="w-full max-w-[1920px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-24 px-6 sm:px-10 lg:px-16 2xl:px-24">
             <div className="w-full mx-auto">
                 {/* 标题区域 - Apple HIG 纯黑白优雅字重 */}
                 <motion.div
