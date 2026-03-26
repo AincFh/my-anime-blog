@@ -100,7 +100,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
     const { articles, animes } = separateActivities();
 
     return (
-        <div ref={containerRef} className="w-full max-w-[1200px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-24 px-6 sm:px-10">
+        <div ref={containerRef} className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-24 px-6 sm:px-8 lg:px-12">
             {/* 极简标题 */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}

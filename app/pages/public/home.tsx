@@ -104,13 +104,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-32 px-6 sm:px-10 lg:px-16 2xl:px-24">
-      {/* Hero Section - 超广角巨幕沉浸系 */}
+    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-32 px-6 sm:px-8 lg:px-12">
+      {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-160px)] px-2 mb-20 md:mb-32 gap-16 lg:gap-12"
+        className="flex flex-col lg:flex-row items-center justify-between min-h-[60vh] px-2 mb-16 md:mb-24 gap-12 lg:gap-12"
       >
         {/* Left: 问候文本群 */}
         <div className="lg:w-1/2 text-left w-full">
