@@ -126,10 +126,10 @@ export const UI_CONSTANTS = {
     },
     // Live2D 看板娘配置
     live2d: {
-        modelPath: 'https://unpkg.com/live2d-widget-model-z16@1.0.5/assets/z16.model.json',
-        scriptSrc: 'https://cdn.jsdelivr.net/npm/live2d-widget@3.0.5/lib/L2Dwidget.min.js',
-        width: 180,
-        height: 350,
+        modelPath: 'https://fastly.jsdelivr.net/npm/live2d-widget-model-pio@1.0.5/assets/pio.model.json',
+        scriptSrc: 'https://fastly.jsdelivr.net/npm/live2d-widget@3.0.5/lib/L2Dwidget.min.js',
+        width: 160,
+        height: 320,
         opacity: {
             default: 0.95,
             hover: 1

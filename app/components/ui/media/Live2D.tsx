@@ -40,7 +40,7 @@ export function Live2D() {
                         position: 'right',
                         width: UI_CONSTANTS.live2d.width,
                         height: UI_CONSTANTS.live2d.height,
-                        hOffset: 30,
+                        hOffset: 0,
                         vOffset: -20,
                     },
                     mobile: { show: false },
@@ -51,8 +51,8 @@ export function Live2D() {
                     dialog: {
                         enable: true,
                         scripts: {
-                            welcome: ['长官好！舰队 Z16 就绪！', '前方海域看起来很安全呢！', '需要我为您记录些什么吗？'],
-                            click: ['哎呀！长官，突袭是不可以的！', '呜...不要一直盯着我看啦。', '全副武装！啊，什么都没有发生。', '长官有什么新指示吗？'],
+                            welcome: ['你好呀，我叫 Pio！', '这是哪里？感觉有很多好玩的东西呢~', '请问需要我为您调制魔药吗？'],
+                            click: ['哇！不要突然戳我啦~', '我的帽子歪了吗？', '我在这里，一直在看着你呢！', '今天也要有好心情哦！'],
                         },
                     },
                 };
