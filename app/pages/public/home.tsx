@@ -104,13 +104,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-32 md:pb-32 px-4 sm:px-6 lg:px-8">
-      {/* Hero Section - 沉浸式全屏首屏 */}
+    <div className="w-full max-w-[1920px] mx-auto pt-[90px] md:pt-[120px] pb-24 md:pb-32 px-6 sm:px-10 lg:px-16 2xl:px-24">
+      {/* Hero Section - 超广角巨幕沉浸系 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-14rem)] px-2 mb-20 md:mb-32 gap-16 lg:gap-8"
+        className="flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-160px)] px-2 mb-20 md:mb-32 gap-16 lg:gap-12"
       >
         {/* Left: 问候文本群 */}
         <div className="lg:w-1/2 text-left w-full">
@@ -218,7 +218,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8 md:gap-10 2xl:gap-12">
           {articles.map((article: any, index: number) => (
             <motion.div
               key={article.id}

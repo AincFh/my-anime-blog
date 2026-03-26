@@ -247,7 +247,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
-            <Live2D />
+            {/* 看板娘组件因加载链深层断层引发主理人反感，已被下令彻底全删退场 */}
             <OmniCommand />
             <AchievementSystem />
           </DelayedSuspense>

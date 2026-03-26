@@ -31,8 +31,8 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pt-safe pb-24 md:pt-20 md:pb-24 px-4 sm:px-6 lg:px-8">
-      {/* 标题 - 极简压实 */}
+    <div className="w-full max-w-[1920px] mx-auto pt-[90px] md:pt-[120px] pb-24 md:pb-36 px-6 sm:px-10 lg:px-16 2xl:px-24">
+      {/* Apple 极简标题流 */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
