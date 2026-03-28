@@ -233,10 +233,10 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
 
                     <div className="flex items-center gap-3">
                       {comment.status === "pending" && (
-                        <button onClick={() => handleAction(comment.id, "approve")} className="px-5 py-2.5 bg-emerald-500 text-black text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">APPROVE</button>
+                        <button onClick={() => handleAction(comment.id, "approve")} className="px-5 py-2.5 bg-emerald-500 text-black text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">通过审核</button>
                       )}
-                      <button onClick={() => handleAction(comment.id, "delete")} className="px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/20 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-red-500/20 transition-all">TERMINATE</button>
-                      <button className="px-5 py-2.5 bg-violet-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-violet-500 transition-all active:scale-95 shadow-lg shadow-violet-500/20">ENCRYPT_REFLY</button>
+                      <button onClick={() => handleAction(comment.id, "delete")} className="px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/20 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-red-500/20 transition-all">物理删除</button>
+                      <button onClick={() => handleAction(comment.id, "markSpam")} className="px-5 py-2.5 bg-violet-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-violet-500 transition-all active:scale-95 shadow-lg shadow-violet-500/20">标记垃圾</button>
                     </div>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl" />
               <h2 className="text-2xl font-black text-white italic tracking-tighter mb-8 flex items-center gap-4">
                 <ShieldAlert className="text-amber-500 w-8 h-8" />
-                Interaction Overwrite Protocol
+                交互覆写协议
               </h2>
               <fetcher.Form method="post" className="space-y-6">
                 <input type="hidden" name="intent" value="godModeEdit" />
@@ -263,17 +263,17 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">Author Name (Spoofable)</label>
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">作者名称</label>
                     <input name="author" defaultValue={editingComment.author} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">Content Payload (Deep Edit)</label>
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">评论内容</label>
                     <textarea name="content" defaultValue={editingComment.content} rows={5} className="w-full bg-white/5 border border-white/10 rounded-3xl px-6 py-4 text-white/80 text-sm leading-relaxed resize-none focus:border-amber-500/40" />
                   </div>
                 </div>
 
                 <button type="submit" className="w-full py-5 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-[0.3em] hover:bg-amber-400 transition-all shadow-2xl">
-                  Finalize Protocol Injection
+                  保存修改
                 </button>
               </fetcher.Form>
             </motion.div>

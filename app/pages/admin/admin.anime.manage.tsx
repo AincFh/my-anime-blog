@@ -109,6 +109,19 @@ export async function action({ request, context }: Route.ActionArgs) {
                 .run();
 
             return { success: true };
+        } else if (action === "update") {
+            const id = formData.get("id") as string;
+            const status = formData.get("status") as string;
+            const progress = formData.get("progress") as string;
+            const rating = formData.get("rating") ? parseInt(formData.get("rating") as string) : null;
+            const review = formData.get("review") as string;
+
+            await anime_db
+                .prepare("UPDATE animes SET status = ?, progress = ?, rating = ?, review = ? WHERE id = ?")
+                .bind(status, progress || null, rating, review || null, id)
+                .run();
+
+            return { success: true };
         } else if (action === "delete") {
             const id = formData.get("id") as string;
             await anime_db
@@ -170,7 +183,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
         watching: "bg-blue-100 text-blue-700 border-blue-200",
         completed: "bg-green-100 text-green-700 border-green-200",
         plan: "bg-purple-100 text-purple-700 border-purple-200",
-        dropped: "bg-gray-100 text-gray-700 border-gray-200",
+        dropped: "bg-white/10 text-white/80 font-bold border-white/10",
     };
 
     const defaultRadarData = {
@@ -289,14 +302,14 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                 transition={{ duration: 0.3 }}
             >
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">番剧记录</h1>
+                    <h1 className="text-3xl font-bold text-white font-bold">番剧记录</h1>
                     <div className="flex items-center gap-4">
                         <input
                             type="text"
                             placeholder="🔍 搜索番剧..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold placeholder-gray-400 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
                         />
                         <motion.button
                             onClick={() => {
@@ -316,16 +329,16 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                 <AnimatePresence>
                     {showForm && (
                         <motion.div
-                            className="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-100"
+                            className="bg-[#0f111a] rounded-2xl p-6 mb-8 shadow-sm border border-white/5"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-800">录入新番</h2>
+                                <h2 className="text-xl font-bold text-white font-bold">录入新番</h2>
                                 <button
                                     onClick={() => setShowForm(false)}
-                                    className="p-2 hover:bg-gray-100 rounded-full"
+                                    className="p-2 hover:bg-white/10 rounded-full"
                                 >
                                     <X size={20} />
                                 </button>
@@ -333,18 +346,18 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                             {/* Bangumi 搜索框 */}
                             <div className="mb-6 relative">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-white/80 font-bold mb-2">
                                     从 Bangumi 搜索（输入番剧名称自动填充）
                                 </label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={18} />
                                     <input
                                         type="text"
                                         value={bangumiQuery}
                                         onChange={(e) => setBangumiQuery(e.target.value)}
                                         onFocus={() => bangumiResults.length > 0 && setShowBangumiDropdown(true)}
                                         placeholder="搜索 Bangumi 番剧..."
-                                        className="w-full pl-10 pr-10 py-3 bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl text-gray-800 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                                        className="w-full pl-10 pr-10 py-3 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-2 border-violet-500/20 rounded-xl text-white font-bold focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
                                     />
                                     {isSearching && (
                                         <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 animate-spin" size={18} />
@@ -356,13 +369,13 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-200 max-h-80 overflow-y-auto"
+                                        className="absolute z-50 w-full mt-2 bg-[#0f111a] rounded-xl shadow-xl border border-white/10 max-h-80 overflow-y-auto"
                                     >
                                         {bangumiResults.map((item) => (
                                             <div
                                                 key={item.id}
                                                 onClick={() => handleSelectBangumi(item)}
-                                                className="flex items-center gap-3 p-3 hover:bg-pink-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                                className="flex items-center gap-3 p-3 hover:bg-pink-50 cursor-pointer border-b border-white/5 last:border-0"
                                             >
                                                 {item.images?.small ? (
                                                     <img
@@ -371,18 +384,18 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                         className="w-12 h-16 object-cover rounded-lg"
                                                     />
                                                 ) : (
-                                                    <div className="w-12 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                                                        <Film size={20} className="text-gray-400" />
+                                                    <div className="w-12 h-16 bg-white/10 rounded-lg flex items-center justify-center">
+                                                        <Film size={20} className="text-white/30" />
                                                     </div>
                                                 )}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-bold text-gray-800 truncate">
+                                                    <p className="font-bold text-white font-bold truncate">
                                                         {item.name_cn || item.name}
                                                     </p>
                                                     {item.name_cn && item.name !== item.name_cn && (
-                                                        <p className="text-xs text-gray-500 truncate">{item.name}</p>
+                                                        <p className="text-xs text-white/40 truncate">{item.name}</p>
                                                     )}
-                                                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                                    <div className="flex items-center gap-3 mt-1 text-xs text-white/40">
                                                         {item.air_date && (
                                                             <span className="flex items-center gap-1">
                                                                 <Calendar size={12} />
@@ -405,7 +418,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                             {/* 选中的番剧预览 */}
                             {selectedBangumi && (
-                                <div className="mb-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl border border-pink-200">
+                                <div className="mb-6 p-4 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-xl border border-violet-500/20">
                                     <div className="flex items-start gap-4">
                                         {formData.cover_url && (
                                             <img
@@ -415,18 +428,18 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                             />
                                         )}
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-lg text-gray-800">{formData.title}</h3>
+                                            <h3 className="font-bold text-lg text-white font-bold">{formData.title}</h3>
                                             {formData.name_jp && formData.name_jp !== formData.title && (
-                                                <p className="text-sm text-gray-500">{formData.name_jp}</p>
+                                                <p className="text-sm text-white/40">{formData.name_jp}</p>
                                             )}
                                             <div className="flex flex-wrap gap-2 mt-2 text-xs">
                                                 {formData.air_date && (
-                                                    <span className="px-2 py-1 bg-white rounded-full text-gray-600">
+                                                    <span className="px-2 py-1 bg-[#0f111a] rounded-full text-white/60">
                                                         📅 {formData.air_date}
                                                     </span>
                                                 )}
                                                 {formData.total_episodes && (
-                                                    <span className="px-2 py-1 bg-white rounded-full text-gray-600">
+                                                    <span className="px-2 py-1 bg-[#0f111a] rounded-full text-white/60">
                                                         🎬 {formData.total_episodes} 集
                                                     </span>
                                                 )}
@@ -442,12 +455,12 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                 )}
                                             </div>
                                             {formData.summary && (
-                                                <p className="mt-2 text-sm text-gray-600 line-clamp-3">{formData.summary}</p>
+                                                <p className="mt-2 text-sm text-white/60 line-clamp-3">{formData.summary}</p>
                                             )}
                                         </div>
                                         <button
                                             onClick={resetForm}
-                                            className="p-1 hover:bg-white rounded-full"
+                                            className="p-1 hover:bg-[#0f111a] rounded-full"
                                         >
                                             <X size={16} />
                                         </button>
@@ -475,14 +488,14 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                         placeholder="番剧名称"
-                                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
                                     />
                                     <select
                                         name="status"
                                         required
                                         value={formData.status}
                                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
                                     >
                                         <option value="watching">在看</option>
                                         <option value="completed">看过</option>
@@ -497,7 +510,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                         value={formData.progress}
                                         onChange={(e) => setFormData({ ...formData, progress: e.target.value })}
                                         placeholder={`进度 (如: 0/${formData.total_episodes || "24"})`}
-                                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
                                     />
                                     <input
                                         type="number"
@@ -507,9 +520,9 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                         value={formData.rating}
                                         onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
                                         placeholder="我的评分 (1-10)"
-                                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
                                     />
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <div className="flex items-center gap-2 text-sm text-white/40">
                                         {formData.bangumi_score && (
                                             <span className="flex items-center gap-1">
                                                 Bangumi: <Star size={14} className="text-yellow-500" fill="currentColor" />
@@ -524,7 +537,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                     value={formData.review}
                                     onChange={(e) => setFormData({ ...formData, review: e.target.value })}
                                     placeholder="短评..."
-                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
                                 />
                                 <div className="flex gap-3">
                                     <motion.button
@@ -539,7 +552,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                     <button
                                         type="button"
                                         onClick={() => setShowForm(false)}
-                                        className="px-6 py-2 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200"
+                                        className="px-6 py-2 bg-white/10 text-white/60 rounded-xl font-medium hover:bg-white/20"
                                     >
                                         取消
                                     </button>
@@ -551,7 +564,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                 {/* 海报墙模式 */}
                 <div>
-                    <h2 className="text-xl font-bold mb-6 text-gray-800">我的收藏架</h2>
+                    <h2 className="text-xl font-bold mb-6 text-white font-bold">我的收藏架</h2>
                     {animes && animes.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {animes
@@ -561,7 +574,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                 .map((anime: any, index: number) => (
                                     <motion.div
                                         key={anime.id}
-                                        className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer group"
+                                        className="bg-[#0f111a] rounded-2xl overflow-hidden shadow-sm border border-white/5 cursor-pointer group"
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.05 }}
@@ -576,7 +589,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                         }}
                                     >
                                         {/* 封面 */}
-                                        <div className="aspect-[3/4] bg-gray-100 overflow-hidden relative">
+                                        <div className="aspect-[3/4] bg-white/10 overflow-hidden relative">
                                             {anime.cover_url ? (
                                                 <OptimizedImage
                                                     src={anime.cover_url}
@@ -585,7 +598,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                     width={300}
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                <div className="w-full h-full flex items-center justify-center text-white/30">
                                                     🎬
                                                 </div>
                                             )}
@@ -608,10 +621,10 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                                         {/* 信息 */}
                                         <div className="p-4">
-                                            <h3 className="font-bold text-gray-800 mb-1 line-clamp-2">
+                                            <h3 className="font-bold text-white font-bold mb-1 line-clamp-2">
                                                 {anime.title}
                                             </h3>
-                                            <div className="flex items-center justify-between text-sm text-gray-500">
+                                            <div className="flex items-center justify-between text-sm text-white/40">
                                                 {anime.rating && (
                                                     <span className="text-yellow-500 font-mono">
                                                         ★ {anime.rating}/10
@@ -622,14 +635,14 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                 )}
                                             </div>
                                             {anime.studio && (
-                                                <p className="text-xs text-gray-400 mt-1 truncate">{anime.studio}</p>
+                                                <p className="text-xs text-white/30 mt-1 truncate">{anime.studio}</p>
                                             )}
                                         </div>
                                     </motion.div>
                                 ))}
                         </div>
                     ) : (
-                        <div className="text-center text-gray-500 py-16 bg-white rounded-2xl border border-gray-100">
+                        <div className="text-center text-white/40 py-16 bg-[#0f111a] rounded-2xl border border-white/5">
                             <p className="text-lg mb-2">收藏架还是空的</p>
                             <p className="text-sm">点击"录入新番"开始收藏吧！</p>
                         </div>
@@ -650,7 +663,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                             />
                             {/* 抽屉 */}
                             <motion.div
-                                className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 overflow-y-auto"
+                                className="fixed right-0 top-0 h-full w-full md:w-96 bg-[#0f111a] border-l border-white/10 backdrop-blur-3xl shadow-2xl z-50 overflow-y-auto"
                                 initial={{ x: "100%" }}
                                 animate={{ x: 0 }}
                                 exit={{ x: "100%" }}
@@ -658,10 +671,10 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                             >
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-2xl font-bold text-gray-800">番剧详情</h2>
+                                        <h2 className="text-2xl font-bold text-white font-bold">番剧详情</h2>
                                         <motion.button
                                             onClick={() => setSelectedAnime(null)}
-                                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                                            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                         >
@@ -682,31 +695,31 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                                     <div className="space-y-4">
                                         <div>
-                                            <h3 className="text-xl font-bold text-gray-800">{selectedAnime.title}</h3>
+                                            <h3 className="text-xl font-bold text-white font-bold">{selectedAnime.title}</h3>
                                             {selectedAnime.name_jp && selectedAnime.name_jp !== selectedAnime.title && (
-                                                <p className="text-sm text-gray-500">{selectedAnime.name_jp}</p>
+                                                <p className="text-sm text-white/40">{selectedAnime.name_jp}</p>
                                             )}
                                         </div>
 
                                         {/* Bangumi 信息 */}
                                         <div className="flex flex-wrap gap-2 text-xs">
                                             {selectedAnime.air_date && (
-                                                <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                                                <span className="px-2 py-1 bg-white/10 rounded-full text-white/60">
                                                     📅 {selectedAnime.air_date}
                                                 </span>
                                             )}
                                             {selectedAnime.total_episodes && (
-                                                <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                                                <span className="px-2 py-1 bg-white/10 rounded-full text-white/60">
                                                     🎬 {selectedAnime.total_episodes} 集
                                                 </span>
                                             )}
                                             {selectedAnime.bangumi_score && (
-                                                <span className="px-2 py-1 bg-yellow-100 rounded-full text-yellow-700">
+                                                <span className="px-2 py-1 bg-yellow-500/20 rounded-full text-yellow-400 border border-yellow-500/30">
                                                     ★ Bangumi {selectedAnime.bangumi_score}
                                                 </span>
                                             )}
                                             {selectedAnime.studio && (
-                                                <span className="px-2 py-1 bg-blue-100 rounded-full text-blue-700">
+                                                <span className="px-2 py-1 bg-blue-500/20 rounded-full text-blue-400 border border-blue-500/30">
                                                     🏢 {selectedAnime.studio}
                                                 </span>
                                             )}
@@ -714,22 +727,22 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                                         {selectedAnime.summary && (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">简介</label>
-                                                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-xl">
+                                                <label className="block text-sm font-medium text-white/80 font-bold mb-2">简介</label>
+                                                <p className="text-sm text-white/60 bg-white/5 p-3 rounded-xl">
                                                     {selectedAnime.summary}
                                                 </p>
                                             </div>
                                         )}
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">状态</label>
+                                            <label className="block text-sm font-medium text-white/80 font-bold mb-2">状态</label>
                                             <span className={`px-3 py-1 rounded-lg text-sm font-bold border ${statusColors[selectedAnime.status]}`}>
                                                 {statusLabels[selectedAnime.status]}
                                             </span>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">进度</label>
+                                            <label className="block text-sm font-medium text-white/80 font-bold mb-2">进度</label>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-lg font-mono">{selectedAnime.progress || "0/?"}</span>
                                                 {selectedAnime.status === "watching" && selectedAnime.progress && (
@@ -743,54 +756,109 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
 
                                         {selectedAnime.rating && (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">我的评分</label>
+                                                <label className="block text-sm font-medium text-white/80 font-bold mb-2">我的评分</label>
                                                 <span className="text-2xl font-bold text-yellow-500">★ {selectedAnime.rating}/10</span>
                                             </div>
                                         )}
 
                                         {/* 雷达图评测 */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-4">
+                                            <label className="block text-sm font-medium text-white/80 font-bold mb-4">
                                                 雷达图评测
                                             </label>
-                                            <div className="bg-gray-50 rounded-xl p-4">
+                                            <div className="bg-white/5 rounded-xl p-4">
                                                 <RadarChart data={radarData} size={200} />
                                             </div>
                                         </div>
 
                                         {selectedAnime.review && (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">短评</label>
-                                                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-xl italic">
+                                                <label className="block text-sm font-medium text-white/80 font-bold mb-2">短评</label>
+                                                <p className="text-sm text-white/60 bg-white/5 p-3 rounded-xl italic">
                                                     "{selectedAnime.review}"
                                                 </p>
                                             </div>
                                         )}
 
-                                        <div className="flex gap-3 pt-4">
-                                            <Form method="post">
-                                                <input type="hidden" name="_action" value="delete" />
-                                                <input type="hidden" name="id" value={selectedAnime.id} />
-                                                <motion.button
-                                                    type="submit"
-                                                    className="px-4 py-2 bg-red-500 text-white rounded-xl font-medium"
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        const res = await confirmModal({ title: "危险操作", message: "确定要删除这部番剧吗？" });
-                                                        if (res) {
-                                                            setSelectedAnime(null);
-                                                            const formData = new FormData();
-                                                            formData.append("_action", "delete");
-                                                            formData.append("id", selectedAnime.id.toString());
-                                                            submit(formData, { method: "post" });
-                                                        }
-                                                    }}
+                                        {/* 编辑表单 */}
+                                        <Form method="post" className="space-y-4 pt-4 border-t border-white/10">
+                                            <input type="hidden" name="_action" value="update" />
+                                            <input type="hidden" name="id" value={selectedAnime.id} />
+
+                                            <div>
+                                                <label className="block text-[10px] font-black text-white/30 uppercase tracking-widest mb-1.5">观看状态</label>
+                                                <select
+                                                    name="status"
+                                                    defaultValue={selectedAnime.status}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-violet-500/50 outline-none transition-all appearance-none"
                                                 >
-                                                    删除
-                                                </motion.button>
-                                            </Form>
+                                                    <option value="watching" className="bg-[#0f111a]">在看</option>
+                                                    <option value="completed" className="bg-[#0f111a]">已看</option>
+                                                    <option value="planned" className="bg-[#0f111a]">想看</option>
+                                                    <option value="dropped" className="bg-[#0f111a]">抛弃</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[10px] font-black text-white/30 uppercase tracking-widest mb-1.5">观看进度</label>
+                                                <input
+                                                    name="progress"
+                                                    defaultValue={selectedAnime.progress || ""}
+                                                    placeholder="例如 6/12"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-violet-500/50 outline-none transition-all"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[10px] font-black text-white/30 uppercase tracking-widest mb-1.5">我的评分 (1-10)</label>
+                                                <input
+                                                    name="rating"
+                                                    type="number"
+                                                    min="1"
+                                                    max="10"
+                                                    defaultValue={selectedAnime.rating || ""}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-yellow-400 font-bold text-sm focus:border-yellow-500/50 outline-none transition-all"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[10px] font-black text-white/30 uppercase tracking-widest mb-1.5">短评</label>
+                                                <textarea
+                                                    name="review"
+                                                    defaultValue={selectedAnime.review || ""}
+                                                    rows={2}
+                                                    placeholder="写点什么..."
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-violet-500/50 outline-none transition-all resize-none"
+                                                />
+                                            </div>
+
+                                            <motion.button
+                                                type="submit"
+                                                className="w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all"
+                                                whileTap={{ scale: 0.98 }}
+                                            >
+                                                保存修改
+                                            </motion.button>
+                                        </Form>
+
+                                        <div className="flex gap-3 pt-2">
+                                            <motion.button
+                                                className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl font-medium text-sm"
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={async () => {
+                                                    const res = await confirmModal({ title: "危险操作", message: "确定要删除这部番剧吗？" });
+                                                    if (res) {
+                                                        setSelectedAnime(null);
+                                                        const formData = new FormData();
+                                                        formData.append("_action", "delete");
+                                                        formData.append("id", selectedAnime.id.toString());
+                                                        submit(formData, { method: "post" });
+                                                    }
+                                                }}
+                                            >
+                                                删除番剧
+                                            </motion.button>
                                         </div>
                                     </div>
                                 </div>

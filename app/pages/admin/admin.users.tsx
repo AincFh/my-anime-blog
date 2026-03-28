@@ -63,17 +63,27 @@ export async function action({ request, context }: Route.ActionArgs) {
         const level = parseInt(formData.get("level") as string);
         const exp = parseInt(formData.get("exp") as string);
         const coins = parseInt(formData.get("coins") as string);
-        const newUserId = parseInt(formData.get("id") as string);
+        const username = formData.get("username") as string;
+        const email = formData.get("email") as string;
 
         try {
             await anime_db.prepare(`
                 UPDATE users SET 
-                level = ?, exp = ?, coins = ?, id = ?
+                level = ?, exp = ?, coins = ?, username = ?, email = ?
                 WHERE id = ?
-            `).bind(level, exp, coins, newUserId, userId).run();
-            return { success: true, message: "上帝指令已下达：用户资产已强行覆盖" };
+            `).bind(level, exp, coins, username, email, userId).run();
+            return { success: true, message: "上帝指令已下达：用户核心数据已强行覆盖" };
         } catch (e: any) {
             return { success: false, error: "数据修正失败: " + e.message };
+        }
+    }
+
+    if (intent === "deleteUser") {
+        try {
+            await anime_db.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
+            return { success: true, message: "极刑下达：已将该旅行者从时间线中物理抹除" };
+        } catch (e: any) {
+            return { success: false, error: "抹除失败: 具有被依赖的外键关联(可能留有评论等)" };
         }
     }
 
@@ -131,12 +141,18 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
     const [godModeUser, setGodModeUser] = useState<any | null>(null);
     const fetcher = useFetcher();
 
-    // 状态自动清理
+    // 状态自动清理与结果反馈
     useEffect(() => {
         if (fetcher.state === "idle" && fetcher.data) {
-            setShowAddModal(false);
-            setResetPasswordId(null);
-            setGodModeUser(null);
+            const data = fetcher.data as any;
+            if (data.error || !data.success) {
+                alert("🚨 指令执行失败: " + (data.error || data.message || "未知异常"));
+            } else if (data.success) {
+                alert("✅ " + data.message);
+                setShowAddModal(false);
+                setResetPasswordId(null);
+                setGodModeUser(null);
+            }
         }
     }, [fetcher.state, fetcher.data]);
 
@@ -248,8 +264,12 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-white/40 uppercase">User ID (Atomic)</label>
-                                        <input name="id" type="number" defaultValue={godModeUser.id} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-xs" />
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Username</label>
+                                        <input name="username" type="text" defaultValue={godModeUser.username} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Email</label>
+                                        <input name="email" type="email" defaultValue={godModeUser.email} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" />
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-bold text-white/40 uppercase">Level</label>
@@ -416,8 +436,16 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                                                         <Shield size={16} />
                                                     </button>
 
-                                                    <button className="p-2 text-white/20 hover:text-white transition-colors">
-                                                        <MoreVertical size={16} />
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm('警告：此操作不可逆转！是否将该玩家从时间线中彻底抹除？')) {
+                                                                handleAction(user.id, "deleteUser");
+                                                            }
+                                                        }}
+                                                        className="p-2 rounded-xl border bg-black/40 text-red-600 border-red-900/50 hover:bg-red-950 transition-all ml-4"
+                                                        title="物理抹除"
+                                                    >
+                                                        <CloseIcon size={16} />
                                                     </button>
                                                 </div>
                                             </td>

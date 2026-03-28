@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, Outlet, useLocation, redirect } from "react-router";
 import type { Route } from "./+types/admin";
 import { useState, useEffect } from "react";
-import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, LogOut, ChevronRight, BarChart3, Users, Trophy, ShoppingBag, Crown, ShieldAlert, Zap, Globe } from "lucide-react";
+import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, LogOut, ChevronRight, BarChart3, Users, Trophy, ShoppingBag, Crown, ShieldAlert, Zap, Globe, Eye, Heart } from "lucide-react";
 import { AdminMusicPlayer } from "~/components/admin/AdminMusicPlayer";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -156,13 +156,13 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="flex h-[100dvh] bg-[#0a0e1a] overflow-hidden font-sans text-white/90">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-72 flex-col bg-[#0f1629]/80 backdrop-blur-3xl border-r border-violet-500/20 z-30">
+      {/* Desktop Sidebar (lg screens and up) */}
+      <aside className="hidden lg:flex w-72 flex-col bg-[#0f1629]/80 backdrop-blur-3xl border-r border-violet-500/20 z-30">
         <SidebarContent pathname={location.pathname} musicPlaylistId={musicPlaylistId} />
       </aside>
 
-      {/* Mobile Top Navbar */}
-      <header className="md:hidden fixed top-0 w-full h-16 bg-[#0f1629]/90 backdrop-blur-xl border-b border-violet-500/20 z-40 flex items-center justify-between px-4">
+      {/* Mobile & Tablet Top Navbar */}
+      <header className="lg:hidden fixed top-0 w-full h-16 bg-[#0f1629]/90 backdrop-blur-xl border-b border-violet-500/20 z-40 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-violet-500/30">
             A
@@ -191,7 +191,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden fixed inset-0 z-30 pt-16 bg-[#0a0e1a]/95 backdrop-blur-3xl"
+            className="lg:hidden fixed inset-0 z-30 pt-16 bg-[#0a0e1a]/95 backdrop-blur-3xl"
           >
             <SidebarContent pathname={location.pathname} musicPlaylistId={musicPlaylistId} />
           </motion.div>
@@ -205,8 +205,8 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
           <div className="flex items-center gap-5 pointer-events-auto">
             <div className="flex items-center gap-3 pr-5 border-r border-white/10">
               <div className="text-right hidden lg:block">
-                <div className="text-sm font-semibold text-white">Administrator</div>
-                <div className="text-[10px] text-emerald-400 font-mono">System Active</div>
+                <div className="text-sm font-semibold text-white">管理员</div>
+                <div className="text-[10px] text-emerald-400 font-mono">系统在线</div>
               </div>
               <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-violet-500/30 flex items-center justify-center overflow-hidden">
                 <img src="https://api.dicebear.com/7.x/notionists/svg?seed=admin" alt="avatar" className="w-full h-full object-cover" />
@@ -242,7 +242,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                   <div className="space-y-3">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400">
                       <Home size={14} />
-                      <span className="text-xs font-bold tracking-widest uppercase">System Overview</span>
+                      <span className="text-xs font-bold tracking-widest uppercase">系统概览</span>
                     </div>
                     <h1 className="text-5xl sm:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 font-orbitron drop-shadow-lg">
                       控制台枢纽
@@ -267,10 +267,10 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
 
                   {/* Top Stats - spans 12 cols, grid of 4 */}
                   <div className="col-span-1 md:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    <StatCard title="总访问量" value={displayStats.pv} color="bg-blue-500" icon="👁️" trend={godMode?.enabled ? "GOD ACTIVE" : "+12.5%"} trendUp={true} />
-                    <StatCard title="总用户数" value={displayStats.users} color="bg-purple-500" icon="👤" trend={godMode?.enabled ? "GOD ACTIVE" : "+5"} trendUp={true} />
-                    <StatCard title="实时在线" value={displayStats.online} color="bg-orange-500" icon="⚡" trend="LIVE" trendUp={true} />
-                    <StatCard title="点赞数" value={stats.likes} color="bg-pink-500" icon="❤️" trend="+28%" trendUp={true} />
+                    <StatCard title="总访问量" value={displayStats.pv} color="bg-blue-500" icon={<Eye size={20} />} trend={godMode?.enabled ? "已激活" : "+12.5%"} trendUp={true} />
+                    <StatCard title="总用户数" value={displayStats.users} color="bg-purple-500" icon={<Users size={20} />} trend={godMode?.enabled ? "已激活" : "+5"} trendUp={true} />
+                    <StatCard title="实时在线" value={displayStats.online} color="bg-orange-500" icon={<Zap size={20} />} trend="LIVE" trendUp={true} />
+                    <StatCard title="点赞数" value={stats.likes} color="bg-pink-500" icon={<Heart size={20} />} trend="+28%" trendUp={true} />
                   </div>
 
                   {/* God Mode Dashboard Module */}
@@ -283,21 +283,21 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                             <ShieldAlert size={32} />
                           </div>
                           <div>
-                            <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase">God Command Center Active</h2>
-                            <p className="text-amber-500/70 text-sm font-mono mt-0.5">正在执行系统级数据伪造协议 (Data Spoofing Protocols)...</p>
+                            <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase">上帝指令中心已激活</h2>
+                            <p className="text-amber-500/70 text-sm font-mono mt-0.5">正在执行系统级数据伪装协议...</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
                           <div className="px-5 py-3 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center min-w-[120px]">
-                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">PV Injection</span>
+                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">PV 注入</span>
                             <span className="text-xl font-black text-emerald-400 font-mono">+{godMode.fake_total_views_offset}</span>
                           </div>
                           <div className="px-5 py-3 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center min-w-[120px]">
-                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">User Inflat</span>
+                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">用户膨胀</span>
                             <span className="text-xl font-black text-blue-400 font-mono">+{godMode.fake_user_count_offset}</span>
                           </div>
                           <div className="px-5 py-3 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center min-w-[120px]">
-                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Sim Online</span>
+                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">模拟在线</span>
                             <span className="text-xl font-black text-amber-500 font-mono">{godMode.simulated_online_users_min}-{godMode.simulated_online_users_max}</span>
                           </div>
                         </div>
@@ -415,7 +415,7 @@ function StatCard({ title, value, color, icon, trend, trendUp }: {
   title: string;
   value: string | number;
   color: string;
-  icon: string;
+  icon: React.ReactNode;
   trend?: string;
   trendUp?: boolean;
 }) {
@@ -424,7 +424,7 @@ function StatCard({ title, value, color, icon, trend, trendUp }: {
       <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${color.replace('bg-', 'from-').replace('-500', '-500/10')} to-transparent rounded-bl-[100px] -mr-8 -mt-8 transition-transform duration-700 group-hover:scale-110`} />
 
       <div className="flex items-center justify-between mb-6 relative z-10">
-        <div className={`w-12 h-12 rounded-2xl ${color} bg-opacity-10 text-white flex items-center justify-center text-xl shadow-inner border border-white/10 backdrop-blur-md`}>
+        <div className={`w-12 h-12 rounded-2xl ${color} bg-opacity-10 text-white flex items-center justify-center shadow-inner border border-white/10 backdrop-blur-md`}>
           {icon}
         </div>
         {trend && (

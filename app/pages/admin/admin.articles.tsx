@@ -4,6 +4,7 @@ import type { Route } from "./+types/admin.articles";
 import { getSessionId } from "~/utils/auth";
 import { Edit3, Trash2, Eye, Calendar, Plus, FileText, Search, Filter, CheckCircle2, Circle, ShieldAlert, Heart, Loader2 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
+import { confirmModal } from "~/components/ui/Modal";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = getSessionId(request);
@@ -168,7 +169,7 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
                   : "bg-amber-500/20 text-amber-400 border border-amber-500/20"
                   }`}>
-                  {article.status === "published" ? "Live" : "Ghost"}
+                  {article.status === "published" ? "已发布" : "草稿"}
                 </span>
 
                 <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all translate-x-2 md:translate-x-4 group-hover:translate-x-0">
@@ -178,7 +179,19 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
                   <Link to={`/admin/article/new?edit=${article.id}`} className="p-2 text-white/40 hover:text-violet-400 hover:bg-violet-500/10 rounded-xl transition-all">
                     <Edit3 size={16} />
                   </Link>
-                  <button className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                  <button
+                    onClick={() => {
+                      confirmModal({ title: "危险操作", message: `确定要永久删除「${article.title}」吗？此操作不可撤销。` }).then(res => {
+                        if (res) {
+                          const formData = new FormData();
+                          formData.append("intent", "delete");
+                          formData.append("articleId", article.id.toString());
+                          fetcher.submit(formData, { method: "POST" });
+                        }
+                      });
+                    }}
+                    className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -215,7 +228,7 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md bg-[#0f111a] border border-white/10 rounded-[32px] p-8 relative z-10 shadow-2xl">
               <h2 className="text-xl font-black text-white italic uppercase tracking-tighter mb-6 flex items-center gap-3">
                 <ShieldAlert className="text-amber-500" />
-                Stat Protocol Overwrite
+                热度数据修正
               </h2>
               <fetcher.Form method="post" className="space-y-6">
                 <input type="hidden" name="intent" value="dataCorrection" />
@@ -223,17 +236,17 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">Page Views (Atomic)</label>
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">页面浏览量 (PV)</label>
                     <input name="views" type="number" defaultValue={correctionTarget.views} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white font-mono" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">Total Likes (Artificial)</label>
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">点赞总数</label>
                     <input name="likes" type="number" defaultValue={correctionTarget.likes || 0} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-pink-400 font-mono" />
                   </div>
                 </div>
 
                 <button type="submit" className="w-full py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-amber-400 transition-all shadow-xl active:scale-[0.98]">
-                  Authorize Data Correction
+                  执行数据修正
                 </button>
               </fetcher.Form>
             </motion.div>
