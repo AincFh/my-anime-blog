@@ -84,7 +84,7 @@ export async function loader({ request, context }: { request: Request; context: 
       hasSignedIn: !!signInRecord,
       consecutiveDays: (streakResult as any)?.streak || 0,
     },
-    missions
+    missions: missions || []
   };
 }
 

@@ -33,7 +33,7 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
     } catch (e) { }
 
     return (
-        <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none z-20">
+        <div className="fixed top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none z-[60]">
             {/* 左上角：玩家信息 */}
             <motion.div
                 className="flex items-center gap-4 pointer-events-auto"

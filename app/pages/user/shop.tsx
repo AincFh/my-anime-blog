@@ -209,7 +209,7 @@ export default function ShopPage() {
             </ClientOnly>
             <NavMenu />
 
-            <div className="w-full max-w-[1400px] mx-auto pt-24 md:pt-32 pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col gap-8 min-h-screen">
+            <div className="w-full h-screen overflow-y-auto pt-24 md:pt-32 pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col gap-8 scroll-smooth">
                 <div className="w-full h-full flex flex-col gap-8">
                     {/* Header & Tabs - iOS 风格净化 */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
