@@ -31,7 +31,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-36 px-6 sm:px-8 lg:px-12">
+    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-32 lg:pb-36 px-4 md:px-6 lg:px-10 xl:px-12">
       {/* Apple 极简标题流 */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -39,10 +39,10 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="mb-12 md:mb-16"
       >
-        <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+        <h1 className="text-4xl md:text-5xl lg:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
           相册
         </h1>
-        <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
+        <p className="text-lg md:text-xl lg:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
           生活切片与沿途风景
         </p>
       </motion.div>

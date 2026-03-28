@@ -187,6 +187,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function App({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
+  const isAuth = location.pathname.startsWith("/login") || location.pathname.startsWith("/register") || location.pathname.startsWith("/forgot-password");
   const { theme, musicPlaylistId, userPrefs } = loaderData;
   const [isMobile, setIsMobile] = useState(false);
 
@@ -235,6 +236,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <AdminLayout>
           <Outlet />
         </AdminLayout>
+      ) : isAuth ? (
+        // 独立纯粹渲染：避免 Auth 页面加载 PublicLayout（防 Padding 和主题色嵌套污染）
+        <Outlet />
       ) : (
         <div className="public-layout-wrapper">
           <PublicLayout>

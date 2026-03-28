@@ -183,7 +183,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-24 px-6 sm:px-8 lg:px-12">
+    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-40 lg:pb-24 px-4 md:px-6 lg:px-10 xl:px-12">
       {/* 极简标题 */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -191,10 +191,10 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="mb-10 md:mb-16"
       >
-        <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+        <h1 className="text-4xl md:text-5xl lg:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
           番剧墙
         </h1>
-        <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
+        <p className="text-lg md:text-xl lg:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
           被框在屏幕里的二次元轨迹
         </p>
       </motion.div>
@@ -204,7 +204,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 mb-12"
+        className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 mb-12"
       >
         {/* 状态筛选 - iOS 风格切换器 */}
         <div className="flex overflow-x-auto hide-scrollbar p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-[20px] md:max-w-fit shadow-inner">
@@ -274,7 +274,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
                   {(statusAnimes as any[]).map((anime: any, index: number) => (
                     <AnimeCardItem key={anime.id} anime={anime} index={index} config={config} onClick={() => setSelectedAnime(anime)} />
                   ))}
@@ -284,7 +284,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
           })
         ) : (
           // 扁平视图 (排序后)
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
             {processedAnimes.map((anime: any, index: number) => {
               const status = anime.status || 'plan';
               const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.plan;

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * API: 用户登录
  * POST /api/auth/login
  */
@@ -17,8 +17,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     const formData = await request.formData();
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const email = (formData.get("email") as string)?.trim();
+    const password = (formData.get("password") as string)?.trim();
 
     if (!email || !password) {
       return Response.json(

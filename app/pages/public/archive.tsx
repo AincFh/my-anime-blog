@@ -100,7 +100,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
     const { articles, animes } = separateActivities();
 
     return (
-        <div ref={containerRef} className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-24 px-6 sm:px-8 lg:px-12">
+        <div ref={containerRef} className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-32 lg:pb-24 px-4 md:px-6 lg:px-10 xl:px-12">
             {/* 极简标题 */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -108,10 +108,10 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="mb-16 md:mb-24"
             >
-                <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
+                <h1 className="text-4xl md:text-5xl lg:text-7xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-3">
                     时光机
                 </h1>
-                <p className="text-xl md:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
+                <p className="text-lg md:text-xl lg:text-2xl font-medium text-slate-400 dark:text-slate-500 tracking-tight">
                     时光卷轴的印记
                 </p>
             </motion.div>

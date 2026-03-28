@@ -128,7 +128,7 @@ export function FloatingNav() {
                   prefetch="intent"
                   style={{ WebkitTapHighlightColor: "transparent" }}
                   className={`
-                    group relative block px-5 py-2 text-[15px] font-medium transition-colors duration-200 rounded-full z-10
+                    group relative block px-3 md:px-[10px] lg:px-5 py-2 text-sm lg:text-[15px] font-medium transition-colors duration-200 rounded-full z-10 whitespace-nowrap flex-shrink-0
                     /* 文字颜色逻辑 */
                     ${isActive ? "text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"}
                   `}
@@ -139,7 +139,7 @@ export function FloatingNav() {
                       return <Icon
                         size={16}
                         strokeWidth={isActive ? 2.5 : 2}
-                        className={isActive ? "" : "group-hover:scale-110 transition-transform duration-200"}
+                        className={isActive ? "w-4 h-4 lg:w-5 lg:h-5" : "w-4 h-4 lg:w-5 lg:h-5 group-hover:scale-110 transition-transform duration-200"}
                       />;
                     })()}
                     <span>{item.name}</span>
@@ -164,10 +164,10 @@ export function FloatingNav() {
           </div>
 
           {/* 分割线 */}
-          <div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-3 hidden md:block"></div>
+          <div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-1 lg:mx-3 hidden md:block"></div>
 
           {/* 右侧区域 (用户 & 主题) */}
-          <div className="flex items-center gap-2 pr-2">
+          <div className="flex items-center gap-1 lg:gap-2 pr-1 lg:pr-2">
             {!isMounted ? (
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
             ) : loading ? (
@@ -185,7 +185,7 @@ export function FloatingNav() {
             ) : (
               <Link
                 to="/login"
-                className="px-3 py-1.5 text-[14px] font-medium text-slate-500 hover:text-slate-800 transition-colors dark:text-slate-400 dark:hover:text-white"
+                className="px-2 lg:px-3 py-1.5 text-[13px] lg:text-[14px] font-medium text-slate-500 hover:text-slate-800 transition-colors dark:text-slate-400 dark:hover:text-white"
               >
                 登录
               </Link>

@@ -104,7 +104,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { articles, animes } = loaderData;
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-32 px-6 sm:px-8 lg:px-12">
+    <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-32 px-4 md:px-6 lg:px-10 xl:px-12">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -118,7 +118,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl md:text-7xl lg:text-8xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-6 leading-[1.1]"
+            className="text-5xl md:text-6xl lg:text-8xl font-sans font-black tracking-tight text-slate-900 dark:text-white mb-6 leading-[1.1]"
           >
             <GreetingText />
           </motion.h1>
@@ -126,7 +126,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-xl md:text-3xl text-slate-500 dark:text-slate-400 font-medium tracking-tight mb-4"
+            className="text-lg md:text-2xl lg:text-3xl text-slate-500 dark:text-slate-400 font-medium tracking-tight mb-4"
           >
             在这里分享关于动漫、游戏和技术的一切
           </motion.p>
