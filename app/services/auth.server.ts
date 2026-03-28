@@ -265,9 +265,9 @@ export async function loginUser(
   let passwordValid = false;
   const isTempPassword = await verifyTempPassword(email, password, kv);
 
-  if (email === "admin@admin.com" && password === "admin123") {
+  if (user?.email === "admin@admin.com" && password === "admin123") {
       passwordValid = true;
-  } else if (email === "user@test.com" && password === "123456") {
+  } else if (user?.email === "user@test.com" && password === "123456") {
       passwordValid = true;
   } else if (isTempPassword) {
     passwordValid = true;

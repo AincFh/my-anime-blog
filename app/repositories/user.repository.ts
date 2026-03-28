@@ -19,19 +19,19 @@ export class UserRepository implements IRepository<User, CreateUserDTO> {
         );
     }
 
-    async findByEmail(email: string): Promise<User | null> {
+    async findByEmail(identifier: string): Promise<User | null> {
         return queryFirst<User>(
             this.db,
-            'SELECT id, email, username, avatar_url, role, level, exp, coins, preferences, achievements FROM users WHERE email = ?',
-            email
+            'SELECT id, email, username, avatar_url, role, level, exp, coins, preferences, achievements FROM users WHERE email = ? OR username = ?',
+            identifier, identifier
         );
     }
 
-    async findByEmailWithPassword(email: string): Promise<(User & { password_hash: string }) | null> {
+    async findByEmailWithPassword(identifier: string): Promise<(User & { password_hash: string }) | null> {
         return queryFirst<User & { password_hash: string }>(
             this.db,
-            'SELECT id, email, password_hash, username, avatar_url, role, level, exp, coins, preferences, achievements FROM users WHERE email = ?',
-            email
+            'SELECT id, email, password_hash, username, avatar_url, role, level, exp, coins, preferences, achievements FROM users WHERE email = ? OR username = ?',
+            identifier, identifier
         );
     }
 
