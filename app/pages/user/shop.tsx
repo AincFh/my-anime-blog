@@ -20,10 +20,11 @@ export async function loader({ request, context }: { request: Request; context: 
     const { anime_db } = context.cloudflare.env;
 
     // 商品和会员档位 — 无论是否登录都加载
-    const [shopItems, tiers] = await Promise.all([
-        anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY sort_order").all(),
+    const [shopItemsRes, tiers] = await Promise.all([
+        anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY id DESC").all(),
         getAllTiers(anime_db)
     ]);
+    const shopItems = shopItemsRes?.results || [];
 
     const rechargePackages = RECHARGE_PACKAGES;
 
@@ -36,7 +37,7 @@ export async function loader({ request, context }: { request: Request; context: 
             loggedIn: false,
             user: null,
             stats: { coins: 0 },
-            shopItems: shopItems.results,
+            shopItems: shopItems,
             tiers,
             rechargePackages,
         };
@@ -58,7 +59,7 @@ export async function loader({ request, context }: { request: Request; context: 
             privileges: JSON.parse(tier.privileges || '{}')
         } : null,
         stats: { coins },
-        shopItems: shopItems.results,
+        shopItems: shopItems,
         tiers,
         rechargePackages
     };
