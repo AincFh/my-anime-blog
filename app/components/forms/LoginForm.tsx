@@ -29,14 +29,14 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             <div className="flex flex-col gap-2">
                 <div className="relative">
                     <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
+                        type="text"
+                        inputMode="text"
+                        autoComplete="username"
                         enterKeyHint="next"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="block w-full pl-5 pr-12 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-[20px] text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
-                        placeholder="请输入电子邮箱"
+                        placeholder="请输入电子邮箱或账户名"
                         required
                     />
                 </div>

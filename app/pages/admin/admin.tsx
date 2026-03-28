@@ -6,60 +6,60 @@ import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, L
 import { AdminMusicPlayer } from "~/components/admin/AdminMusicPlayer";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const sessionId = request.headers.get("Cookie")?.match(/admin_session=([^;]+)/)?.[1];
-  const { anime_db } = (context as any).cloudflare.env;
+  const { getDBSafe } = await import("~/utils/db");
+  const anime_db = getDBSafe(context);
 
-  if (!sessionId) throw redirect("/panel/login");
-
-  try {
-    const session = await anime_db.prepare(
-      "SELECT * FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-    ).bind(sessionId).first();
-    if (!session) throw redirect("/panel/login");
-  } catch (e) {
-    if (e instanceof Response) throw e;
-    throw redirect("/panel/login");
+  if (!anime_db) {
+      // Local dev fallback
+      const sessionId = request.headers.get("Cookie")?.match(/session=([^;]+)/)?.[1];
+      if (!sessionId) throw redirect("/panel/login");
+  } else {
+      const { requireAdmin } = await import("~/utils/auth");
+      const session = await requireAdmin(request, anime_db);
+      if (!session) throw redirect("/panel/login");
   }
 
   let stats = { pv: 0, uv: 0, articles: 0, comments: 0, likes: 0, storage: 0 };
   let pendingComments: any[] = [];
-
-  try {
-    const articlesCount = await anime_db.prepare("SELECT COUNT(*) as count FROM articles").first();
-    stats.articles = (articlesCount as any)?.count || 0;
-
-    const commentsCount = await anime_db.prepare("SELECT COUNT(*) as count FROM comments").first();
-    stats.comments = (commentsCount as any)?.count || 0;
-
-    const totalViews = await anime_db.prepare("SELECT SUM(views) as total FROM articles").first();
-    stats.pv = (totalViews as any)?.total || 0;
-
-    const result = await anime_db.prepare(
-      "SELECT * FROM comments WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5"
-    ).all();
-    if (result.results) pendingComments = result.results;
-  } catch (e) {
-    console.error("Failed to fetch stats:", e);
-  }
-
   let musicPlaylistId = "";
   let godMode: any = null;
   let userCount = 0;
-  try {
-    const usersCount = await anime_db.prepare("SELECT COUNT(*) as count FROM users").first();
-    userCount = (usersCount as any)?.count || 0;
 
-    const settingsResult = await anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
-    if (settingsResult && (settingsResult as any).config_json) {
-      const config = JSON.parse((settingsResult as any).config_json);
-      musicPlaylistId = config.features?.music?.playlist_id || "";
+  if (anime_db) {
+    try {
+      const articlesCount = await anime_db.prepare("SELECT COUNT(*) as count FROM articles").first();
+      stats.articles = (articlesCount as any)?.count || 0;
 
-      if (config.god_mode?.enabled) {
-        godMode = config.god_mode;
-      }
+      const commentsCount = await anime_db.prepare("SELECT COUNT(*) as count FROM comments").first();
+      stats.comments = (commentsCount as any)?.count || 0;
+
+      const totalViews = await anime_db.prepare("SELECT SUM(views) as total FROM articles").first();
+      stats.pv = (totalViews as any)?.total || 0;
+
+      const result = await anime_db.prepare(
+        "SELECT * FROM comments WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5"
+      ).all();
+      if (result.results) pendingComments = result.results;
+    } catch (e) {
+      console.error("Failed to fetch stats:", e);
     }
-  } catch (e) {
-    console.warn("Settings or user count failed", e);
+
+    try {
+      const usersCount = await anime_db.prepare("SELECT COUNT(*) as count FROM users").first();
+      userCount = (usersCount as any)?.count || 0;
+
+      const settingsResult = await anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
+      if (settingsResult && (settingsResult as any).config_json) {
+        const config = JSON.parse((settingsResult as any).config_json);
+        musicPlaylistId = config.features?.music?.playlist_id || "";
+
+        if (config.god_mode?.enabled) {
+          godMode = config.god_mode;
+        }
+      }
+    } catch (e) {
+      console.warn("Settings or user count failed", e);
+    }
   }
 
   // 计算实时在线 (上帝模拟)
