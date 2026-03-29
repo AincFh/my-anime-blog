@@ -110,7 +110,12 @@ export async function action({ request, context }: Route.ActionArgs) {
         }
 
         if (intent === "update_preferences") {
-            const preferences = JSON.parse(formData.get("preferences") as string);
+            let preferences;
+            try {
+                preferences = JSON.parse(formData.get("preferences") as string);
+            } catch (e) {
+                return { success: false, message: "偏好设置数据格式错误" };
+            }
             await updateUserPreferences(user.id, preferences, db);
             return { success: true, message: "偏好设置已保存" };
         }

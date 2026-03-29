@@ -168,9 +168,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     if (token) {
       const sessionResult = await verifySession(token, env.anime_db);
       if (sessionResult.valid && sessionResult.user && sessionResult.user.preferences) {
-        userPrefs = typeof sessionResult.user.preferences === 'string' 
-          ? JSON.parse(sessionResult.user.preferences) 
-          : sessionResult.user.preferences;
+        try {
+          userPrefs = typeof sessionResult.user.preferences === 'string' 
+            ? JSON.parse(sessionResult.user.preferences) 
+            : sessionResult.user.preferences;
+        } catch (e) {
+          console.error("Failed to parse user preferences in root loader", e);
+        }
       }
     }
   } catch (e) {

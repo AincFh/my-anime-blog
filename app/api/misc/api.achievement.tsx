@@ -27,7 +27,14 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
 
     // 解析成就数组
-    const achievements: string[] = user.achievements ? JSON.parse(user.achievements) : [];
+    let achievements: string[] = [];
+    if (user.achievements) {
+      try {
+        achievements = JSON.parse(user.achievements);
+      } catch (e) {
+        console.error("Failed to parse user achievements:", e);
+      }
+    }
 
     // 检查是否已拥有
     if (achievements.includes(achievementId)) {

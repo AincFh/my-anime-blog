@@ -64,7 +64,6 @@ export function OptimizedImage({
                 }
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 alt={alt}
-                loading="lazy"
                 decoding="async"
                 className={cn(
                     "w-full h-full object-cover object-center transition-opacity duration-500",
