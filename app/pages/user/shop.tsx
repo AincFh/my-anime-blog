@@ -209,7 +209,7 @@ export default function ShopPage() {
             </ClientOnly>
             <NavMenu />
 
-            <div className="w-full h-screen overflow-y-auto pt-24 md:pt-32 pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col gap-8 scroll-smooth">
+            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+8rem)] md:pt-[calc(env(safe-area-inset-top)+6rem)] pb-[calc(env(safe-area-inset-bottom)+8rem)] px-4 md:pl-[120px] md:pr-8 flex flex-col gap-8 scroll-smooth">
                 <div className="w-full h-full flex flex-col gap-8">
                     {/* Header & Tabs - iOS 风格净化 */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
@@ -221,9 +221,10 @@ export default function ShopPage() {
                         </div>
                         
                         {/* iOS Segmented Control */}
-                        <div className="inline-flex bg-white/[0.03] backdrop-blur-2xl rounded-full p-1.5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-                            {[
-                                { id: "goods", label: "道具商店" },
+                        <div className="w-full md:w-auto overflow-x-auto hide-scrollbar pb-2 md:pb-0">
+                            <div className="inline-flex shrink-0 bg-white/[0.03] backdrop-blur-2xl rounded-full p-1.5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                                {[
+                                    { id: "goods", label: "道具商店" },
                                 { id: "recharge", label: "星尘充值" },
                                 { id: "membership", label: "会员订阅" },
                             ].map((tab) => (
@@ -245,11 +246,12 @@ export default function ShopPage() {
                                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                         />
                                     )}
-                                    <span className="relative z-10 flex items-center gap-2">
+                                    <span className="relative z-10 flex items-center gap-2 shrink-0">
                                         {tab.label}
                                     </span>
                                 </button>
                             ))}
+                            </div>
                         </div>
                     </div>
 
@@ -282,12 +284,12 @@ export default function ShopPage() {
                                     className="space-y-8"
                                 >
                                     {/* 优雅分类 */}
-                                    <div className="flex gap-2 flex-wrap">
+                                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0">
                                         {Object.entries(CATEGORY_MAP).map(([key, label]) => (
                                             <button
                                                 key={key}
                                                 onClick={() => setFilterCategory(key)}
-                                                className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${filterCategory === key
+                                                className={`shrink-0 px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-300 ${filterCategory === key
                                                     ? "bg-white text-black shadow-lg"
                                                     : "bg-[#1A1A1A] text-white/50 hover:bg-[#2A2A2A] hover:text-white border border-white/5"
                                                     }`}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "~/utils/cn"; // assuming utils/cn exists, standard in this project likely
 
@@ -20,6 +20,7 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
 
     const handleLoad = () => {
         setIsLoaded(true);
@@ -28,6 +29,16 @@ export function OptimizedImage({
     const handleError = () => {
         setHasError(true);
     };
+
+    useEffect(() => {
+        if (imgRef.current?.complete) {
+            if (imgRef.current.naturalWidth === 0) {
+                setHasError(true);
+            } else {
+                setIsLoaded(true);
+            }
+        }
+    }, [src, fallbackSrc]);
 
     const finalSrc = hasError ? fallbackSrc : src;
 
@@ -56,13 +67,8 @@ export function OptimizedImage({
             </AnimatePresence>
 
             <motion.img
+                ref={imgRef}
                 src={finalSrc}
-                srcSet={
-                    !hasError && finalSrc && !finalSrc.startsWith('data:') 
-                    ? `${finalSrc}?w=400 400w, ${finalSrc}?w=800 800w, ${finalSrc} 1200w` 
-                    : undefined
-                }
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 alt={alt}
                 decoding="async"
                 className={cn(

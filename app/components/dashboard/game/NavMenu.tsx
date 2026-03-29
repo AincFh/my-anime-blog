@@ -20,7 +20,7 @@ export function NavMenu() {
     const location = useLocation();
 
     return (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 pl-6">
+        <div className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 z-20 pl-6">
             <div className="flex flex-col gap-4">
                 {NAV_ITEMS.map((item, index) => {
                     const isActive = location.pathname === item.path;
