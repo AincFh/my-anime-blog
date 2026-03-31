@@ -13,6 +13,7 @@ import { getUserMissions } from "~/services/membership/mission.server";
 import { MissionBoard } from "~/components/dashboard/widgets/MissionBoard";
 import { ServerStatus } from "~/components/dashboard/widgets/ServerStatus";
 import { ActivityLog } from "~/components/dashboard/widgets/ActivityLog";
+import { NavMenu } from "~/components/dashboard/game/NavMenu";
 
 // Loader: 获取真实数据
 export async function loader({ request, context }: { request: Request; context: any }) {
@@ -155,6 +156,7 @@ function DashboardContent() {
       <ClientOnly>
         {() => <StatusHUD user={{ ...userData, tier: loaderData.tier }} stats={{ coins: stats.coins }} />}
       </ClientOnly>
+      <NavMenu />
 
       {/* 2. 动作面板 */}
       <ActionPanel

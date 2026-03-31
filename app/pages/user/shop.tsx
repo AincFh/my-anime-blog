@@ -197,19 +197,10 @@ export default function ShopPage() {
     return (
         <>
             <ClientOnly>
-                {() => <StatusHUD user={{
-                    avatar: user?.avatar_url,
-                    uid: user ? `UID-${user.id.toString().padStart(6, '0')}` : "UID-000000",
-                    level: stats.level,
-                    name: user?.username || "Traveler",
-                    exp: stats.exp,
-                    maxExp: stats.maxExp,
-                    tier: loaderData.tier
-                }} stats={{ coins: stats.coins }} />}
+                {() => <div className="fixed inset-0 z-[-1] bg-black/20 backdrop-blur-3xl" />} 
             </ClientOnly>
-            <NavMenu />
 
-            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+8rem)] md:pt-[calc(env(safe-area-inset-top)+6rem)] pb-[calc(env(safe-area-inset-bottom)+8rem)] px-4 md:pl-[120px] md:pr-8 flex flex-col gap-8 scroll-smooth">
+            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+7rem)] pb-[calc(env(safe-area-inset-bottom)+8rem)] px-4 md:px-12 flex flex-col gap-8 scroll-smooth">
                 <div className="w-full h-full flex flex-col gap-8">
                     {/* Header & Tabs - iOS 风格净化 */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
