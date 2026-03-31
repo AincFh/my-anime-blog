@@ -5,6 +5,7 @@ import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLa
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
 import { ClientOnly } from "~/components/common/ClientOnly";
+import { cn } from "~/utils/cn";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import type { Route } from "./+types/user.achievements";
@@ -122,73 +123,118 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
     return (
         <>
             <ClientOnly>
-                {() => <StatusHUD user={userData} stats={{ coins: stats.coins }} />}
+                {() => <>
+                    <StatusHUD user={userData} stats={{ coins: stats.coins }} />
+                    <div className="fixed inset-0 z-[-1] bg-black/20 backdrop-blur-3xl" />
+                </>}
             </ClientOnly>
             <NavMenu />
 
-            <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
-                <div className="w-full h-full max-w-6xl pointer-events-auto overflow-y-auto custom-scrollbar flex flex-col items-center">
-                    {/* Header */}
-                    <div className="text-center mb-12 w-full">
+            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6.5rem)] md:pt-[calc(env(safe-area-inset-top)+7.5rem)] pb-24 px-4 md:px-12 flex flex-col items-center scroll-smooth">
+                {/* Header Section */}
+                <div className="w-full max-w-6xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-16 px-4">
+                    <div className="flex-1 text-center md:text-left">
                         <motion.h1
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-4xl md:text-6xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-4 drop-shadow-lg"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="text-4xl md:text-6xl font-display font-black text-white tracking-tight"
                         >
-                            TROPHY ROOM
+                            TROPHY <span className="text-yellow-400">ROOM</span>
                         </motion.h1>
-                        <motion.p
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-white/60 font-display tracking-widest uppercase"
+                            className="flex items-center justify-center md:justify-start gap-4 mt-2"
                         >
-                            Sync Rate: {progress}% // Level {user?.level || 1}
-                        </motion.p>
+                            <span className="text-white/40 text-[10px] font-mono tracking-widest uppercase">Synchronization Index</span>
+                            <div className="flex gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className={`w-3 h-1 rounded-full ${i < Math.floor(progress / 20) ? 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'bg-white/10'}`} />
+                                ))}
+                            </div>
+                            <span className="text-yellow-400 text-xs font-bold font-mono">{progress}%</span>
+                        </motion.div>
                     </div>
 
-                    {/* Honeycomb Grid Container */}
-                    <div className="flex-1 w-full flex items-center justify-center min-h-[400px]">
-                        <div className="flex flex-wrap justify-center gap-4 md:gap-8 max-w-5xl mx-auto pb-12 px-4">
-                            {ALL_ACHIEVEMENTS.map((achievement, index) => (
+                    <div className="flex gap-4">
+                        <div className="px-5 py-2.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 flex flex-col items-center min-w-[80px]">
+                            <span className="text-[10px] text-white/40 uppercase font-mono">Rank</span>
+                            <span className="text-xl font-black text-white">#{loaderData.stats.level}</span>
+                        </div>
+                        <div className="px-5 py-2.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 flex flex-col items-center min-w-[80px]">
+                            <span className="text-[10px] text-white/40 uppercase font-mono">Vault</span>
+                            <span className="text-xl font-black text-yellow-400">{unlocked}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Medallion Wall (The Honeycomb Wall) */}
+                <div className="w-full max-w-6xl pb-24">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-4 px-4">
+                        {ALL_ACHIEVEMENTS.map((achievement, index) => {
+                            const isUnlocked = (unlockedIds as string[]).includes(achievement.id);
+                            return (
                                 <motion.div
                                     key={achievement.id}
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className={index % 2 === 1 ? "md:mt-16" : ""} // Staggered layout for honeycomb effect
+                                    transition={{ delay: index * 0.05 }}
+                                    className={cn(
+                                        "flex flex-col items-center perspective-1000",
+                                        index % 2 === 1 ? "md:mt-12" : "" // Staggered layout
+                                    )}
                                 >
-                                    <HexagonBadge
-                                        {...achievement}
-                                        isUnlocked={(unlockedIds as string[]).includes(achievement.id)}
-                                        size="md"
-                                    />
+                                    <div className={cn(
+                                        "transition-all duration-700",
+                                        !isUnlocked ? "grayscale brightness-50 opacity-40 hover:grayscale-0 hover:brightness-100 hover:opacity-100" : ""
+                                    )}>
+                                        <HexagonBadge
+                                            {...achievement}
+                                            isUnlocked={isUnlocked}
+                                            size="lg"
+                                        />
+                                    </div>
+                                    
+                                    {/* Achievement Label */}
+                                    <div className="mt-4 text-center">
+                                        <p className={cn(
+                                            "text-sm font-bold tracking-tight transition-colors",
+                                            isUnlocked ? "text-white" : "text-white/20"
+                                        )}>
+                                            {achievement.name}
+                                        </p>
+                                        <p className="text-[10px] text-white/30 uppercase tracking-widest mt-0.5 font-mono">
+                                            {achievement.category}
+                                        </p>
+                                    </div>
                                 </motion.div>
-                            ))}
-                        </div>
+                            );
+                        })}
                     </div>
 
-                    {/* Footer Stats */}
+                    {/* Footer Stats - Centered Glass Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 }}
-                        className="glass-card p-8 max-w-2xl w-full mx-auto text-center bg-black/40 border border-white/10 backdrop-blur-md rounded-2xl mt-8"
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="glass-card p-10 max-w-2xl w-full mx-auto text-center bg-white/[0.03] border border-white/10 backdrop-blur-2xl rounded-[32px] mt-24 relative overflow-hidden group"
                     >
-                        <div className="grid grid-cols-3 gap-8">
-                            <div>
-                                <div className="text-3xl font-display font-bold text-yellow-500">{unlocked}</div>
-                                <div className="text-xs text-white/50 uppercase tracking-wider mt-1">Unlocked</div>
+                        <div className="absolute inset-0 bg-grid-white/[0.02] [mask-image:radial-gradient(white,transparent_85%)]" />
+                        <div className="grid grid-cols-3 gap-8 relative z-10">
+                            <div className="space-y-1">
+                                <div className="text-3xl font-display font-black text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]">{unlocked}</div>
+                                <div className="text-[10px] text-white/30 uppercase tracking-widest font-mono">Unlocked</div>
                             </div>
-                            <div>
-                                <div className="text-3xl font-display font-bold text-purple-500">{total}</div>
-                                <div className="text-xs text-white/50 uppercase tracking-wider mt-1">Total</div>
+                            <div className="space-y-1">
+                                <div className="text-3xl font-display font-black text-white">{total}</div>
+                                <div className="text-[10px] text-white/30 uppercase tracking-widest font-mono">Archive</div>
                             </div>
-                            <div>
-                                <div className="text-3xl font-display font-bold text-red-500">
+                            <div className="space-y-1">
+                                <div className="text-3xl font-display font-black text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]">
                                     {unlockedIds.filter(id => ALL_ACHIEVEMENTS.find(a => a.id === id)?.category === 'hidden').length}
                                 </div>
-                                <div className="text-xs text-white/50 uppercase tracking-wider mt-1">Secrets Found</div>
+                                <div className="text-[10px] text-white/30 uppercase tracking-widest font-mono">Classified</div>
                             </div>
                         </div>
                     </motion.div>

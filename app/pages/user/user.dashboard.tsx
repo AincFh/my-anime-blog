@@ -17,76 +17,100 @@ import { NavMenu } from "~/components/dashboard/game/NavMenu";
 
 // Loader: 获取真实数据
 export async function loader({ request, context }: { request: Request; context: any }) {
-  const { anime_db } = context.cloudflare.env;
-  const token = getSessionToken(request);
-  const { valid, user } = await verifySession(token, anime_db);
+  try {
+    const { anime_db } = context.cloudflare.env;
+    const token = getSessionToken(request);
+    const { valid, user } = await verifySession(token, anime_db);
 
-  if (!valid || !user) {
-    return {
-      loggedIn: false,
-      user: null,
-      stats: { coins: 0, level: 1, exp: 0, maxExp: 100 },
-      signInStatus: { hasSignedIn: false, consecutiveDays: 0 }
-    };
-  }
+    if (!valid || !user) {
+      return {
+        loggedIn: false,
+        user: null,
+        stats: { coins: 0, level: 1, exp: 0, maxExp: 100 },
+        signInStatus: { hasSignedIn: false, consecutiveDays: 0 },
+        missions: []
+      };
+    }
 
-  // 1. 获取今日签到状态
-  const today = new Date().toISOString().split('T')[0];
-  const signInRecord = await anime_db
-    .prepare(`
-          SELECT * FROM coin_transactions 
+    // 并行获取数据以提升性能
+    const [signInRecord, streakResult, coins, missions, membership] = await Promise.all([
+      // 1. 今日签到状态
+      anime_db.prepare(`
+          SELECT 1 FROM coin_transactions 
           WHERE user_id = ? AND source = 'daily_signin' 
-          AND date(created_at, 'unixepoch') = ?
-      `)
-    .bind(user.id, today)
-    .first();
+          AND date(created_at, 'unixepoch') = date('now')
+      `).bind(user.id).first().catch(() => null),
 
-  // 2. 获取连续签到天数
-  // 简单估算：查询最近30天记录
-  const streakResult = await anime_db
-    .prepare(`
+      // 2. 连续签到天数
+      anime_db.prepare(`
           SELECT COUNT(DISTINCT date(created_at, 'unixepoch')) as streak
           FROM coin_transactions 
           WHERE user_id = ? AND source = 'daily_signin'
           AND created_at > unixepoch('now', '-30 days')
-      `)
-    .bind(user.id)
-    .first();
+      `).bind(user.id).first().catch(() => null),
 
-  // 3. 获取最新积分
-  const coins = await getUserCoins(anime_db, user.id);
+      // 3. 积分
+      getUserCoins(anime_db, user.id).catch(() => 0),
 
-  // 4. 获取用户使命进度
-  const missions = await getUserMissions(anime_db, user.id);
+      // 4. 使命进度
+      getUserMissions(anime_db, user.id).catch(() => []),
 
-  // 5. 获取详细会员信息
-  const { getUserMembershipTier } = await import("~/services/membership/tier.server");
-  const { tier, subscription } = await getUserMembershipTier(anime_db, user.id);
+      // 5. 会员信息 (动态加载服务)
+      (async () => {
+        try {
+          const { getUserMembershipTier } = await import("~/services/membership/tier.server");
+          return await getUserMembershipTier(anime_db, user.id);
+        } catch {
+          return { tier: null, subscription: null };
+        }
+      })()
+    ]);
 
-  return {
-    loggedIn: true,
-    user: {
-      ...user,
-      avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
-    },
-    tier: tier ? {
-      name: tier.name,
-      display_name: tier.display_name,
-      badge_color: tier.badge_color,
-      privileges: JSON.parse(tier.privileges || '{}')
-    } : null,
-    stats: {
-      coins,
-      level: user.level || 1,
-      exp: user.exp || 0,
-      maxExp: (user.level || 1) * 100,
-    },
-    signInStatus: {
-      hasSignedIn: !!signInRecord,
-      consecutiveDays: (streakResult as any)?.streak || 0,
-    },
-    missions: missions || []
-  };
+    const { tier } = membership;
+
+    return {
+      loggedIn: true,
+      user: {
+        ...user,
+        avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+      },
+      tier: tier ? {
+        name: tier.name,
+        display_name: tier.display_name,
+        badge_color: tier.badge_color,
+        // 安全解析 privileges
+        privileges: (() => {
+          try {
+            return JSON.parse(tier.privileges || '{}');
+          } catch {
+            return {};
+          }
+        })()
+      } : null,
+      stats: {
+        coins: coins || 0,
+        level: user.level || 1,
+        exp: user.exp || 0,
+        maxExp: (user.level || 1) * 100,
+      },
+      signInStatus: {
+        hasSignedIn: !!signInRecord,
+        consecutiveDays: (streakResult as any)?.streak || 0,
+      },
+      missions: missions || []
+    };
+  } catch (error) {
+    console.error("Dashboard Loader Error:", error);
+    // 终极降级方案：即便数据库崩溃也返回基础界面
+    return {
+      loggedIn: false,
+      error: "Command center is currently in low-power mode.",
+      user: null,
+      stats: { coins: 0, level: 1, exp: 0, maxExp: 100 },
+      signInStatus: { hasSignedIn: false, consecutiveDays: 0 },
+      missions: []
+    };
+  }
 }
 
 function DashboardContent() {

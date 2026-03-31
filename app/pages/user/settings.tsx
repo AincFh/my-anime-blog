@@ -14,6 +14,7 @@ import { ClientOnly } from "~/components/common/ClientOnly";
 import { ColorPicker } from "~/components/ui/ColorPicker";
 import { ThemeToggle } from "~/components/ui/ThemeToggle";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
+import { cn } from "~/utils/cn";
 import { verifySession, updateUserProfile, changePassword, updateUserPreferences, getSessionToken, type User as AuthUser } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 
@@ -228,31 +229,37 @@ export default function SettingsPage() {
             </ClientOnly>
             <NavMenu />
 
-            <div className="w-full max-w-[1400px] mx-auto pt-[calc(env(safe-area-inset-top)+5rem)] md:pt-32 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-32 px-4 md:pl-[120px] md:pr-8 flex flex-col min-h-screen">
-                <div className="w-full h-full flex flex-col md:flex-row gap-4 md:gap-8 flex-1">
+            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6.5rem)] md:pt-[calc(env(safe-area-inset-top)+7.5rem)] pb-32 px-4 md:px-12 scroll-smooth">
+                <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
 
-                    {/* Sidebar / Topbar on Mobile */}
-                    <div className="w-full md:w-64 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 custom-scrollbar pb-2 md:pb-0">
+                    {/* Sidebar / Topbar on Mobile - Segmented Control Style */}
+                    <div className="w-full md:w-64 flex flex-row md:flex-col gap-1 md:gap-1.5 p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:h-fit overflow-x-auto no-scrollbar md:sticky md:top-32">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden whitespace-nowrap shrink-0
+                                    flex items-center gap-3 px-4 py-2.5 md:py-3.5 rounded-xl text-xs md:text-sm font-black transition-all relative overflow-hidden whitespace-nowrap shrink-0 group
                                     ${activeTab === tab.id
-                                        ? "bg-white text-slate-900 shadow-[0_4px_20px_rgb(255,255,255,0.15)]"
-                                        : "text-white/60 hover:text-white hover:bg-white/10"
+                                        ? "bg-white text-slate-900 shadow-xl scale-[1.02] z-10"
+                                        : "text-white/40 hover:text-white/80 hover:bg-white/10"
                                     }
                                 `}
                             >
-                                <tab.icon size={18} className={activeTab === tab.id ? "text-slate-900" : tab.color} />
+                                <tab.icon 
+                                    size={16} 
+                                    className={cn(
+                                        "transition-transform group-hover:scale-110",
+                                        activeTab === tab.id ? "text-slate-900" : "text-white/20"
+                                    )} 
+                                />
                                 {tab.label}
                             </button>
                         ))}
                     </div>
 
-                    {/* Main Content */}
-                    <div className="flex-1 min-w-0 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 md:p-8 overflow-y-auto custom-scrollbar">
+                    {/* Main Content - Grouped Card UI */}
+                    <div className="flex-1 min-w-0">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}

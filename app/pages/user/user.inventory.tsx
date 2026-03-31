@@ -158,139 +158,172 @@ export default function UserInventory() {
     return (
         <>
             <ClientOnly>
-                {() => <StatusHUD user={userData} stats={{ coins: stats.coins }} />}
+                {() => <>
+                    <StatusHUD user={userData} stats={{ coins: stats.coins }} />
+                    <div className="fixed inset-0 z-[-1] bg-black/20 backdrop-blur-3xl" />
+                </>}
             </ClientOnly>
             <NavMenu />
 
-            <div className="absolute inset-0 flex items-center justify-center pl-24 pr-8 pt-24 pb-8 pointer-events-none">
-                <div className="w-full h-full max-w-6xl flex gap-8 pointer-events-auto">
-
-                    {/* 左侧：物品网格 */}
-                    <div className="flex-1 flex flex-col gap-6">
-                        {/* 过滤器 */}
-                        <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md p-2 rounded-full w-fit border border-white/10">
-                            {['all', 'avatar_frame', 'theme', 'emoji'].map(type => (
-                                <button
-                                    key={type}
-                                    onClick={() => setFilter(type)}
-                                    className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${filter === type ? "bg-white text-slate-900" : "text-white/60 hover:text-white hover:bg-white/10"
-                                        }`}
-                                >
-                                    {type === 'all' ? '全部' : type === 'avatar_frame' ? '头像框' : type === 'theme' ? '主题' : '表情包'}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* 网格 */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                            {filteredInventory.length > 0 ? (
-                                <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                                    {filteredInventory.map((item: any) => (
-                                        <motion.div
-                                            key={item.id}
-                                            layoutId={`item-${item.id}`}
-                                            onClick={() => setSelectedItem(item)}
-                                            className={`
-                                        aspect-square rounded-xl border-2 cursor-pointer relative group overflow-hidden
-                                        ${selectedItem?.id === item.id
-                                                    ? "border-yellow-400 bg-yellow-400/10 shadow-[0_0_20px_rgba(250,204,21,0.3)]"
-                                                    : "border-white/10 bg-black/40 hover:border-white/40 hover:bg-white/5"
-                                                }
-                                    `}
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            <OptimizedImage src={item.image_url} alt={item.name} className="w-full h-full object-cover p-2" width={100} />
-                                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-center">
-                                                <span className="text-[10px] text-white/80 truncate block">{item.name}</span>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-
-                                    {/* 填充空位 */}
-                                    {Array.from({ length: Math.max(0, 24 - filteredInventory.length) }).map((_, i) => (
-                                        <div key={`empty-${i}`} className="aspect-square rounded-xl border border-white/5 bg-black/20 flex items-center justify-center">
-                                            <div className="w-2 h-2 bg-white/5 rounded-full" />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-white/40">
-                                    <Package size={64} className="mb-4 opacity-50" />
-                                    <p className="text-lg font-bold">背包是空的</p>
-                                    <p className="text-sm mt-2">去商城看看吧！</p>
-                                </div>
-                            )}
-                        </div>
+            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6.5rem)] md:pt-[calc(env(safe-area-inset-top)+7.5rem)] pb-[calc(env(safe-area-inset-bottom)+8rem)] px-4 md:px-12 flex flex-col md:flex-row gap-8 scroll-smooth">
+                {/* 左侧：物品网格 */}
+                <div className="flex-1 flex flex-col gap-6 min-w-0">
+                    {/* 过滤器 */}
+                    <div className="flex items-center gap-2 md:gap-4 bg-black/40 backdrop-blur-md p-1.5 rounded-full w-fit border border-white/10 overflow-x-auto no-scrollbar max-w-full">
+                        {['all', 'avatar_frame', 'theme', 'emoji'].map(type => (
+                            <button
+                                key={type}
+                                onClick={() => setFilter(type)}
+                                className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold transition-all whitespace-nowrap ${filter === type ? "bg-white text-slate-900 shadow-lg" : "text-white/60 hover:text-white hover:bg-white/10"
+                                    }`}
+                            >
+                                {type === 'all' ? '全部' : type === 'avatar_frame' ? '头像框' : type === 'theme' ? '主题' : '表情包'}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* 右侧：详情面板 */}
-                    <div className="w-80 flex flex-col">
-                        <AnimatePresence mode="wait">
-                            {selectedItem ? (
-                                <motion.div
-                                    key={selectedItem.id}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 20 }}
-                                    className="h-full bg-black/60 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col rounded-r-3xl"
-                                >
-                                    <div className="aspect-square bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 flex items-center justify-center mb-6 relative overflow-hidden group">
-                                        <div className="absolute inset-0 bg-[url('/grid.png')] opacity-20" />
-                                        <motion.div
-                                            className="w-3/4 h-3/4 z-10 drop-shadow-2xl relative"
-                                            initial={{ scale: 0.8, rotate: -10 }}
-                                            animate={{ scale: 1, rotate: 0 }}
-                                            transition={{ type: "spring" }}
-                                        >
+                    {/* 网格 */}
+                    <div className="flex-1 overflow-y-visible">
+                        {filteredInventory.length > 0 ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4 pb-12">
+                                {filteredInventory.map((item: any) => (
+                                    <motion.div
+                                        key={item.id}
+                                        layoutId={`item-${item.id}`}
+                                        onClick={() => setSelectedItem(item)}
+                                        className={`
+                                            aspect-square rounded-2xl border-2 cursor-pointer relative group overflow-hidden transition-all duration-300
+                                            ${selectedItem?.id === item.id
+                                                ? "border-yellow-400 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.2)] scale-[1.02]"
+                                                : "border-white/5 bg-black/40 hover:border-white/20 hover:bg-white/5"
+                                            }
+                                        `}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <div className="w-full h-full p-2.5 flex items-center justify-center">
                                             <OptimizedImage
-                                                src={selectedItem.image_url}
-                                                alt={selectedItem.name}
-                                                className="w-full h-full object-contain"
-                                                width={300}
+                                                src={item.image_url}
+                                                alt={item.name}
+                                                className="w-full h-full object-contain drop-shadow-xl"
+                                                width={120}
                                             />
-                                        </motion.div>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
+                                        </div>
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-[10px] text-white/90 text-center truncate block font-medium">{item.name}</span>
+                                        </div>
+                                    </motion.div>
+                                ))}
 
-                                    <h2 className="text-2xl font-bold text-white mb-2">{selectedItem.name}</h2>
-                                    <div className="flex gap-2 mb-4">
-                                        <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded border border-yellow-500/30">
-                                            {selectedItem.type === 'avatar_frame' ? '稀有' : '普通'}
-                                        </span>
-                                        <span className="px-2 py-0.5 bg-white/10 text-white/60 text-xs rounded">
-                                            已拥有
+                                {/* 填充空位 - 仅在桌面端显示 */}
+                                {Array.from({ length: Math.max(0, 16 - filteredInventory.length) }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="hidden md:flex aspect-square rounded-2xl border border-white/[0.03] bg-white/[0.02] items-center justify-center">
+                                        <div className="w-1.5 h-1.5 bg-white/5 rounded-full" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="h-[50vh] flex flex-col items-center justify-center text-white/30">
+                                <Package size={56} className="mb-4 opacity-20" strokeWidth={1.5} />
+                                <p className="text-lg font-display font-medium">维度口袋是空的</p>
+                                <p className="text-sm mt-1 text-white/20">去星尘集市探索吧</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 右侧：详情面板 (Responsive Drawer) */}
+                <div className="w-full md:w-80 lg:w-96 shrink-0 h-fit md:h-auto">
+                    <AnimatePresence mode="wait">
+                        {selectedItem ? (
+                            <motion.div
+                                key={selectedItem.id}
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                className="bg-black/40 backdrop-blur-3xl border border-white/10 p-6 md:p-8 flex flex-col rounded-[32px] md:sticky md:top-32"
+                            >
+                                <div className="aspect-square bg-gradient-to-br from-white/5 to-white/[0.02] rounded-3xl border border-white/10 flex items-center justify-center mb-8 relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-grid-white/[0.02] [mask-image:radial-gradient(white,transparent_85%)]" />
+                                    
+                                    {/* 动态光效反馈 */}
+                                    <motion.div 
+                                        className="absolute inset-0 bg-yellow-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                                        animate={{ opacity: [0, 0.1, 0] }}
+                                        transition={{ duration: 4, repeat: Infinity }}
+                                    />
+
+                                    <motion.div
+                                        className="w-4/5 h-4/5 z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative"
+                                        initial={{ rotate: -5 }}
+                                        animate={{ rotate: 0 }}
+                                        transition={{ type: "spring", stiffness: 200 }}
+                                    >
+                                        <OptimizedImage
+                                            src={selectedItem.image_url}
+                                            alt={selectedItem.name}
+                                            className="w-full h-full object-contain"
+                                            width={400}
+                                        />
+                                    </motion.div>
+                                </div>
+
+                                <div className="space-y-4 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">{selectedItem.name}</h2>
+                                        <span className="px-3 py-1 bg-yellow-400/10 text-yellow-500 text-[10px] font-black rounded-full border border-yellow-400/20 uppercase tracking-tighter">
+                                            {selectedItem.type === 'avatar_frame' ? 'Super Rare' : 'Regular'}
                                         </span>
                                     </div>
-
-                                    <p className="text-white/60 text-sm leading-relaxed mb-8 flex-1">
-                                        {selectedItem.description || "暂无描述..."}
+                                    
+                                    <p className="text-white/50 text-sm leading-relaxed font-light">
+                                        {selectedItem.description || "在该物质被同步前，暂无更多核心数据描述。"}
                                     </p>
+                                    
+                                    <div className="pt-4 space-y-3">
+                                        <div className="flex justify-between text-[11px] font-mono text-white/30 uppercase tracking-widest">
+                                            <span>Origin Date</span>
+                                            <span>{new Date(selectedItem.purchased_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                                    </div>
+                                </div>
 
+                                <div className="mt-10">
                                     <fetcher.Form method="post">
                                         <input type="hidden" name="itemId" value={selectedItem.id} />
                                         <button
                                             type="submit"
-                                            className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
+                                            className={`
+                                                w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all duration-500
+                                                ${(selectedItem.type === 'avatar_frame' && (user?.prefs as any)?.equipped_avatar_frame === selectedItem.image_url) ||
+                                                  (selectedItem.type === 'theme' && (user?.prefs as any)?.equipped_theme === selectedItem.image_url)
+                                                    ? "bg-white/10 text-white border border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
+                                                    : "bg-white text-slate-900 shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:scale-[1.02] hover:shadow-[0_25px_50px_rgba(255,255,255,0.15)]"
+                                                }
+                                                disabled:opacity-50 disabled:scale-100
+                                            `}
                                             disabled={fetcher.state !== 'idle'}
                                         >
-                                            {fetcher.state !== 'idle' ? "正在共鸣请求..." : (
+                                            {fetcher.state !== 'idle' ? (
+                                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                            ) : (
                                                 (selectedItem.type === 'avatar_frame' && (user?.prefs as any)?.equipped_avatar_frame === selectedItem.image_url) ||
-                                                    (selectedItem.type === 'theme' && (user?.prefs as any)?.equipped_theme === selectedItem.image_url)
-                                                    ? "卸下装备" : "装备 / 使用"
+                                                (selectedItem.type === 'theme' && (user?.prefs as any)?.equipped_theme === selectedItem.image_url)
+                                                    ? "卸下当前装备" : "立即同步装备"
                                             )}
                                         </button>
                                     </fetcher.Form>
-                                </motion.div>
-                            ) : (
-                                <div className="h-full bg-black/60 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col items-center justify-center text-white/30 rounded-r-3xl">
-                                    <Package className="w-16 h-16 mb-4 opacity-50" />
-                                    <p>选择一个物品查看详情</p>
                                 </div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-
+                            </motion.div>
+                        ) : (
+                            <div className="hidden md:flex flex-col items-center justify-center p-12 border border-dashed border-white/10 rounded-[32px] text-white/20 bg-white/[0.01]">
+                                <div className="w-12 h-12 rounded-full border border-current flex items-center justify-center mb-4 opacity-30">
+                                    <Filter size={20} />
+                                </div>
+                                <p className="text-sm font-medium">选择物品以开始量子共鸣</p>
+                            </div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </>
