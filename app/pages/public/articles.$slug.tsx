@@ -237,18 +237,18 @@ export default function ArticleDetailPage() {
     };
 
     return (
-        <div ref={articleRef} className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <div ref={articleRef} className="min-h-screen bg-[var(--bg-primary)] dark:bg-[var(--bg-primary)]">
             {/* 阅读进度条 */}
             <motion.div
                 className="fixed top-0 left-0 right-0 h-[3px] z-[100] origin-left"
                 style={{
                     scaleX: scrollYProgress,
-                    background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #d946ef)'
+                    background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end), #d946ef)'
                 }}
             />
 
             {/* 顶部导航 */}
-            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-white/[0.85] dark:bg-[#0A0A0A]/[0.85] border-b border-black/[0.06] dark:border-white/[0.06]">
+            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] border-b border-[var(--glass-border)] dark:border-[var(--glass-border)]">
                 <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
                     {/* 左侧 */}
                     <div className="flex items-center gap-4">
@@ -315,7 +315,7 @@ export default function ArticleDetailPage() {
                         alt={article.title}
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#FAFAFA] dark:from-[#0A0A0A] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] dark:from-[var(--bg-primary)] via-transparent to-transparent" />
                 </motion.div>
             )}
 
@@ -418,7 +418,7 @@ export default function ArticleDetailPage() {
                         prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[1.9] prose-p:mb-8 font-medium
                         prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-a:font-bold
                         prose-code:bg-slate-100 dark:prose-code:bg-white/10 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:text-[0.875em] prose-code:before:content-none prose-code:after:content-none
-                        prose-pre:bg-[#1a1a2e] dark:prose-pre:bg-[#0d0d15] prose-pre:border prose-pre:border-white/10 prose-pre:rounded-2xl prose-pre:shadow-xl prose-pre:p-6 prose-pre:overflow-x-auto
+                        prose-pre:bg-slate-900 dark:prose-pre:bg-black prose-pre:border prose-pre:border-white/10 prose-pre:rounded-2xl prose-pre:shadow-xl prose-pre:p-6 prose-pre:overflow-x-auto
                         prose-pre:prose-pre:my-10
                         prose-img:rounded-3xl prose-img:shadow-xl prose-img:my-10
                         prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:bg-indigo-500/5 dark:prose-blockquote:bg-indigo-500/10 prose-blockquote:rounded-r-2xl prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:not-italic prose-blockquote:font-semibold

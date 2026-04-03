@@ -198,15 +198,15 @@ export default function ArticlesPage() {
     const hasSearch = q !== "";
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <div className="min-h-screen bg-[var(--bg-primary)] dark:bg-[var(--bg-primary)]">
             {/* 动态背景 */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-gradient-radial from-indigo-500/5 via-transparent to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-[-20%] left-[-10%] w-[800px] h-[800px] bg-gradient-radial from-violet-500/5 via-transparent to-transparent rounded-full blur-3xl" />
+                <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-gradient-radial from-indigo-500/[0.05] dark:from-indigo-500/[0.08] via-transparent to-transparent rounded-full blur-3xl" />
+                <div className="absolute bottom-[-20%] left-[-10%] w-[800px] h-[800px] bg-gradient-radial from-violet-500/[0.05] dark:from-violet-500/[0.08] via-transparent to-transparent rounded-full blur-3xl" />
             </div>
 
             {/* 顶部导航栏 */}
-            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-white/[0.85] dark:bg-[#0A0A0A]/[0.85] border-b border-black/[0.06] dark:border-white/[0.06]">
+            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] border-b border-[var(--glass-border)] dark:border-[var(--glass-border)]">
                 <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-16 h-16 flex items-center justify-between gap-6">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 group">
@@ -333,7 +333,7 @@ export default function ArticlesPage() {
                                 >
                                     <Link
                                         to={`/articles/${heroArticle.slug}`}
-                                        className="block relative rounded-[40px] overflow-hidden bg-white dark:bg-[#141414] border border-black/[0.06] dark:border-white/[0.08] shadow-xl shadow-black/[0.04] dark:shadow-black/40 hover:shadow-2xl hover:shadow-black/[0.08] dark:hover:shadow-black/60 transition-all duration-500"
+                                        className="block relative rounded-[40px] overflow-hidden bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] border border-[var(--glass-border)] dark:border-[var(--glass-border)] shadow-xl hover:shadow-2xl transition-all duration-500"
                                     >
                                         {/* 封面图 */}
                                         <div className="relative aspect-[21/9] md:aspect-[3/1] overflow-hidden">
@@ -404,7 +404,7 @@ export default function ArticlesPage() {
                                         >
                                             <Link
                                                 to={`/articles/${article.slug}`}
-                                                className="block h-full rounded-[28px] overflow-hidden bg-white dark:bg-[#141414] border border-black/[0.06] dark:border-white/[0.08] shadow-lg shadow-black/[0.03] dark:shadow-black/30 hover:shadow-xl hover:shadow-black/[0.06] dark:hover:shadow-black/50 hover:-translate-y-1 transition-all duration-500"
+                                                className="block h-full rounded-[28px] overflow-hidden bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] border border-[var(--glass-border)] dark:border-[var(--glass-border)] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
                                             >
                                                 {/* 封面 */}
                                                 <div className="relative aspect-[16/10] overflow-hidden">
