@@ -1,16 +1,17 @@
 /**
- * 文章详情页
+ * 文章详情页 - 使用主题系统
  */
 
 import { Link, useLoaderData } from "react-router";
-import { motion } from "framer-motion";
-import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock, ArrowRight, BookOpen } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/articles.$slug";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
-import { getCategoryColor } from "~/utils/categoryColor";
-import { toast } from "~/components/ui/Toast";
-import { CommentsSection } from "~/components/ui/interactive/CommentsSection";
 import { getPlaceholderCover } from "~/utils/placeholder_covers";
+import { CommentsSection } from "~/components/ui/interactive/CommentsSection";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Article {
     id: number;
@@ -26,9 +27,6 @@ interface Article {
     updated_at: number | null;
 }
 
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-
 export async function loader({ request, params, context }: Route.LoaderArgs) {
     const { getNotionArticleContent } = await import("~/services/notion.server.ts");
     const { getDB } = await import("~/utils/db");
@@ -39,26 +37,18 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     let isNotion = false;
 
     try {
-        // 1. 优先从 Notion 获取文章详情
         const notionData = await getNotionArticleContent(slug!, context);
         if (notionData) {
-            article = {
-                ...notionData.metadata,
-                content: notionData.content,
-            };
+            article = { ...notionData.metadata, content: notionData.content };
             isNotion = true;
         }
     } catch (error) {
         console.warn("Notion detail fetch failed, falling back to D1:", error);
     }
 
-    // 2. 如果 Notion 没有，降级到 D1
     if (!article) {
         article = await db
-            .prepare(`
-                SELECT * FROM articles 
-                WHERE slug = ? AND (status = 'published' OR status IS NULL)
-            `)
+            .prepare(`SELECT * FROM articles WHERE slug = ? AND (status = 'published' OR status IS NULL)`)
             .bind(slug)
             .first() as Article | null;
     }
@@ -67,73 +57,77 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         throw new Response("文章不存在", { status: 404 });
     }
 
-    // 增加阅读量及附属功能务必使用 try-catch 以防阻塞主文章加载
     try {
         if (!isNotion) {
-            await db
-                .prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
-                .bind(article.id)
-                .run();
+            db.prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`).bind(article.id).run();
         }
-
-        // 更新任务进度：阅读 (仅对登录用户)
         const { getSessionToken, verifySession } = await import('~/services/auth.server');
         const { updateMissionProgress } = await import('~/services/membership/mission.server');
         const token = getSessionToken(request);
         if (token) {
             const { valid, user } = await verifySession(token, db);
-            if (valid && user) {
-                await updateMissionProgress(db, user.id, 'article_read');
-            }
+            if (valid && user) await updateMissionProgress(db, user.id, 'article_read');
         }
     } catch (err) {
-        console.error("Non-fatal error updating views or mission:", err);
+        console.error("Non-fatal error:", err);
     }
 
-    // 获取相关文章 (暂从 D1 获取，以保持简单)
     let relatedArticles = { results: [] };
     try {
-        relatedArticles = (await db
-            .prepare(`
-                SELECT id, slug, title, cover_image, category, created_at
-                FROM articles 
-                WHERE category = ? AND slug != ? AND (status = 'published' OR status IS NULL)
-                ORDER BY created_at DESC
-                LIMIT 3
-            `)
-            .bind(article.category, slug)
-            .all()) as any;
+        relatedArticles = (await db.prepare(`
+            SELECT id, slug, title, cover_image, category, created_at
+            FROM articles WHERE category = ? AND slug != ? AND (status = 'published' OR status IS NULL)
+            ORDER BY created_at DESC LIMIT 3
+        `).bind(article.category, slug).all()) as any;
     } catch (err) {
         console.error("Failed to fetch related articles:", err);
     }
-    
-    // 获取评论
+
     let comments = { results: [] };
     try {
-        comments = (await db
-            .prepare(`
-                SELECT id, author, content, created_at, is_danmaku, avatar_style
-                FROM comments
-                WHERE article_id = ? AND status = 'approved'
-                ORDER BY created_at DESC
-            `)
-            .bind(article.id)
-            .all()) as any;
+        comments = (await db.prepare(`
+            SELECT id, author, content, created_at, is_danmaku, avatar_style
+            FROM comments WHERE article_id = ? AND status = 'approved'
+            ORDER BY created_at DESC
+        `).bind(article.id).all()) as any;
     } catch (err) {
-        console.error("Failed to fetch comments for article:", err);
+        console.error("Failed to fetch comments:", err);
     }
 
-    return {
-        article,
-        relatedArticles: relatedArticles.results || [],
-        comments: comments.results || [],
-        isNotion
-    };
+    return { article, relatedArticles: relatedArticles.results || [], comments: comments.results || [], isNotion };
+}
+
+export function meta({ data }: Route.MetaArgs) {
+    const article = data?.article;
+    if (!article) return [{ title: "文章未找到 - A.T. Field" }];
+    return [
+        { title: `${article.title} - A.T. Field` },
+        { name: "description", content: article.content?.slice(0, 160) || article.title },
+        { property: "og:title", content: article.title },
+        { property: "og:type", content: "article" },
+        { property: "og:image", content: article.cover_image || '' },
+    ];
 }
 
 export default function ArticleDetailPage() {
     const loaderData = useLoaderData<typeof loader>();
     const { article, relatedArticles, comments } = loaderData;
+    const articleRef = useRef<HTMLElement>(null);
+    const [readProgress, setReadProgress] = useState(0);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(article.likes || 0);
+
+    const { scrollYProgress } = useScroll({
+        target: articleRef,
+        offset: ["start start", "end end"]
+    });
+
+    useEffect(() => {
+        const unsubscribe = scrollYProgress.on("change", (v) => {
+            setReadProgress(Math.round(v * 100));
+        });
+        return () => unsubscribe();
+    }, [scrollYProgress]);
 
     const formatDate = (timestamp: number) => {
         return new Date(timestamp * 1000).toLocaleDateString('zh-CN', {
@@ -143,27 +137,16 @@ export default function ArticleDetailPage() {
         });
     };
 
-    const estimateReadTime = (content: string) => {
-        const words = content.length;
-        const minutes = Math.ceil(words / 500); // 假设每分钟阅读500字
-        return `${minutes} 分钟`;
-    };
+    const estimateReadTime = (content: string) => Math.ceil(content.length / 500);
 
     const parseTags = (tagsJson: string | null): string[] => {
         if (!tagsJson) return [];
-        try {
-            return JSON.parse(tagsJson);
-        } catch {
-            return [];
-        }
+        try { return JSON.parse(tagsJson); } catch { return []; }
     };
 
     const tags = parseTags(article.tags);
-
-    // 预处理内容：修复字面量 \n 问题
     const processedContent = (article.content || "").replace(/\\n/g, '\n');
 
-    // 提取目录 (Extract TOC from Markdown)
     const extractHeadings = (text: string) => {
         const headingLines = text.split('\n').filter(line => line.trim().match(/^#{2,3}\s/));
         return headingLines.map(line => {
@@ -177,225 +160,347 @@ export default function ArticleDetailPage() {
 
     const headings = extractHeadings(processedContent);
 
+    const handleShare = async () => {
+        const url = window.location.href;
+        if (navigator.share) {
+            try { await navigator.share({ title: article.title, url }); } catch {}
+        } else {
+            await navigator.clipboard.writeText(url);
+        }
+    };
+
+    const handleLike = () => {
+        setIsLiked(!isLiked);
+        setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+        fetch('/api/article/like', {
+            method: 'POST',
+            body: new URLSearchParams({ articleId: article.id.toString() })
+        }).catch(() => {});
+    };
+
     return (
-        <div className="min-h-screen bg-[#FBFBFD] dark:bg-[#080808] pt-[70px] md:pt-20 pb-32">
-            {/* 顶部阅读进度条 */}
-            <motion.div 
-                className="fixed top-0 left-0 right-0 h-[3px] bg-blue-600 dark:bg-blue-500 z-[100] origin-left"
-                style={{ scaleX: 0 }} // 此处需配合 CSS 或 Framer Motion 的 scroll 钩子，简单起见先放占位
+        <div ref={articleRef} className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+            {/* 阅读进度条 */}
+            <motion.div
+                className="fixed top-0 left-0 right-0 h-[3px] z-[100] origin-left"
+                style={{
+                    scaleX: scrollYProgress,
+                    background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end))'
+                }}
             />
 
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-20 relative">
-                {/* 侧边返回键 - 极简悬浮 */}
-                <div className="hidden xl:block absolute -left-12 top-0 h-full">
-                    <div className="sticky top-32">
+            {/* 顶部导航 */}
+            <header className="sticky top-0 z-50 backdrop-blur-2xl border-b" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}>
+                <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
                         <Link
                             to="/articles"
-                            className="p-3 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-white/5 rounded-full text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all hover:scale-110 active:scale-95 block"
+                            className="flex items-center gap-2 text-[15px] font-semibold hover:opacity-70 transition-colors"
+                            style={{ color: 'var(--text-secondary)' }}
                         >
-                            <ArrowLeft className="w-5 h-5" />
+                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                            <span className="hidden sm:inline">返回</span>
                         </Link>
+                        <div className="hidden md:flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                            <div className="w-24 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--glass-border)' }}>
+                                <motion.div
+                                    className="h-full rounded-full"
+                                    style={{
+                                        width: `${readProgress}%`,
+                                        background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end))'
+                                    }}
+                                />
+                            </div>
+                            <span>{readProgress}%</span>
+                        </div>
+                    </div>
+
+                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 max-w-[300px] truncate text-[15px] font-bold">
+                        {article.title}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleLike}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all border"
+                            style={isLiked
+                                ? { backgroundColor: 'var(--color-primary-end)', color: 'white', borderColor: 'var(--color-primary-end)' }
+                                : { backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }
+                            }
+                        >
+                            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                            <span>{likeCount}</span>
+                        </button>
+
+                        <button
+                            onClick={handleShare}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all border"
+                            style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }}
+                        >
+                            <Share2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">分享</span>
+                        </button>
                     </div>
                 </div>
+            </header>
 
-                <div className="max-w-3xl mx-auto">
-                    {/* 沉浸式头部 */}
-                    <motion.header
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        className="mb-12 md:mb-20"
-                    >
-                        <div className="flex items-center gap-4 mb-8">
-                            <span className="px-4 py-1.5 bg-blue-600/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-[0.1em] rounded-full">
-                                {article.category || '未分类'}
-                            </span>
-                            <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-2">
-                                <Clock className="w-4 h-4" />
-                                {estimateReadTime(processedContent)} 阅读
-                            </span>
-                        </div>
+            {/* 封面 */}
+            {article.cover_image && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1 }}
+                    className="relative w-full aspect-[21/9] md:aspect-[3/1] overflow-hidden"
+                >
+                    <OptimizedImage src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] dark:from-[var(--bg-primary)] via-transparent to-transparent" />
+                </motion.div>
+            )}
 
-                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-8 leading-[1.1] tracking-tight text-pretty">
-                            {article.title}
-                        </h1>
+            {/* 文章主体 */}
+            <article className="max-w-[800px] mx-auto px-6 md:px-8 lg:px-0 -mt-20 relative z-10">
 
-                        <div className="flex items-center gap-8 py-5 border-y border-slate-100 dark:border-white/5 text-[12px] text-slate-400 dark:text-slate-500 font-medium tracking-wide">
-                            <span className="flex items-center gap-2">
-                                <Calendar className="w-3.5 h-3.5 opacity-40" />
-                                {formatDate(article.created_at)}
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <Eye className="w-3.5 h-3.5 opacity-40" />
-                                {article.views + 1} 次阅读
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <Heart className="w-3.5 h-3.5 opacity-40" />
-                                {article.likes || 0} 点赞
-                            </span>
-                        </div>
-                    </motion.header>
-
-                    {/* 封面图 - 宽屏包裹 */}
-                    {article.cover_image && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                            className="mb-16 md:mb-24 -mx-6 sm:mx-0 sm:rounded-[40px] overflow-hidden shadow-2xl bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-white/5"
+                {/* 元信息 */}
+                <motion.header
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="mb-12"
+                >
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link
+                            to={`/articles?category=${article.category}`}
+                            className="px-4 py-1.5 text-white text-[11px] font-black uppercase tracking-wider rounded-full border border-transparent"
+                            style={{ background: 'linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end))' }}
                         >
-                            <OptimizedImage
-                                src={article.cover_image}
-                                alt={article.title}
-                                aspectRatio="video"
-                                className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-1000"
-                            />
-                        </motion.div>
-                    )}
-
-                    <div className="flex flex-col lg:flex-row gap-12 relative">
-                        {/* 目录 (TOC) - 宽屏专供悬浮 */}
-                        {headings.length > 0 && (
-                            <aside className="hidden lg:block lg:absolute lg:-right-[350px] lg:top-0 w-[240px]">
-                                <div className="sticky top-32 p-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[32px] border border-slate-200/50 dark:border-white/5">
-                                    <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-6">目录</h4>
-                                    <nav className="flex flex-col gap-4">
-                                        {headings.map((h, i) => (
-                                            <a
-                                                key={i}
-                                                href={`#${h.id}`}
-                                                className={`text-sm font-bold transition-all hover:text-blue-600 dark:hover:text-blue-400 ${h.level === 3 ? 'pl-4 opacity-60' : ''}`}
-                                            >
-                                                {h.title}
-                                            </a>
-                                        ))}
-                                    </nav>
-                                </div>
-                            </aside>
-                        )}
-
-                        {/* 正文内容 - 高奢 Prose */}
-                        <article className="flex-1 w-full prose prose-slate md:prose-xl max-w-none dark:prose-invert antialiased
-                                prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white
-                                prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-4xl prose-h2:pb-4 prose-h2:border-b prose-h2:border-slate-100 dark:prose-h2:border-white/5
-                                prose-h3:text-2xl prose-h3:mt-10
-                                prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[2] prose-p:mb-12 prose-p:text-[17px] font-medium
-                                prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-a:font-bold
-                                prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:text-[0.9em] prose-code:before:content-none prose-code:after:content-none
-                                prose-pre:bg-[#0A0A0A] dark:prose-pre:bg-[#050505] prose-pre:border prose-pre:border-slate-800 dark:prose-pre:border-white/5 prose-pre:rounded-[24px] prose-pre:shadow-2xl prose-pre:p-8
-                                prose-img:rounded-[32px] prose-img:shadow-2xl prose-img:my-16
-                                prose-blockquote:border-l-4 prose-blockquote:border-blue-600 prose-blockquote:bg-blue-50/50 dark:prose-blockquote:bg-blue-500/5 prose-blockquote:rounded-r-3xl prose-blockquote:px-8 prose-blockquote:py-4 prose-blockquote:not-italic prose-blockquote:font-bold">
-                            <ReactMarkdown 
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                    h2: ({node, ...props}) => <h2 id={props.children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-')} {...props} />,
-                                    h3: ({node, ...props}) => <h3 id={props.children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-')} {...props} />
-                                }}
-                            >
-                                {processedContent}
-                            </ReactMarkdown>
-                        </article>
+                            {article.category || '无分类'}
+                        </Link>
+                        <span className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                            <Clock className="w-4 h-4" />
+                            {estimateReadTime(processedContent)} 分钟阅读
+                        </span>
                     </div>
 
-                    {/* 底部标签组 */}
-                    {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-3 mt-20 mb-16">
-                            {tags.map((tag, i) => (
-                                <span
-                                    key={i}
-                                    className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 rounded-full text-[13px] font-black tracking-wide hover:border-blue-600 dark:hover:border-blue-500 transition-all cursor-pointer shadow-sm"
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-8 leading-[1.1] tracking-tight">
+                        {article.title}
+                    </h1>
+
+                    <div className="flex items-center justify-between py-6 border-y" style={{ borderColor: 'var(--glass-border)' }}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg" style={{ background: 'linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end))' }}>
+                                A
+                            </div>
+                            <div>
+                                <div className="font-bold">Ainc</div>
+                                <div className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                                    {formatDate(article.created_at)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-6 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                            <span className="flex items-center gap-2">
+                                <Eye className="w-4 h-4" />
+                                {(article.views + 1).toLocaleString()}
+                            </span>
+                            <span className="flex items-center gap-2">
+                                <Heart className="w-4 h-4" />
+                                {likeCount}
+                            </span>
+                        </div>
+                    </div>
+                </motion.header>
+
+                {/* 目录 */}
+                {headings.length > 0 && (
+                    <motion.aside
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="hidden xl:block mb-12"
+                    >
+                        <div className="sticky top-24 p-6 rounded-[24px] glass-card">
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                <BookOpen className="w-4 h-4" />
+                                目录
+                            </h4>
+                            <nav className="flex flex-col gap-3">
+                                {headings.map((h, i) => (
+                                    <a
+                                        key={i}
+                                        href={`#${h.id}`}
+                                        className={`text-[14px] font-medium transition-all hover:opacity-70 ${h.level === 3 ? 'pl-4' : ''}`}
+                                        style={{ color: 'var(--text-primary)' }}
+                                    >
+                                        {h.title}
+                                    </a>
+                                ))}
+                            </nav>
+                        </div>
+                    </motion.aside>
+                )}
+
+                {/* 正文 */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="prose prose-lg md:prose-xl max-w-none
+                        prose-headings:font-black prose-headings:tracking-tight
+                        prose-h2:text-3xl md:prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:pb-4 prose-h2:border-b
+                        prose-h3:text-2xl md:prose-h3:text-3xl prose-h3:mt-10
+                        prose-p:leading-[1.9] prose-p:mb-8 font-medium
+                        prose-code:bg-slate-100 dark:prose-code:bg-white/10 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:text-[0.875em] prose-code:before:content-none prose-code:after:content-none
+                        prose-pre:bg-slate-900 dark:prose-pre:bg-black prose-pre:border prose-pre:border-white/10 prose-pre:rounded-2xl prose-pre:shadow-xl prose-pre:p-6 prose-pre:overflow-x-auto
+                        prose-img:rounded-3xl prose-img:shadow-xl prose-img:my-10
+                        prose-blockquote:border-l-4 prose-blockquote:border-[var(--color-primary-start)] prose-blockquote:rounded-r-2xl prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:not-italic prose-blockquote:font-semibold
+                        prose-ul:my-6 prose-li:my-2
+                        prose-hr:border-slate-200/50 dark:prose-hr:border-white/10 prose-hr:my-12
+                    "
+                    style={{
+                        '--tw-prose-body': 'var(--text-primary)',
+                        '--tw-prose-headings': 'var(--text-primary)',
+                    } as any}
+                >
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            h2: ({node, ...props}) => {
+                                const text = String(props.children || '');
+                                const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-');
+                                return <h2 id={id} {...props} />;
+                            },
+                            h3: ({node, ...props}) => {
+                                const text = String(props.children || '');
+                                const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-');
+                                return <h3 id={id} {...props} />;
+                            }
+                        }}
+                    >
+                        {processedContent}
+                    </ReactMarkdown>
+                </motion.div>
+
+                {/* 标签 */}
+                {tags.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="flex flex-wrap gap-3 mt-16 mb-12"
+                    >
+                        <Tag className="w-5 h-5 mt-1" style={{ color: 'var(--text-secondary)' }} />
+                        {tags.map((tag, i) => (
+                            <Link
+                                key={i}
+                                to={`/articles?q=${encodeURIComponent(tag)}`}
+                                className="px-4 py-2 rounded-full text-[13px] font-semibold border transition-all hover:opacity-80"
+                                style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }}
+                            >
+                                #{tag}
+                            </Link>
+                        ))}
+                    </motion.div>
+                )}
+
+                {/* 分享卡片 */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="p-8 md:p-10 rounded-[32px] border mb-16"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(255, 159, 67, 0.08), rgba(255, 107, 107, 0.05))',
+                        borderColor: 'var(--glass-border)'
+                    }}
+                >
+                    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                        <div className="flex-1 text-center md:text-left">
+                            <h3 className="text-2xl font-black mb-2">喜欢这篇文章吗？</h3>
+                            <p style={{ color: 'var(--text-secondary)' }}>如果内容对你有帮助，欢迎分享给更多的小伙伴！</p>
+                        </div>
+                        <button
+                            onClick={handleShare}
+                            className="flex items-center gap-3 px-8 py-4 rounded-full font-bold text-[14px] text-white transition-all hover:opacity-80"
+                            style={{ background: 'linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end))' }}
+                        >
+                            <Share2 className="w-5 h-5" />
+                            分享文章
+                        </button>
+                    </div>
+                </motion.div>
+
+                {/* 相关阅读 */}
+                {relatedArticles.length > 0 && (
+                    <section className="mb-16">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl md:text-3xl font-black flex items-center gap-3">
+                                相关阅读
+                            </h2>
+                            <Link
+                                to="/articles"
+                                className="text-[13px] font-semibold flex items-center gap-1 hover:opacity-70 transition-all"
+                                style={{ color: 'var(--color-primary-start)' }}
+                            >
+                                查看全部 <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            {relatedArticles.map((related: any, index: number) => (
+                                <motion.div
+                                    key={related.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.1 * index }}
                                 >
-                                    #{tag}
-                                </span>
+                                    <Link
+                                        to={`/articles/${related.slug}`}
+                                        className="group block rounded-[24px] overflow-hidden glass-card"
+                                    >
+                                        <div className="relative aspect-[16/9] overflow-hidden">
+                                            <OptimizedImage
+                                                src={related.cover_image || getPlaceholderCover(related.category)}
+                                                alt={related.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                            <span className="absolute bottom-3 left-3 text-white text-[10px] font-bold uppercase tracking-wider">{related.category}</span>
+                                        </div>
+                                        <div className="p-5">
+                                            <h3 className="font-bold line-clamp-2 group-hover:opacity-70 transition-opacity">{related.title}</h3>
+                                        </div>
+                                    </Link>
+                                </motion.div>
                             ))}
                         </div>
-                    )}
-
-                    {/* 分享栏 - 紧凑优雅风格 */}
-                    <div className="p-6 md:p-8 bg-white dark:bg-slate-900/80 rounded-[24px] border border-slate-100 dark:border-white/10 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-20">
-                        <div className="text-center md:text-left">
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">觉得有用就点个赞吧</h3>
-                            <p className="text-sm text-slate-400 dark:text-slate-500">你的支持是我创作的动力</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={async () => {
-                                    const { likeArticle } = await import('~/services/article.server');
-                                    try {
-                                        await likeArticle(article.id, context);
-                                        toast.success('感谢你的点赞！');
-                                    } catch {
-                                        toast.error('点赞失败，请稍后重试');
-                                    }
-                                }}
-                                className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-[13px] font-bold hover:scale-105 transition-all shadow-md active:scale-95"
-                            >
-                                <Heart className="w-4 h-4" />
-                                点赞 {article.likes > 0 && <span className="ml-1">({article.likes})</span>}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(window.location.href);
-                                    toast.success('链接已复制到剪贴板！');
-                                }}
-                                className="flex items-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 rounded-full text-[13px] font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition-all active:scale-95"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                分享
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* 相关阅读 */}
-                    {relatedArticles.length > 0 && (
-                        <section className="mb-16">
-                            <div className="flex items-end justify-between mb-10">
-                                <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                                    相关阅读
-                                </h2>
-                                <Link to="/articles" className="text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                                    查看全部
-                                </Link>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {relatedArticles.map((related: any) => {
-                                    const relCover = related.cover_image || getPlaceholderCover(related.category);
-                                    return (
-                                        <Link
-                                            key={related.id}
-                                            to={`/articles/${related.slug}`}
-                                            className="group relative h-[320px] rounded-[32px] overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-white/5 shadow-lg block"
-                                        >
-                                            <OptimizedImage
-                                                src={relCover}
-                                                alt={related.title}
-                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent p-8 flex flex-col justify-end">
-                                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">{related.category}</span>
-                                                <h3 className="text-xl font-black text-white leading-tight line-clamp-2">
-                                                    {related.title}
-                                                </h3>
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* 评论区 - 独立高奢岛 */}
-                    <section className="bg-white/50 dark:bg-slate-950/50 backdrop-blur-3xl p-8 md:p-12 rounded-[48px] border border-slate-200 dark:border-white/5">
-                        <div className="flex items-center gap-4 mb-10">
-                            <div className="w-1.5 h-8 bg-blue-600 dark:bg-blue-500 rounded-full" />
-                            <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                                评论区
-                            </h2>
-                        </div>
-                        <CommentsSection articleId={article.id} comments={comments as any} />
                     </section>
+                )}
+
+                {/* 评论区 */}
+                <section className="p-8 md:p-12 rounded-[32px] glass-card mb-16">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-1.5 h-8 rounded-full" style={{ background: 'linear-gradient(180deg, var(--color-primary-start), var(--color-primary-end))' }} />
+                        <h2 className="text-2xl md:text-3xl font-black">评论区</h2>
+                        <span className="px-3 py-1 text-[12px] font-bold rounded-full" style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>
+                            {comments.length} 条
+                        </span>
+                    </div>
+                    <CommentsSection articleId={article.id} comments={comments as any} />
+                </section>
+            </article>
+
+            {/* 底部 */}
+            <footer className="border-t py-8" style={{ borderColor: 'var(--glass-border)' }}>
+                <div className="max-w-[800px] mx-auto px-6 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                    <Link to="/articles" className="inline-flex items-center gap-2 font-semibold hover:opacity-70 transition-all" style={{ color: 'var(--color-primary-start)' }}>
+                        <ArrowLeft className="w-4 h-4" />
+                        返回文章专栏
+                    </Link>
+                    <span className="mx-4">·</span>
+                    <span>© 2024 A.T. Field · Ainc</span>
                 </div>
-            </div>
+            </footer>
         </div>
     );
 }
