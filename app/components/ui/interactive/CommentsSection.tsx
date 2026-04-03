@@ -1,8 +1,7 @@
 import { useFetcher } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { GlassCard } from "~/components/layout/GlassCard";
-import { Send, MessageSquare } from "lucide-react";
+import { Send, MessageSquare, User } from "lucide-react";
 
 interface Comment {
     id: number;
@@ -23,7 +22,6 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
     const formRef = useRef<HTMLFormElement>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 乐观UI更新：提交后立即显示（虽然实际需要审核，但可以给用户反馈）
     const isSuccess = fetcher.data?.success;
     const error = fetcher.data?.error;
 
@@ -38,18 +36,18 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
         }
     }, [fetcher.state, isSuccess]);
 
-    return (
-        <div className="mt-12">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <MessageSquare size={20} className="text-primary-start" />
-                评论区
-                <span className="text-sm text-slate-400 font-normal ml-2">
-                    ({initialComments.length})
-                </span>
-            </h3>
+    const formatDate = (timestamp: number) => {
+        return new Date(timestamp * 1000).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
 
-            {/* 评论表单 - 移至顶部并紧凑化 */}
-            <GlassCard className="p-6 mb-8 border-l-4 border-l-primary-start">
+    return (
+        <div>
+            {/* 评论表单 */}
+            <div className="bg-white/70 dark:bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-slate-100 dark:border-white/10">
                 <fetcher.Form
                     method="post"
                     action="/api/comments"
@@ -59,44 +57,43 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                     <input type="hidden" name="article_id" value={articleId} />
 
                     <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex-1 space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <input
                                     type="text"
                                     name="author"
                                     required
                                     placeholder="昵称 *"
-                                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                                 />
                                 <input
                                     type="email"
                                     name="email"
-                                    placeholder="邮箱 (可选)"
-                                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    placeholder="邮箱（可选）"
+                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                                 />
                             </div>
                             <textarea
                                 name="content"
                                 required
                                 rows={3}
-                                placeholder="发表你的看法..."
-                                className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary-start transition-colors resize-none"
+                                placeholder="写下你的想法..."
+                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
                             />
                         </div>
 
-                        <div className="flex flex-col justify-end">
-                            <motion.button
+                        <div className="flex items-end">
+                            <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`h-10 px-6 rounded-lg font-medium text-white text-sm transition-all flex items-center justify-center gap-2 ${isSubmitting
-                                    ? "bg-slate-600 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/20"
-                                    }`}
-                                whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-                                whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                    isSubmitting
+                                    ? "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg active:scale-95"
+                                }`}
                             >
-                                {isSubmitting ? "..." : <><Send size={14} /> 发送</>}
-                            </motion.button>
+                                {isSubmitting ? "发送中..." : <><Send size={14} /> 发布</>}
+                            </button>
                         </div>
                     </div>
 
@@ -106,9 +103,9 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="text-green-400 text-xs flex items-center gap-1"
+                                className="text-green-600 dark:text-green-400 text-xs flex items-center gap-1"
                             >
-                                ✅ 评论已提交，等待审核。
+                                评论已提交，等待审核
                             </motion.div>
                         )}
                         {error && (
@@ -116,47 +113,47 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="text-red-400 text-xs"
+                                className="text-red-500 text-xs"
                             >
-                                ❌ {error}
+                                {error}
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </fetcher.Form>
-            </GlassCard>
+            </div>
 
             {/* 评论列表 */}
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {initialComments.length === 0 ? (
-                    <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10 border-dashed">
-                        <p className="text-slate-500 text-sm">暂无评论，来坐沙发！</p>
+                    <div className="text-center py-12 bg-white/40 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-white/5">
+                        <MessageSquare className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                        <p className="text-slate-400 dark:text-slate-500 text-sm">还没有评论，来坐沙发吧！</p>
                     </div>
                 ) : (
                     initialComments.map((comment, index) => (
                         <motion.div
                             key={comment.id}
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
+                            className="group flex gap-4 p-4 bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm rounded-xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-colors"
                         >
-                            <div className="group flex gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                                {/* 头像 */}
-                                <div className="flex-shrink-0 mt-1">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center text-white font-bold text-sm shadow-inner border border-white/10">
-                                        {comment.author[0].toUpperCase()}
-                                    </div>
+                            {/* 头像 */}
+                            <div className="flex-shrink-0 mt-0.5">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/80 to-purple-500/80 flex items-center justify-center text-white font-bold text-sm shadow-sm border border-white/20">
+                                    {comment.author[0]?.toUpperCase() || <User className="w-4 h-4" />}
                                 </div>
+                            </div>
 
-                                {/* 内容 */}
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="font-bold text-slate-200 text-sm">{comment.author}</span>
-                                        <span className="text-xs text-slate-500">
-                                            {new Date(comment.created_at * 1000).toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <p className="text-slate-300 text-sm leading-relaxed">{comment.content}</p>
+                            {/* 内容 */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{comment.author}</span>
+                                    <span className="text-xs text-slate-400 dark:text-slate-500">
+                                        {formatDate(comment.created_at)}
+                                    </span>
                                 </div>
+                                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{comment.content}</p>
                             </div>
                         </motion.div>
                     ))
@@ -165,3 +162,4 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
         </div>
     );
 }
+

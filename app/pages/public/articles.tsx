@@ -4,7 +4,7 @@
 
 import { Link, useLoaderData, useSearchParams, useSubmit, Form, useNavigation } from "react-router";
 import { motion } from "framer-motion";
-import { Calendar, Eye, Heart, ArrowRight, Search, Loader2 } from "lucide-react";
+import { Calendar, Eye, Heart, ArrowRight, Search, Loader2, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/articles";
 import { getCategoryColor } from "~/utils/categoryColor";
@@ -21,6 +21,7 @@ interface Article {
     tags: string | null;
     views: number;
     likes: number;
+    comment_count?: number;
     created_at: number;
 }
 
@@ -66,27 +67,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
                 created_at: as.created_at
             }));
 
-            // 提取分类
-            const uniqueCats = Array.from(new Set(notionArticles.map(a => a.category)));
+            // 提取分类 (过滤掉空值/null/undefined)
+            const uniqueCats = Array.from(new Set(notionArticles.map(a => a.category).filter(Boolean)));
             categories = ['all', ...uniqueCats];
         } else {
             throw new Error("No articles from Notion");
         }
     } catch (error) {
         console.warn("Falling back to D1 Database:", error);
-        
-        // 2. 降级逻辑：从 D1 读取
+
+        // 2. 降级逻辑：从 D1 读取 (含评论数)
         let sql = `
-            SELECT id, slug, title, summary as content, category, cover_image, tags, views, likes, created_at
-            FROM articles 
+            SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at,
+                   (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id AND c.status = 'approved') as comment_count
+            FROM articles a
         `;
         const params: any[] = [];
-        const whereClauses: string[] = ["(status = 'published' OR status IS NULL)"];
+        const whereClauses: string[] = ["(a.status = 'published' OR a.status IS NULL)"];
 
         if (q) {
             // 使用 FTS5 全文搜索配合 JOIN (假设 rowid 与 id 一一对应)
             sql = `
-                SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at
+                SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at,
+                       (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id AND c.status = 'approved') as comment_count
                 FROM articles a
                 JOIN articles_fts f ON a.id = f.rowid
             `;
@@ -95,16 +98,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         }
 
         if (categoryQuery !== "all") {
-            whereClauses.push(`category = ?`);
+            whereClauses.push(`a.category = ?`);
             params.push(categoryQuery);
         }
 
-        sql += ` WHERE ` + whereClauses.join(" AND ") + ` ORDER BY created_at DESC LIMIT 50`;
+        sql += ` WHERE ` + whereClauses.join(" AND ") + ` ORDER BY a.created_at DESC LIMIT 50`;
         const result = await db.prepare(sql).bind(...params).all();
         articles = (result.results || []) as unknown as Article[];
 
-        const categoriesResult = await db.prepare("SELECT DISTINCT category FROM articles WHERE category IS NOT NULL").all();
-        categories = ['all', ...(categoriesResult.results || []).map((c: any) => c.category)];
+        const categoriesResult = await db.prepare("SELECT DISTINCT category FROM articles WHERE category IS NOT NULL AND category != '' AND category != 'null' AND category != 'undefined'").all();
+        categories = ['all', ...(categoriesResult.results || []).map((c: any) => c.category).filter(Boolean)];
     }
 
     // 处理搜索过滤 (如果是从 Notion 获取的全量，需要在内存中过滤)
@@ -212,10 +215,11 @@ export default function ArticlesPage() {
                                 <button
                                     key={cat}
                                     onClick={() => handleCategoryChange(cat)}
-                                    className={`px-5 py-3 rounded-[20px] text-[15px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap ${category === cat
-                                        ? 'bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900 dark:shadow-white/10'
-                                        : 'bg-slate-100/80 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80'
-                                        }`}
+                                    className={`px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 whitespace-nowrap border ${
+                                        category === cat
+                                        ? 'bg-slate-900 text-white shadow-md border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                                        : 'bg-white/80 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
                                 >
                                     {cat === 'all' ? '全部' : cat}
                                 </button>
@@ -248,10 +252,10 @@ export default function ArticlesPage() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         
-                                        {/* 分类标签毛玻璃化 */}
+                                        {/* 分类标签 */}
                                         <div className="absolute top-4 left-4">
-                                            <span className={`px-3 py-1.5 backdrop-blur-md bg-white/20 dark:bg-black/20 text-[10px] font-black uppercase tracking-[0.1em] rounded-full text-white border border-white/20`}>
-                                                {article.category || '无分类'}
+                                            <span className={`inline-flex items-center gap-1 px-3 py-1 backdrop-blur-md bg-white/80 dark:bg-black/50 text-[11px] font-bold uppercase tracking-wider rounded-full border border-white/30 dark:border-white/10 shadow-sm text-slate-700 dark:text-white/90`}>
+                                                {article.category}
                                             </span>
                                         </div>
                                     </Link>
@@ -278,20 +282,24 @@ export default function ArticlesPage() {
                                             <div className="flex items-center gap-4 text-[12px] text-slate-400 dark:text-slate-500 font-black tracking-tighter">
                                                 <div className="flex items-center gap-1.5">
                                                     <Eye className="w-4 h-4 opacity-50" />
-                                                    {article.views}
+                                                    <span>{article.views}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     <Heart className="w-4 h-4 opacity-50" />
-                                                    {article.likes}
+                                                    <span>{article.likes}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <MessageSquare className="w-4 h-4 opacity-50" />
+                                                    <span>{article.comment_count || 0}</span>
                                                 </div>
                                             </div>
 
                                             <Link 
                                                 to={`/articles/${article.slug}`} 
-                                                className="group/btn flex items-center gap-1 text-[13px] text-slate-900 dark:text-white font-black antialiased uppercase tracking-widest"
+                                                className="group/btn flex items-center gap-1 text-[12px] text-slate-500 dark:text-slate-400 font-bold antialiased uppercase tracking-widest hover:text-slate-900 dark:hover:text-white transition-colors"
                                             >
-                                                READ
-                                                <ArrowRight className="w-4 h-4 ml-0.5 group-hover/btn:translate-x-1 transition-transform" />
+                                                阅读全文
+                                                <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                                             </Link>
                                         </div>
                                     </div>

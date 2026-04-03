@@ -178,7 +178,7 @@ export default function ArticleDetailPage() {
     const headings = extractHeadings(processedContent);
 
     return (
-        <div className="min-h-screen bg-[#FBFBFB] dark:bg-[#050505] pt-safe md:pt-20 pb-32">
+        <div className="min-h-screen bg-[#FBFBFD] dark:bg-[#080808] pt-[70px] md:pt-20 pb-32">
             {/* 顶部阅读进度条 */}
             <motion.div 
                 className="fixed top-0 left-0 right-0 h-[3px] bg-blue-600 dark:bg-blue-500 z-[100] origin-left"
@@ -208,7 +208,7 @@ export default function ArticleDetailPage() {
                     >
                         <div className="flex items-center gap-4 mb-8">
                             <span className="px-4 py-1.5 bg-blue-600/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-[0.1em] rounded-full">
-                                {article.category || 'Uncategorized'}
+                                {article.category || '未分类'}
                             </span>
                             <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-2">
                                 <Clock className="w-4 h-4" />
@@ -220,18 +220,18 @@ export default function ArticleDetailPage() {
                             {article.title}
                         </h1>
 
-                        <div className="flex items-center gap-8 py-8 border-y border-slate-100 dark:border-white/5 text-[14px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
-                            <span className="flex items-center gap-2.5">
-                                <Calendar className="w-4 h-4 opacity-50" />
+                        <div className="flex items-center gap-8 py-5 border-y border-slate-100 dark:border-white/5 text-[12px] text-slate-400 dark:text-slate-500 font-medium tracking-wide">
+                            <span className="flex items-center gap-2">
+                                <Calendar className="w-3.5 h-3.5 opacity-40" />
                                 {formatDate(article.created_at)}
                             </span>
-                            <span className="flex items-center gap-2.5">
-                                <Eye className="w-4 h-4 opacity-50" />
-                                {article.views + 1}
+                            <span className="flex items-center gap-2">
+                                <Eye className="w-3.5 h-3.5 opacity-40" />
+                                {article.views + 1} 次阅读
                             </span>
-                            <span className="flex items-center gap-2.5">
-                                <Heart className="w-4 h-4 opacity-50" />
-                                {article.likes || 0}
+                            <span className="flex items-center gap-2">
+                                <Heart className="w-3.5 h-3.5 opacity-40" />
+                                {article.likes || 0} 点赞
                             </span>
                         </div>
                     </motion.header>
@@ -279,7 +279,7 @@ export default function ArticleDetailPage() {
                                 prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white
                                 prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-4xl prose-h2:pb-4 prose-h2:border-b prose-h2:border-slate-100 dark:prose-h2:border-white/5
                                 prose-h3:text-2xl prose-h3:mt-10
-                                prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:mb-10 font-medium
+                                prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[2] prose-p:mb-12 prose-p:text-[17px] font-medium
                                 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-a:font-bold
                                 prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:text-[0.9em] prose-code:before:content-none prose-code:after:content-none
                                 prose-pre:bg-[#0A0A0A] dark:prose-pre:bg-[#050505] prose-pre:border prose-pre:border-slate-800 dark:prose-pre:border-white/5 prose-pre:rounded-[24px] prose-pre:shadow-2xl prose-pre:p-8
@@ -311,30 +311,47 @@ export default function ArticleDetailPage() {
                         </div>
                     )}
 
-                    {/* 分享栏 - iOS 风格卡片 */}
-                    <div className="p-8 md:p-12 bg-white dark:bg-slate-900 rounded-[40px] border border-slate-200 dark:border-white/5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 mb-24 transition-all hover:shadow-2xl">
+                    {/* 分享栏 - 紧凑优雅风格 */}
+                    <div className="p-6 md:p-8 bg-white dark:bg-slate-900/80 rounded-[24px] border border-slate-100 dark:border-white/10 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-20">
                         <div className="text-center md:text-left">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">喜欢这篇文章吗？</h3>
-                            <p className="text-slate-500 font-medium">如果内容对你有帮助，欢迎分享给更多的小伙伴！</p>
+                            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">觉得有用就点个赞吧</h3>
+                            <p className="text-sm text-slate-400 dark:text-slate-500">你的支持是我创作的动力</p>
                         </div>
-                        <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(window.location.href);
-                                toast.success('链接已成功捕捉至剪贴板！');
-                            }}
-                            className="flex items-center gap-3 px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-[15px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95"
-                        >
-                            <Share2 className="w-5 h-5" />
-                            分享地址
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={async () => {
+                                    const { likeArticle } = await import('~/services/article.server');
+                                    try {
+                                        await likeArticle(article.id, context);
+                                        toast.success('感谢你的点赞！');
+                                    } catch {
+                                        toast.error('点赞失败，请稍后重试');
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-[13px] font-bold hover:scale-105 transition-all shadow-md active:scale-95"
+                            >
+                                <Heart className="w-4 h-4" />
+                                点赞 {article.likes > 0 && <span className="ml-1">({article.likes})</span>}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(window.location.href);
+                                    toast.success('链接已复制到剪贴板！');
+                                }}
+                                className="flex items-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 rounded-full text-[13px] font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition-all active:scale-95"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                分享
+                            </button>
+                        </div>
                     </div>
 
-                    {/* 相关阅读 - 视觉磁贴 (Visual Tiles) */}
+                    {/* 相关阅读 */}
                     {relatedArticles.length > 0 && (
-                        <section className="mb-24">
+                        <section className="mb-16">
                             <div className="flex items-end justify-between mb-10">
                                 <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                                    Read Next
+                                    相关阅读
                                 </h2>
                                 <Link to="/articles" className="text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                                     查看全部
@@ -372,7 +389,7 @@ export default function ArticleDetailPage() {
                         <div className="flex items-center gap-4 mb-10">
                             <div className="w-1.5 h-8 bg-blue-600 dark:bg-blue-500 rounded-full" />
                             <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                                Discussions
+                                评论区
                             </h2>
                         </div>
                         <CommentsSection articleId={article.id} comments={comments as any} />
