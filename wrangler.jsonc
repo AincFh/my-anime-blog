@@ -16,15 +16,13 @@
 	},
 	"vars": {
 		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
-		// 支付系统安全配置
 		// ⚠️ 生产环境必须使用 wrangler secret 注入，此处留空
 		"PAYMENT_SECRET": "",
 		"CSRF_SECRET": "",
 		"SESSION_SECRET": "",
-		// 环境标识
 		"ENVIRONMENT": "development",
-		// 支付回调 IP 白名单（逗号分隔）
-		// 生产环境添加: 支付宝/微信官方回调 IP
+		// 使用 wrangler secret put NOTION_TOKEN 设置
+		"NOTION_DATABASE_ID": "f9e50175c2fe408d86f46d2067e2ec53",
 		"PAYMENT_CALLBACK_IPS": "127.0.0.1,::1"
 	},
 	"observability": {
@@ -49,11 +47,11 @@
 			"bucket_name": "my-anime-blog"
 		}
 	],
-	// Workers AI - Cloudflare 原生 AI 模型 (免费 10,000 次/天)
+	// Workers AI - Cloudflare 原生 AI 模型
 	"ai": {
 		"binding": "AI"
 	},
-	// Analytics Engine - 访问统计 (免费 100,000 次/月)
+	// Analytics Engine - 访问统计
 	"analytics_engine_datasets": [
 		{
 			"binding": "ANALYTICS",

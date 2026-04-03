@@ -9,6 +9,8 @@ export const SECURITY_CONFIG = {
     csrfSecret: typeof process !== 'undefined' ? process.env.CSRF_SECRET : undefined,
     // 极盾风控等级
     turnstileLevel: 'strict',
+    // 指纹盐值 (P1 安全加固)
+    fingerprintSalt: 'aincrad_sword_art_online',
 };
 
 export const AUTH_CONFIG = {

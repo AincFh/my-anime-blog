@@ -9,13 +9,20 @@ import { getSessionId } from "~/utils/auth";
 export async function action({ request, context }: Route.ActionArgs) {
     // 1. 权限验证
     const sessionId = getSessionId(request);
+    const env = (context as any).cloudflare.env;
+    const { anime_db } = env;
+    const r2_bucket = env.IMAGES_BUCKET;
+
     if (!sessionId) {
         return jsonWithSecurity({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. 检查 R2 绑定
-    const env = (context as any).cloudflare.env;
-    const r2_bucket = env.IMAGES_BUCKET;
+    const { verifySession } = await import("~/utils/auth");
+    const sessionDetail = await verifySession(sessionId, anime_db);
+    if (!sessionDetail) {
+        return jsonWithSecurity({ error: "Invalid session" }, { status: 401 });
+    }
+
     if (!r2_bucket) {
         console.error("R2 bucket not bound");
         return jsonWithSecurity({ error: "Storage service unavailable" }, { status: 503 });

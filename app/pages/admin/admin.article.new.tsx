@@ -17,7 +17,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   // 生成 CSRF Token
   const env = (context as any).cloudflare.env;
-  const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
+  const secret = env.CSRF_SECRET;
+  if (!secret) {
+    throw new Error("CRITICAL: CSRF_SECRET is not set in environment.");
+  }
   const { generateCSRFToken } = await import("~/services/security/csrf.server");
   const csrfToken = await generateCSRFToken(sessionId, env.CACHE_KV, secret);
 
@@ -47,7 +50,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     // 验证 CSRF
     const env = (context as any).cloudflare.env;
-    const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
+    const secret = env.CSRF_SECRET;
+    if (!secret) {
+      return { success: false, error: "CRITICAL: CSRF_SECRET is not set in environment." };
+    }
     const { validateCSRFToken } = await import("~/services/security/csrf.server");
     const csrfResult = await validateCSRFToken(csrfToken, sessionId, env.CACHE_KV, secret);
 

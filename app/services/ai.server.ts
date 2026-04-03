@@ -214,14 +214,15 @@ export async function checkDailyLimit(
     db: Database,
     kv: KVNamespace | null,
     feature: AIFeature,
+    userId: number | string = 'guest',
     customLimits?: Record<AIFeature, number>
 ): Promise<{ allowed: boolean; remaining: number; limit: number }> {
     const limits = customLimits || DEFAULT_DAILY_LIMITS;
     const limit = (limits as Record<AIFeature, number>)[feature] || 100;
 
-    // 使用 KV 快速检查（避免频繁查询数据库）
+    // 使用 KV 快速检查（包含 userId 以实现用户级限流，P1 安全加固）
     const today = new Date().toISOString().split('T')[0];
-    const counterKey = `ai_limit:${feature}:${today}`;
+    const counterKey = `ai_limit:${feature}:${userId}:${today}`;
 
     let currentCount = 0;
 
@@ -246,12 +247,13 @@ export async function checkDailyLimit(
  */
 export async function incrementDailyCount(
     kv: KVNamespace | null,
-    feature: AIFeature
+    feature: AIFeature,
+    userId: number | string = 'guest'
 ): Promise<void> {
     if (!kv) return;
 
     const today = new Date().toISOString().split('T')[0];
-    const counterKey = `ai_limit:${feature}:${today}`;
+    const counterKey = `ai_limit:${feature}:${userId}:${today}`;
 
     try {
         const cached = await kv.get(counterKey);

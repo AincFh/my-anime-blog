@@ -7,7 +7,7 @@ import { getSessionId } from "~/utils/auth";
 export async function loader({ request }: Route.LoaderArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
-    throw redirect("/admin/login");
+    throw redirect("/panel/login");
   }
 
   // TODO: 从数据库获取标签和分类

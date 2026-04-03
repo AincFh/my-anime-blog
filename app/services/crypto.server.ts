@@ -6,6 +6,8 @@
 // 注意：在 Cloudflare Workers 环境中，需要使用兼容的加密库
 // 这里使用 Web Crypto API 实现简单的哈希，生产环境建议使用 bcryptjs 或 argon2
 
+import { SECURITY_CONFIG } from '~/config';
+
 /**
  * 使用 Web Crypto API 生成密码哈希
  * 注意：这不是 bcrypt，但可以在 Workers 环境中使用
@@ -99,28 +101,30 @@ export function generateToken(): string {
 
 /**
  * 生成6位数字验证码
+ * 使用 CSPRNG (Web Crypto API) 替代 Math.random()
  */
 export function generateVerificationCode(): string {
-  // 生成6位数字验证码
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  // 取模确保 6 位
+  const code = (array[0] % 900000) + 100000;
+  return code.toString();
 }
 
 /**
  * 生成设备指纹
+ * 核心哲学：不可逆性。
  */
 export function generateDeviceFingerprint(userAgent: string, ip: string): string {
-  // 结合用户代理和IP地址生成设备指纹
-  const combined = `${userAgent}:${ip}`;
+  const combined = `${userAgent}:${ip}:${SECURITY_CONFIG?.fingerprintSalt || 'aincrad'}`;
   
-  // 简单的哈希函数
-  let hash = 0;
+  // 使用简单的 DJB2 算法并结合 36 进制转换
+  let hash = 5381;
   for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // 转换为32位整数
+    hash = (hash * 33) ^ combined.charCodeAt(i);
   }
   
-  return Math.abs(hash).toString(36);
+  return Math.abs(hash >>> 0).toString(36);
 }
 
 /**

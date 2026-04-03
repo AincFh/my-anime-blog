@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import type { Route } from "./+types/articles";
 import { getCategoryColor } from "~/utils/categoryColor";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
+import { getPlaceholderCover } from "~/utils/placeholder_covers";
 
 interface Article {
     id: number;
@@ -35,44 +36,96 @@ const getDescription = (content: string): string => {
 };
 
 export async function loader({ request, context }: Route.LoaderArgs) {
+    const { fetchNotionArticles } = await import("~/services/notion.server.ts");
     const { getDB } = await import("~/utils/db");
     const db = getDB(context);
 
     const url = new URL(request.url);
     const q = url.searchParams.get("q") || "";
-    const category = url.searchParams.get("category") || "all";
+    const categoryQuery = url.searchParams.get("category") || "all";
 
-    // 构建查询
-    let sql = `
-        SELECT id, slug, title, content, category, cover_image, tags, views, likes, created_at
-        FROM articles 
-        WHERE (status = 'published' OR status IS NULL)
-    `;
-    const params: any[] = [];
+    let articles: Article[] = [];
+    let categories: string[] = ['all'];
 
-    if (q) {
-        sql += ` AND (title LIKE ? OR content LIKE ?)`;
-        params.push(`%${q}%`, `%${q}%`);
+    try {
+        // 1. 尝试从 Notion 获取数据
+        const notionArticles = await fetchNotionArticles(context);
+        
+        if (notionArticles.length > 0) {
+            // 转换为内部接口结构
+            articles = notionArticles.map(as => ({
+                id: parseInt(as.id.replace(/-/g, '').slice(0, 8), 16), // 临时转换 ID
+                slug: as.slug,
+                title: as.title,
+                content: as.summary, // 列表页显示摘要
+                category: as.category,
+                cover_image: as.cover_image,
+                tags: JSON.stringify(as.tags),
+                views: 0, // Notion 暂无原生点击量，设为 0
+                likes: 0,
+                created_at: as.created_at
+            }));
+
+            // 提取分类
+            const uniqueCats = Array.from(new Set(notionArticles.map(a => a.category)));
+            categories = ['all', ...uniqueCats];
+        } else {
+            throw new Error("No articles from Notion");
+        }
+    } catch (error) {
+        console.warn("Falling back to D1 Database:", error);
+        
+        // 2. 降级逻辑：从 D1 读取
+        let sql = `
+            SELECT id, slug, title, summary as content, category, cover_image, tags, views, likes, created_at
+            FROM articles 
+        `;
+        const params: any[] = [];
+        const whereClauses: string[] = ["(status = 'published' OR status IS NULL)"];
+
+        if (q) {
+            // 使用 FTS5 全文搜索配合 JOIN (假设 rowid 与 id 一一对应)
+            sql = `
+                SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at
+                FROM articles a
+                JOIN articles_fts f ON a.id = f.rowid
+            `;
+            whereClauses.push(`articles_fts MATCH ?`);
+            params.push(q);
+        }
+
+        if (categoryQuery !== "all") {
+            whereClauses.push(`category = ?`);
+            params.push(categoryQuery);
+        }
+
+        sql += ` WHERE ` + whereClauses.join(" AND ") + ` ORDER BY created_at DESC LIMIT 50`;
+        const result = await db.prepare(sql).bind(...params).all();
+        articles = (result.results || []) as unknown as Article[];
+
+        const categoriesResult = await db.prepare("SELECT DISTINCT category FROM articles WHERE category IS NOT NULL").all();
+        categories = ['all', ...(categoriesResult.results || []).map((c: any) => c.category)];
     }
 
-    if (category !== "all") {
-        sql += ` AND category = ?`;
-        params.push(category);
+    // 处理搜索过滤 (如果是从 Notion 获取的全量，需要在内存中过滤)
+    if (q && articles.length > 0) {
+        const lowerQ = q.toLowerCase();
+        articles = articles.filter(a => 
+            a.title.toLowerCase().includes(lowerQ) || 
+            a.content.toLowerCase().includes(lowerQ)
+        );
     }
 
-    sql += ` ORDER BY created_at DESC LIMIT 50`; // 限制 50 篇，暂不分页以简化
-
-    const result = await db.prepare(sql).bind(...params).all();
-
-    //获取所有分类（用于筛选）
-    const categoriesResult = await db.prepare("SELECT DISTINCT category FROM articles WHERE category IS NOT NULL").all();
-    const categories = ['all', ...(categoriesResult.results || []).map((c: any) => c.category)];
+    // 处理分类过滤
+    if (categoryQuery !== 'all') {
+        articles = articles.filter(a => a.category === categoryQuery);
+    }
 
     return {
-        articles: (result.results || []) as unknown as Article[],
+        articles,
         categories,
         q,
-        category
+        category: categoryQuery
     };
 }
 
@@ -171,72 +224,80 @@ export default function ArticlesPage() {
                     </div>
                 </motion.div>
 
-                {/* 文章列表 - Apple News 阅读流排版 */}
+                {/* 文章列表 - 高奢非对称网格 (Asymmetric Premium Grid) */}
                 {articles.length > 0 ? (
-                    <div className="flex flex-col gap-6 md:gap-10 max-w-4xl mx-auto">
-                        {articles.map((article, index) => (
-                            <motion.article
-                                key={article.id}
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.15 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                                className="group relative flex flex-col md:flex-row gap-5 md:gap-8 items-start justify-between py-6 md:py-8 border-b border-slate-200 dark:border-slate-800 last:border-0"
-                            >
-                                {/* 文章主信息区 */}
-                                <div className="flex-1 flex flex-col w-full order-2 md:order-1 pt-1">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md text-white ${getCategoryColor(article.category)}`}>
-                                            {article.category || '未分类'}
-                                        </span>
-                                        <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 text-xs font-medium font-mono">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+                        {articles.map((article, index) => {
+                            const displayCover = article.cover_image || getPlaceholderCover(article.category);
+                            
+                            return (
+                                <motion.article
+                                    key={article.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-50px" }}
+                                    transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                                    className="group relative flex flex-col bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl rounded-[32px] overflow-hidden border border-slate-200/50 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500"
+                                >
+                                    {/* 封面容器 - 沉浸式超大圆角 */}
+                                    <Link to={`/articles/${article.slug}`} className="block relative aspect-[16/10] overflow-hidden">
+                                        <OptimizedImage
+                                            src={displayCover}
+                                            alt={article.title}
+                                            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        
+                                        {/* 分类标签毛玻璃化 */}
+                                        <div className="absolute top-4 left-4">
+                                            <span className={`px-3 py-1.5 backdrop-blur-md bg-white/20 dark:bg-black/20 text-[10px] font-black uppercase tracking-[0.1em] rounded-full text-white border border-white/20`}>
+                                                {article.category || '无分类'}
+                                            </span>
+                                        </div>
+                                    </Link>
+
+                                    {/* 内容区 - 呼吸感排版 */}
+                                    <div className="p-6 md:p-8 flex flex-col flex-1">
+                                        <div className="flex items-center gap-2 mb-4 text-slate-400 dark:text-slate-500 text-[11px] font-black tracking-widest uppercase">
                                             <Calendar className="w-3.5 h-3.5" />
                                             {formatDate(article.created_at)}
                                         </div>
-                                    </div>
-                                    
-                                    <Link to={`/articles/${article.slug}`} className="block">
-                                        <h3 className="text-xl md:text-2xl leading-snug font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                            {article.title}
-                                        </h3>
-                                    </Link>
-                                    
-                                    <p className="text-sm md:text-[15px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 md:line-clamp-3 mb-5">
-                                        {getDescription(article.content)}
-                                    </p>
 
-                                    <div className="flex items-center gap-5 mt-auto text-xs md:text-sm text-slate-400 dark:text-slate-500 font-medium font-mono">
-                                        <div className="flex items-center gap-1.5 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-                                            <Eye className="w-4 h-4" />
-                                            {article.views}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 hover:text-red-500 transition-colors">
-                                            <Heart className="w-4 h-4" />
-                                            {article.likes}
-                                        </div>
-                                        <Link 
-                                            to={`/articles/${article.slug}`} 
-                                            className="ml-auto flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 antialiased"
-                                        >
-                                            阅读全文
-                                            <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
+                                        <Link to={`/articles/${article.slug}`} className="block mb-4">
+                                            <h3 className="text-xl md:text-2xl leading-[1.3] font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                                                {article.title}
+                                            </h3>
                                         </Link>
-                                    </div>
-                                </div>
 
-                                {/* 右侧/上方 缩略海报流 */}
-                                {article.cover_image && (
-                                    <Link to={`/articles/${article.slug}`} className="block w-full md:w-[280px] shrink-0 order-1 md:order-2">
-                                        <div className="aspect-[16/9] md:aspect-[4/3] rounded-[20px] overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-transparent dark:border-white/5 transition-all duration-500">
-                                            <OptimizedImage
-                                                src={article.cover_image}
-                                                alt={article.title}
-                                                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
-                                            />
+                                        <p className="text-sm md:text-[15px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3 mb-6 font-medium">
+                                            {getDescription(article.content)}
+                                        </p>
+
+                                        {/* 底部元数据 */}
+                                        <div className="mt-auto pt-6 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                                            <div className="flex items-center gap-4 text-[12px] text-slate-400 dark:text-slate-500 font-black tracking-tighter">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Eye className="w-4 h-4 opacity-50" />
+                                                    {article.views}
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Heart className="w-4 h-4 opacity-50" />
+                                                    {article.likes}
+                                                </div>
+                                            </div>
+
+                                            <Link 
+                                                to={`/articles/${article.slug}`} 
+                                                className="group/btn flex items-center gap-1 text-[13px] text-slate-900 dark:text-white font-black antialiased uppercase tracking-widest"
+                                            >
+                                                READ
+                                                <ArrowRight className="w-4 h-4 ml-0.5 group-hover/btn:translate-x-1 transition-transform" />
+                                            </Link>
                                         </div>
-                                    </Link>
-                                )}
-                            </motion.article>
-                        ))}
+                                    </div>
+                                </motion.article>
+                            );
+                        })}
                     </div>
                 ) : (
                     <motion.div

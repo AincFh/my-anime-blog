@@ -12,6 +12,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     "session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
   );
 
-  return redirect("/admin/login", { headers });
+  return redirect("/panel/login", { headers });
 }
 

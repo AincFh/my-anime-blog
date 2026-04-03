@@ -57,7 +57,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   // 2. 身份验证
   const sessionId = getSessionId(request);
   const session = await verifySession(sessionId, anime_db);
-  const finalAuthor = session ? session.username : (authorInput || "次元访客");
+  
+  // 区分用户与游客
+  const userId = session?.userId || null;
+  const guestName = !userId ? (authorInput || "次元访客") : null;
 
   // 3. 清理和验证内容
   const cleanedContent = sanitizeComment(content);
@@ -73,16 +76,16 @@ export async function action({ request, context }: Route.ActionArgs) {
   try {
     await anime_db
       .prepare(
-        `INSERT INTO comments (article_id, author, content, is_danmaku, status, is_spam)
+        `INSERT INTO comments (article_id, user_id, guest_name, content, is_danmaku, status)
          VALUES (?, ?, ?, ?, ?, ?)`
       )
-      .bind(articleId, finalAuthor, cleanedContent, false, "approved", false)
+      .bind(articleId, userId, guestName, cleanedContent, false, "approved")
       .run();
 
     // 4. 更新任务/成就进度
-    if (session) {
+    if (userId) {
       try {
-        await updateMissionProgress(anime_db, session.userId, 'comment');
+        await updateMissionProgress(anime_db, userId, 'comment');
       } catch (e) {
         console.warn("Mission update failed, but comment saved", e);
       }

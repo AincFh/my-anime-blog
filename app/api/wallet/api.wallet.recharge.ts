@@ -79,7 +79,10 @@ export async function action({ request, context }: { request: Request; context: 
         metadata: { packageId, coins: totalCoins, price: pkg.price },
     });
 
-    const secretKey = (context.cloudflare.env as any).PAYMENT_SECRET_KEY || 'dev-secret-key';
+    const secretKey = (context.cloudflare.env as any).PAYMENT_SECRET_KEY;
+    if (!secretKey) {
+        return Response.json({ success: false, error: "系统安全配置错误: 缺少支付密钥" }, { status: 500 });
+    }
 
     // Generate secure pay URL with HMAC signature
     const payUrl = await generateSecurePayUrl(

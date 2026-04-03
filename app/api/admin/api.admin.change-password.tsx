@@ -21,7 +21,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const env = (context as any).cloudflare.env;
   const { validateCSRFToken } = await import("~/services/security/csrf.server");
   const csrfToken = formData.get("_csrf") as string;
-  const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
+  const secret = env.CSRF_SECRET;
+  if (!secret) {
+    return Response.json({ success: false, error: "系统安全配置错误: 缺少 CSRF 密钥" }, { status: 500 });
+  }
 
   const csrfResult = await validateCSRFToken(csrfToken, session.sessionId, env.CACHE_KV, secret);
   if (!csrfResult.valid) {

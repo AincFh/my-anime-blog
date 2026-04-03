@@ -20,7 +20,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   try {
     const env = (context as any).cloudflare.env;
-    const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
+    const secret = env.CSRF_SECRET;
+    if (!secret) {
+      console.error("Critical Security Error: CSRF_SECRET is not set in environment.");
+      throw new Error("系统安全配置错误: 缺少 CSRF 密钥");
+    }
 
     // 生成 CSRF Token
     const { generateCSRFToken } = await import("~/services/security/csrf.server");

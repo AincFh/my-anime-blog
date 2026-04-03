@@ -108,6 +108,9 @@ export default [
   route("api/bangumi/detail", "api/bangumi/api.bangumi.detail.ts"),
   route("api/animes", "api/misc/api.animes.ts"),
 
+  // Notion 调试 (临时)
+  route("api/notion/debug", "api/api.notion.debug.ts"),
+
   // 杂项
   route("action/set-theme", "api/misc/action.set-theme.ts"),
   route("api/og", "api/misc/api.og.tsx"),

@@ -12,49 +12,56 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { valid, user } = await verifySession(token, anime_db, CACHE_KV as any, request);
 
   if (!valid || user?.role !== 'admin') {
-    return redirect("/admin/login");
+    return redirect("/panel/login");
   }
 
-  // 获取统计数据
-  const stats = await anime_db.prepare(`
-    SELECT 
-      (SELECT COUNT(*) FROM articles) as articles,
-      (SELECT COUNT(*) FROM comments) as comments,
-      (SELECT SUM(views) FROM articles) as pv,
-      (SELECT SUM(likes) FROM articles) as likes
-  `).first() as any;
+  // 并行获取所有统计数据以提升性能
+  const [statsResult, pendingCommentsResult, animesResult, userCountResult, settingsResult] = await Promise.all([
+    // 1. 统计数据
+    anime_db.prepare(`
+      SELECT 
+        (SELECT COUNT(*) FROM articles) as articles,
+        (SELECT COUNT(*) FROM comments) as comments,
+        (SELECT COALESCE(SUM(views), 0) FROM articles) as pv,
+        (SELECT COALESCE(SUM(likes), 0) FROM articles) as likes
+    `).first(),
 
-  // 获取待审核评论
-  const pendingComments = await anime_db.prepare(`
-    SELECT * FROM comments WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5
-  `).all();
+    // 2. 待审核评论
+    anime_db.prepare(`
+      SELECT * FROM comments WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5
+    `).all(),
 
-  // 获取最近追番
-  const animes = await anime_db.prepare(`
-    SELECT * FROM animes ORDER BY id DESC LIMIT 10
-  `).all();
+    // 3. 最近追番
+    anime_db.prepare(`
+      SELECT * FROM animes ORDER BY id DESC LIMIT 10
+    `).all(),
 
-  // 获取用户总数 (简单统计)
-  const userCount = await anime_db.prepare(`SELECT COUNT(*) as count FROM users`).first() as any;
+    // 4. 用户总数
+    anime_db.prepare(`SELECT COUNT(*) as count FROM users`).first(),
 
-  // 获取系统配置 (God Mode 等)
-  let settings: any = {};
-  try {
-    const settingsRow = await anime_db.prepare("SELECT value FROM settings WHERE key = 'system_settings'").first() as any;
-    if (settingsRow?.value) {
-      settings = JSON.parse(settingsRow.value);
-    }
-  } catch (e) {
-    console.error("Failed to parse system settings:", e);
-  }
+    // 5. 系统配置
+    (async () => {
+      try {
+        const row = await anime_db.prepare("SELECT value FROM settings WHERE key = 'system_settings'").first() as any;
+        return row?.value ? JSON.parse(row.value) : {};
+      } catch (e) {
+        console.error("Failed to parse system settings:", e);
+        return {};
+      }
+    })()
+  ]);
+
+  const stats = statsResult as any || { articles: 0, comments: 0, pv: 0, likes: 0 };
+  const settings = settingsResult as any || {};
+  const userCount = (userCountResult as any)?.count || 0;
 
   return {
-    stats: stats || { articles: 0, comments: 0, pv: 0, likes: 0 },
-    pendingComments: pendingComments?.results || [],
-    animes: animes?.results || [],
+    stats,
+    pendingComments: pendingCommentsResult?.results || [],
+    animes: animesResult?.results || [],
     musicPlaylistId: settings?.features?.music?.playlist_id || "",
     godMode: settings?.god_mode || { enabled: false },
-    userCount: userCount?.count || 0,
+    userCount,
     onlineUsers: Math.floor(Math.random() * 10) + 1 // 模拟实时
   };
 }
@@ -336,9 +343,6 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
           </AnimatePresence>
         </div>
       </main>
-
-      {/* Global Music Player (Admin Context) */}
-      <AdminMusicPlayer />
     </div>
   );
 }
@@ -391,7 +395,12 @@ function SidebarContent({ pathname, musicPlaylistId }: { pathname: string; music
         })}
       </nav>
 
-      <div className="p-6 border-t border-white/5">
+      {/* 音乐预览播放器 */}
+      <div className="p-4 border-t border-white/5">
+        <AdminMusicPlayer playlistId={musicPlaylistId} />
+      </div>
+
+      <div className="p-6 pt-0 border-t border-white/5">
         <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">环境签名</p>

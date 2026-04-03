@@ -143,9 +143,14 @@ import { createDynamicThemeSessionResolver } from "./sessions.theme.server";
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const isProd = env.ENVIRONMENT === "production";
-  const secret = env.SESSION_SECRET || "default-secret";
+  const secret = env.SESSION_SECRET;
+  if (isProd && !secret) {
+    throw new Error("CRITICAL: SESSION_SECRET environment variable is not set in production. Theme switching will not work without it.");
+  }
+  // 仅在未设置时使用占位符（非生产环境允许）
+  const resolvedSecret = secret || "dev-only-secret-do-not-use-in-prod";
 
-  const themeSessionResolver = createDynamicThemeSessionResolver(secret, isProd);
+  const themeSessionResolver = createDynamicThemeSessionResolver(resolvedSecret, isProd);
   const { getTheme } = await themeSessionResolver(request);
 
   let userPrefs = null;

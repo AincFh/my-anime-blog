@@ -39,16 +39,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const db = getDBSafe(context);
 
   if (!db) {
-    // 本地开发模式：使用硬编码的管理员账号
-    if (username === "admin" && password === "admin123") {
-      const token = crypto.randomUUID();
-      throw redirect("/admin", {
-        headers: {
-          "Set-Cookie": `session=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`,
-        },
-      });
-    }
-    return { success: false, error: "用户名或密码错误" };
+    return { success: false, error: "数据库连接失败，请检查配置" };
   }
 
   try {
@@ -61,14 +52,9 @@ export async function action({ request, context }: Route.ActionArgs) {
       return { success: false, error: "用户名或密码错误" };
     }
 
-    // --- 热更新提权后门，跨越密码盐值不同步灾难 ---
-    let passwordValid = false;
-    if (password === "admin123" || password === "123456") {
-      passwordValid = true;
-    } else {
-      const { verifyPassword } = await import("~/services/crypto.server");
-      passwordValid = await verifyPassword(password, admin.password_hash);
-    }
+    // 验证密码
+    const { verifyPassword } = await import("~/services/crypto.server");
+    const passwordValid = await verifyPassword(password, admin.password_hash);
 
     if (!passwordValid) {
       return { success: false, error: "用户名或密码错误" };

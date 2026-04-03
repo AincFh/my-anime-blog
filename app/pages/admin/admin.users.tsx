@@ -8,7 +8,7 @@ import { hashPassword } from "~/services/crypto.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
     const sessionId = getSessionId(request);
-    if (!sessionId) throw redirect("/admin/login");
+    if (!sessionId) throw redirect("/panel/login");
 
     const { anime_db } = (context as any).cloudflare.env;
 
@@ -24,8 +24,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
         // 获取并生成 CSRF Token
         const env = (context as any).cloudflare.env;
+        const secret = env.CSRF_SECRET;
+        if (!secret) {
+            console.error("Critical: CSRF_SECRET not set in admin.users");
+            throw new Error("系统安全配置错误: 缺少 CSRF 密钥");
+        }
         const { generateCSRFToken } = await import("~/services/security/csrf.server");
-        const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
         const csrfToken = await generateCSRFToken(sessionId, env.CACHE_KV, secret);
 
         return { users, csrfToken };
@@ -41,7 +45,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     // 1. 强制管理员鉴权
     const session = await requireAdmin(request, anime_db);
-    if (!session) throw redirect("/admin/login");
+    if (!session) throw redirect("/panel/login");
 
     const formData = await request.formData();
 
@@ -49,7 +53,11 @@ export async function action({ request, context }: Route.ActionArgs) {
     const env = (context as any).cloudflare.env;
     const { validateCSRFToken } = await import("~/services/security/csrf.server");
     const csrfToken = formData.get("_csrf") as string;
-    const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
+    const secret = env.CSRF_SECRET;
+    if (!secret) {
+        console.error("Critical: CSRF_SECRET not set in admin.users action");
+        return { success: false, error: "系统安全配置错误: 缺少 CSRF 密钥" };
+    }
 
     const csrfResult = await validateCSRFToken(csrfToken, (session as any).sessionId, env.CACHE_KV, secret);
     if (!csrfResult.valid) {

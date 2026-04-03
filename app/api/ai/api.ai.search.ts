@@ -76,8 +76,8 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
             });
         }
 
-        // 检查每日限制
-        const limitCheck = await checkDailyLimit(db, kv, "search");
+        // 检查每日限制 (P1 安全加固: 增加 userId 维度)
+        const limitCheck = await checkDailyLimit(db, kv, "search", session.userId);
         if (!limitCheck.allowed) {
             return Response.json({
                 success: false,
@@ -147,8 +147,8 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
             tokensUsed: result.tokensUsed || 0,
         });
 
-        // 增加计数
-        await incrementDailyCount(kv, "search");
+        // 增加计数 (P1 安全加固: 增加 userId 维度)
+        await incrementDailyCount(kv, "search", session.userId);
 
         return Response.json({
             success: true,

@@ -3,7 +3,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { anime_db } = (context as any).cloudflare.env;
 
   const session = await requireAdmin(request, anime_db);
-  if (!session) throw redirect("/admin/login");
+    if (!session) throw redirect("/panel/login");
 
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -44,7 +44,7 @@ import { Search, MessageSquare, CheckCircle, ShieldAlert, Trash2, Reply, MoreVer
 export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
-    throw redirect("/admin/login");
+    throw redirect("/panel/login");
   }
 
   const { anime_db } = (context as any).cloudflare.env;

@@ -17,7 +17,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   // 检查是否已登录
   const sessionId = getSessionId(request);
   if (!sessionId) {
-    throw redirect("/admin/login");
+    throw redirect("/panel/login");
   }
 
   // 从R2获取图片列表

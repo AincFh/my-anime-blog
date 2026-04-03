@@ -43,6 +43,11 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
     const db = env.anime_db;
     const kv = env.CACHE_KV || null;
 
+    // 尝试获取用户信息供限流审计 (P1 安全加固)
+    const { getSessionId, verifySession } = await import("~/utils/auth");
+    const sessionId = getSessionId(request);
+    const session = sessionId ? await verifySession(sessionId, db) : null;
+
     try {
         // 检查 AI 功能是否启用
         const config = await getAIConfig(db);
@@ -64,8 +69,8 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
             });
         }
 
-        // 检查每日限制
-        const limitCheck = await checkDailyLimit(db, kv, "moderate");
+        // 检查每日限制 (P1 安全加固: 增加 userId 维度)
+        const limitCheck = await checkDailyLimit(db, kv, "moderate", session?.userId || 'guest');
         if (!limitCheck.allowed) {
             // 超过限制时默认放行
             return Response.json({
@@ -122,12 +127,13 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
 
         // 记录使用量
         await trackAIUsage(db, {
+            userId: session?.userId,
             feature: "moderate",
             tokensUsed: result.tokensUsed || 0,
         });
 
-        // 增加计数
-        await incrementDailyCount(kv, "moderate");
+        // 增加计数 (P1 安全加固: 增加 userId 维度)
+        await incrementDailyCount(kv, "moderate", session?.userId || 'guest');
 
         return Response.json({
             success: true,

@@ -76,8 +76,8 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
             });
         }
 
-        // 检查每日限制
-        const limitCheck = await checkDailyLimit(db, kv, "recommend");
+        // 检查每日限制 (P1 安全加固: 增加 userId 维度)
+        const limitCheck = await checkDailyLimit(db, kv, "recommend", session.userId);
         if (!limitCheck.allowed) {
             return Response.json({
                 success: false,
@@ -172,7 +172,7 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
                 feature: "recommend",
                 tokensUsed: result.tokensUsed || 0,
             });
-            await incrementDailyCount(kv, "recommend");
+            await incrementDailyCount(kv, "recommend", session.userId);
         }
 
         return Response.json({

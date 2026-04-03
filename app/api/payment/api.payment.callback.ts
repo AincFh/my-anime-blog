@@ -30,7 +30,7 @@ export async function action({ request, context }: { request: Request; context: 
     const { createSubscription } = await import('~/services/membership/subscription.server');
     const { addCoins } = await import('~/services/membership/coins.server');
     const { logAudit } = await import('~/services/security/audit-log.server');
-    const { validateAmount, validateTimestamp } = await import('~/services/security/payment-sign.server');
+    const { validateAmount, validateTimestamp, validateNonce } = await import('~/services/security/payment-sign.server');
     const { verifyCallbackSignature, isCallbackIPAllowed } = await import('~/services/payment/signature.server');
     const { PAYMENT_CONFIG } = await import('~/config');
 
@@ -131,6 +131,15 @@ export async function action({ request, context }: { request: Request; context: 
                 riskLevel: 'high',
             });
             return Response.json({ success: false, error: signatureResult.error }, { status: 403 });
+        }
+
+        // ==================== Nonce 校验 (P1 安全加固: 防重放补全) ====================
+        if (params.nonce) {
+            const isNonceValid = await validateNonce(params.nonce, CACHE_KV);
+            if (!isNonceValid) {
+                console.warn(`检测到潜在的支付回调重放攻击: order_no=${params.order_no}, nonce=${params.nonce}`);
+                return Response.json({ success: false, error: '请求已过时或已被处理' }, { status: 400 });
+            }
         }
 
         // ==================== 分布式锁 - 防止并发处理 ====================

@@ -10,7 +10,7 @@ import { toast } from "~/components/ui/Toast";
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
-    throw redirect("/admin/login");
+    throw redirect("/panel/login");
   }
 
   const { anime_db } = context.cloudflare.env;
@@ -38,7 +38,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 export async function action({ request, context }: ActionFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
-    throw redirect("/admin/login");
+    throw redirect("/panel/login");
   }
 
   const { anime_db } = context.cloudflare.env;

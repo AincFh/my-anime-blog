@@ -20,15 +20,19 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     const formData = await request.formData();
 
-    // 2. CSRF 校验
+    // 2. CSRF 校验 (P0 安全加固)
     const env = (context as any).cloudflare.env;
     const { validateCSRFToken } = await import("~/services/security/csrf.server");
     const csrfToken = formData.get("_csrf") as string;
-    // 使用 PAYMENT_SECRET 作为备用密钥 (实际应配置 CSRF_SECRET)
-    const secret = env.CSRF_SECRET || env.PAYMENT_SECRET || "default-secret";
+    
+    // [安全加固] 严禁使用硬编码默认密钥，必须从环境变量获取
+    const secret = env.CSRF_SECRET || env.PAYMENT_SECRET;
+    if (!secret) {
+        console.error("CRITICAL: CSRF_SECRET or PAYMENT_SECRET not configured");
+        return jsonWithSecurity({ error: "服务器安全配置错误" }, { status: 500 });
+    }
 
     // Session ID 在 session.sessionId 中 (根据 utils/auth.ts 类型定义)
-    // requireAdmin 返回的 session 对象结构: { sessionId, userId, ... }
     const csrfResult = await validateCSRFToken(csrfToken, session.sessionId, env.CACHE_KV, secret);
 
     if (!csrfResult.valid) {

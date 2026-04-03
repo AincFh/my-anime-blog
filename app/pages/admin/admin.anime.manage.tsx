@@ -33,9 +33,7 @@ interface BangumiResult {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
     const sessionId = getSessionId(request);
-    if (!sessionId) {
-        throw redirect("/admin/login");
-    }
+    if (!sessionId) throw redirect("/panel/login");
 
     const { anime_db } = context.cloudflare.env;
 
@@ -53,9 +51,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
     const sessionId = getSessionId(request);
-    if (!sessionId) {
-        throw redirect("/admin/login");
-    }
+    if (!sessionId) throw redirect("/panel/login");
 
     const { anime_db } = context.cloudflare.env;
 

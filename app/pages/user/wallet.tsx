@@ -77,7 +77,10 @@ export async function action({ request, context }: Route.ActionArgs) {
         return Response.json({ success: false, error: orderResult.error }, { status: 500 });
     }
 
-    const secretKey = env.PAYMENT_SECRET || "dev-secret-key";
+    const secretKey = env.PAYMENT_SECRET;
+    if (!secretKey) {
+        return Response.json({ success: false, error: "系统安全配置错误: 缺少支付密钥" }, { status: 500 });
+    }
     const payUrl = await generateSecurePayUrl(
         "/api/payment/mock-complete",
         orderResult.order!.order_no,

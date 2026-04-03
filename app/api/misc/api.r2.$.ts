@@ -7,9 +7,8 @@ import type { Headers as CloudflareHeaders } from "@cloudflare/workers-types";
  * 通过 Workers 访问 R2 存储桶中的图片
  * 路由: /api/r2/* -> R2 bucket
  */
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ params, context, request }: Route.LoaderArgs) {
     // 显式类型断言，确保 Env 类型正确
-    // context.cloudflare 是 unknown，需要先断言
     const env = (context as any).cloudflare.env as Env;
     const { IMAGES_BUCKET } = env;
 
@@ -23,6 +22,30 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
     if (!key) {
         return new Response("Bad Request: File path required", { status: 400 });
+    }
+
+    // [安全加固] 路径隔离：仅允许访问 uploads/ 目录
+    if (!key.startsWith('uploads/')) {
+        console.warn(`Blocked unauthorized R2 access attempt: ${key}`);
+        return new Response("Forbidden: Access restricted to 'uploads/' directory", { status: 403 });
+    }
+
+    // [安全加固] 防御路径遍历攻击
+    if (key.includes('..') || key.includes('//')) {
+        return new Response("Bad Request: Invalid path characters", { status: 400 });
+    }
+
+    // [安全加固] 限制代理范围：仅允许图片后缀，防止 R2 变成全量文件代理
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico'];
+    if (!allowedExtensions.some(ext => key.toLowerCase().endsWith(ext))) {
+        return new Response("Forbidden: Only images are allowed through this proxy", { status: 403 });
+    }
+
+    // [安全加固] 简单的防盗链校验
+    const referer = request.headers.get("Referer");
+    const url = new URL(request.url);
+    if (referer && !referer.includes(url.hostname)) {
+         // 可根据需求决定是否拒绝
     }
 
     try {

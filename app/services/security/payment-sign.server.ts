@@ -41,25 +41,42 @@ export async function generatePaymentSign(
 }
 
 /**
- * 验证签名
+ * 验证签名 (P1 安全加固: 防御时序攻击)
  */
 export async function verifyPaymentSign(
     params: Record<string, string | number>,
     sign: string,
     secretKey: string
 ): Promise<boolean> {
-    const expectedSign = await generatePaymentSign(params, secretKey);
-    return expectedSign.toLowerCase() === sign.toLowerCase();
+    const expectedSign = (await generatePaymentSign(params, secretKey)).toLowerCase();
+    const actualSign = sign.toLowerCase();
+
+    if (expectedSign.length !== actualSign.length) return false;
+
+    // 使用恒定时间比较，防止通过响应时间差异探测签名位数
+    let mismatch = 0;
+    for (let i = 0; i < expectedSign.length; i++) {
+        mismatch |= expectedSign.charCodeAt(i) ^ actualSign.charCodeAt(i);
+    }
+    return mismatch === 0;
 }
 
 /**
  * 生成订单号
- * 格式: ORD + 年月日时分秒 + 6位随机数
+ * 格式: ORD + 年月日时分秒 + 6位高强度随机数 (CSPRNG)
  */
 export function generateOrderNo(): string {
     const now = new Date();
     const datePart = now.toISOString().replace(/[-T:Z.]/g, '').slice(0, 14);
-    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    const randomBytes = new Uint8Array(4);
+    crypto.getRandomValues(randomBytes);
+    const randomPart = Array.from(randomBytes)
+        .map(b => b.toString(36))
+        .join('')
+        .substring(0, 6)
+        .toUpperCase();
+        
     return `ORD${datePart}${randomPart}`;
 }
 

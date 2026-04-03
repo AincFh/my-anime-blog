@@ -10,6 +10,7 @@ import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { getCategoryColor } from "~/utils/categoryColor";
 import { toast } from "~/components/ui/Toast";
 import { CommentsSection } from "~/components/ui/interactive/CommentsSection";
+import { getPlaceholderCover } from "~/utils/placeholder_covers";
 
 interface Article {
     id: number;
@@ -25,19 +26,42 @@ interface Article {
     updated_at: number | null;
 }
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 export async function loader({ request, params, context }: Route.LoaderArgs) {
+    const { getNotionArticleContent } = await import("~/services/notion.server.ts");
     const { getDB } = await import("~/utils/db");
     const db = getDB(context);
     const { slug } = params;
 
-    // 获取文章
-    const article = await db
-        .prepare(`
-            SELECT * FROM articles 
-            WHERE slug = ? AND (status = 'published' OR status IS NULL)
-        `)
-        .bind(slug)
-        .first() as Article | null;
+    let article: any = null;
+    let isNotion = false;
+
+    try {
+        // 1. 优先从 Notion 获取文章详情
+        const notionData = await getNotionArticleContent(slug!, context);
+        if (notionData) {
+            article = {
+                ...notionData.metadata,
+                content: notionData.content,
+            };
+            isNotion = true;
+        }
+    } catch (error) {
+        console.warn("Notion detail fetch failed, falling back to D1:", error);
+    }
+
+    // 2. 如果 Notion 没有，降级到 D1
+    if (!article) {
+        article = await db
+            .prepare(`
+                SELECT * FROM articles 
+                WHERE slug = ? AND (status = 'published' OR status IS NULL)
+            `)
+            .bind(slug)
+            .first() as Article | null;
+    }
 
     if (!article) {
         throw new Response("文章不存在", { status: 404 });
@@ -45,10 +69,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
     // 增加阅读量及附属功能务必使用 try-catch 以防阻塞主文章加载
     try {
-        await db
-            .prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
-            .bind(article.id)
-            .run();
+        if (!isNotion) {
+            await db
+                .prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
+                .bind(article.id)
+                .run();
+        }
 
         // 更新任务进度：阅读 (仅对登录用户)
         const { getSessionToken, verifySession } = await import('~/services/auth.server');
@@ -64,18 +90,18 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         console.error("Non-fatal error updating views or mission:", err);
     }
 
-    // 获取相关文章
+    // 获取相关文章 (暂从 D1 获取，以保持简单)
     let relatedArticles = { results: [] };
     try {
         relatedArticles = (await db
             .prepare(`
                 SELECT id, slug, title, cover_image, category, created_at
                 FROM articles 
-                WHERE category = ? AND id != ? AND (status = 'published' OR status IS NULL)
+                WHERE category = ? AND slug != ? AND (status = 'published' OR status IS NULL)
                 ORDER BY created_at DESC
                 LIMIT 3
             `)
-            .bind(article.category, article.id)
+            .bind(article.category, slug)
             .all()) as any;
     } catch (err) {
         console.error("Failed to fetch related articles:", err);
@@ -101,11 +127,13 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         article,
         relatedArticles: relatedArticles.results || [],
         comments: comments.results || [],
+        isNotion
     };
 }
 
 export default function ArticleDetailPage() {
-    const { article, relatedArticles, comments } = useLoaderData<typeof loader>();
+    const loaderData = useLoaderData<typeof loader>();
+    const { article, relatedArticles, comments } = loaderData;
 
     const formatDate = (timestamp: number) => {
         return new Date(timestamp * 1000).toLocaleDateString('zh-CN', {
@@ -132,101 +160,150 @@ export default function ArticleDetailPage() {
 
     const tags = parseTags(article.tags);
 
-    // const getCategoryColor = ... (removed local function)
+    // 预处理内容：修复字面量 \n 问题
+    const processedContent = (article.content || "").replace(/\\n/g, '\n');
+
+    // 提取目录 (Extract TOC from Markdown)
+    const extractHeadings = (text: string) => {
+        const headingLines = text.split('\n').filter(line => line.trim().match(/^#{2,3}\s/));
+        return headingLines.map(line => {
+            const cleanLine = line.trim();
+            const level = cleanLine.match(/^#+/)![0].length;
+            const title = cleanLine.replace(/^#+\s/, '').trim();
+            const id = title.toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-');
+            return { level, title, id };
+        });
+    };
+
+    const headings = extractHeadings(processedContent);
 
     return (
-        <div className="min-h-screen pt-safe md:pt-16 pb-20 w-full px-5 sm:px-8">
-            <div className="max-w-3xl mx-auto">
-                {/* 极简返回栏 */}
-                <Link
-                    to="/articles"
-                    className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-10 md:mb-16"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Articles
-                </Link>
+        <div className="min-h-screen bg-[#FBFBFB] dark:bg-[#050505] pt-safe md:pt-20 pb-32">
+            {/* 顶部阅读进度条 */}
+            <motion.div 
+                className="fixed top-0 left-0 right-0 h-[3px] bg-blue-600 dark:bg-blue-500 z-[100] origin-left"
+                style={{ scaleX: 0 }} // 此处需配合 CSS 或 Framer Motion 的 scroll 钩子，简单起见先放占位
+            />
 
-                {/* 沉浸感头部 */}
-                <motion.header
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="mb-10 md:mb-14"
-                >
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-[11px] font-bold uppercase tracking-widest rounded-full">
-                            {article.category || 'Uncategorized'}
-                        </span>
-                        <span className="text-[13px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
-                            {estimateReadTime(article.content || '')} read
-                        </span>
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-20 relative">
+                {/* 侧边返回键 - 极简悬浮 */}
+                <div className="hidden xl:block absolute -left-12 top-0 h-full">
+                    <div className="sticky top-32">
+                        <Link
+                            to="/articles"
+                            className="p-3 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-white/5 rounded-full text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all hover:scale-110 active:scale-95 block"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
                     </div>
+                </div>
 
-                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-sans font-black text-slate-900 dark:text-white mb-6 leading-tight md:leading-[1.1] tracking-tight text-pretty">
-                        {article.title}
-                    </h1>
-
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-6 border-t border-slate-100 dark:border-white/5 text-[14px] text-slate-500 dark:text-slate-400 font-medium">
-                        <span className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 opacity-70" />
-                            {formatDate(article.created_at)}
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <Eye className="w-4 h-4 opacity-70" />
-                            {article.views + 1} Views
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <Heart className="w-4 h-4 opacity-70" />
-                            {article.likes || 0} Likes
-                        </span>
-                    </div>
-                </motion.header>
-
-                {/* 无界震撼巨幕头图 */}
-                {article.cover_image && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                        className="mb-12 md:mb-16 -mx-5 sm:mx-0 sm:rounded-[32px] overflow-hidden bg-slate-100 dark:bg-slate-900"
+                <div className="max-w-3xl mx-auto">
+                    {/* 沉浸式头部 */}
+                    <motion.header
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className="mb-12 md:mb-20"
                     >
-                        <OptimizedImage
-                            src={article.cover_image}
-                            alt={article.title}
-                            aspectRatio="video"
-                            className="w-full h-auto object-cover"
-                        />
-                    </motion.div>
-                )}
+                        <div className="flex items-center gap-4 mb-8">
+                            <span className="px-4 py-1.5 bg-blue-600/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-[0.1em] rounded-full">
+                                {article.category || 'Uncategorized'}
+                            </span>
+                            <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                                <Clock className="w-4 h-4" />
+                                {estimateReadTime(processedContent)} 阅读
+                            </span>
+                        </div>
 
-                {/* 核心阅读区无边框流 (剥离动画避免字体发虚模糊) */}
-                <article className="mb-16 md:mb-24">
-                    <div
-                        className="prose prose-slate md:prose-xl max-w-none dark:prose-invert antialiased tracking-wide
-                            prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white
-                            prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-3xl
-                            prose-h3:text-2xl
-                            prose-p:text-slate-700 dark:prose-p:text-slate-200 prose-p:leading-relaxed prose-p:mb-8 font-medium
-                            prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
-                            prose-code:bg-slate-100 dark:prose-code:bg-slate-800/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-lg prose-code:text-[0.9em] prose-code:font-medium
-                            prose-pre:bg-slate-900 dark:prose-pre:bg-[#0A0A0A] prose-pre:border prose-pre:border-slate-800 dark:prose-pre:border-white/5 prose-pre:rounded-2xl prose-pre:shadow-2xl
-                            prose-img:rounded-[24px] prose-img:shadow-xl prose-img:my-10
-                            prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-white/5 prose-blockquote:rounded-r-2xl prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:not-italic"
-                        dangerouslySetInnerHTML={{
-                            __html: article.content?.replace(/\n/g, '<br>') || ''
-                        }}
-                    />
-                </article>
+                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-8 leading-[1.1] tracking-tight text-pretty">
+                            {article.title}
+                        </h1>
 
-                {/* 底部交互组 */}
-                <div className="pt-8 border-t border-slate-100 dark:border-white/5 mb-16 md:mb-24">
+                        <div className="flex items-center gap-8 py-8 border-y border-slate-100 dark:border-white/5 text-[14px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
+                            <span className="flex items-center gap-2.5">
+                                <Calendar className="w-4 h-4 opacity-50" />
+                                {formatDate(article.created_at)}
+                            </span>
+                            <span className="flex items-center gap-2.5">
+                                <Eye className="w-4 h-4 opacity-50" />
+                                {article.views + 1}
+                            </span>
+                            <span className="flex items-center gap-2.5">
+                                <Heart className="w-4 h-4 opacity-50" />
+                                {article.likes || 0}
+                            </span>
+                        </div>
+                    </motion.header>
+
+                    {/* 封面图 - 宽屏包裹 */}
+                    {article.cover_image && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                            className="mb-16 md:mb-24 -mx-6 sm:mx-0 sm:rounded-[40px] overflow-hidden shadow-2xl bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-white/5"
+                        >
+                            <OptimizedImage
+                                src={article.cover_image}
+                                alt={article.title}
+                                aspectRatio="video"
+                                className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-1000"
+                            />
+                        </motion.div>
+                    )}
+
+                    <div className="flex flex-col lg:flex-row gap-12 relative">
+                        {/* 目录 (TOC) - 宽屏专供悬浮 */}
+                        {headings.length > 0 && (
+                            <aside className="hidden lg:block lg:absolute lg:-right-[350px] lg:top-0 w-[240px]">
+                                <div className="sticky top-32 p-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[32px] border border-slate-200/50 dark:border-white/5">
+                                    <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-6">目录</h4>
+                                    <nav className="flex flex-col gap-4">
+                                        {headings.map((h, i) => (
+                                            <a
+                                                key={i}
+                                                href={`#${h.id}`}
+                                                className={`text-sm font-bold transition-all hover:text-blue-600 dark:hover:text-blue-400 ${h.level === 3 ? 'pl-4 opacity-60' : ''}`}
+                                            >
+                                                {h.title}
+                                            </a>
+                                        ))}
+                                    </nav>
+                                </div>
+                            </aside>
+                        )}
+
+                        {/* 正文内容 - 高奢 Prose */}
+                        <article className="flex-1 w-full prose prose-slate md:prose-xl max-w-none dark:prose-invert antialiased
+                                prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white
+                                prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-4xl prose-h2:pb-4 prose-h2:border-b prose-h2:border-slate-100 dark:prose-h2:border-white/5
+                                prose-h3:text-2xl prose-h3:mt-10
+                                prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:mb-10 font-medium
+                                prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-a:font-bold
+                                prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:text-[0.9em] prose-code:before:content-none prose-code:after:content-none
+                                prose-pre:bg-[#0A0A0A] dark:prose-pre:bg-[#050505] prose-pre:border prose-pre:border-slate-800 dark:prose-pre:border-white/5 prose-pre:rounded-[24px] prose-pre:shadow-2xl prose-pre:p-8
+                                prose-img:rounded-[32px] prose-img:shadow-2xl prose-img:my-16
+                                prose-blockquote:border-l-4 prose-blockquote:border-blue-600 prose-blockquote:bg-blue-50/50 dark:prose-blockquote:bg-blue-500/5 prose-blockquote:rounded-r-3xl prose-blockquote:px-8 prose-blockquote:py-4 prose-blockquote:not-italic prose-blockquote:font-bold">
+                            <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                    h2: ({node, ...props}) => <h2 id={props.children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-')} {...props} />,
+                                    h3: ({node, ...props}) => <h3 id={props.children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]/g, '-')} {...props} />
+                                }}
+                            >
+                                {processedContent}
+                            </ReactMarkdown>
+                        </article>
+                    </div>
+
+                    {/* 底部标签组 */}
                     {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-8">
+                        <div className="flex flex-wrap gap-3 mt-20 mb-16">
                             {tags.map((tag, i) => (
                                 <span
                                     key={i}
-                                    className="px-4 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1A1A1A] dark:hover:bg-[#222] text-slate-600 dark:text-slate-300 rounded-full text-[13px] font-bold transition-colors cursor-pointer"
+                                    className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 rounded-full text-[13px] font-black tracking-wide hover:border-blue-600 dark:hover:border-blue-500 transition-all cursor-pointer shadow-sm"
                                 >
                                     #{tag}
                                 </span>
@@ -234,73 +311,73 @@ export default function ArticleDetailPage() {
                         </div>
                     )}
 
-                    <div className="flex items-center gap-4">
+                    {/* 分享栏 - iOS 风格卡片 */}
+                    <div className="p-8 md:p-12 bg-white dark:bg-slate-900 rounded-[40px] border border-slate-200 dark:border-white/5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 mb-24 transition-all hover:shadow-2xl">
+                        <div className="text-center md:text-left">
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">喜欢这篇文章吗？</h3>
+                            <p className="text-slate-500 font-medium">如果内容对你有帮助，欢迎分享给更多的小伙伴！</p>
+                        </div>
                         <button
                             onClick={() => {
                                 navigator.clipboard.writeText(window.location.href);
-                                toast.success('链接已复制到剪贴板！');
+                                toast.success('链接已成功捕捉至剪贴板！');
                             }}
-                            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white dark:bg-white dark:text-black rounded-full text-[15px] font-bold hover:scale-[1.02] transition-transform active:scale-[0.98]"
+                            className="flex items-center gap-3 px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-[15px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95"
                         >
-                            <Share2 className="w-4 h-4" />
-                            Share Article
+                            <Share2 className="w-5 h-5" />
+                            分享地址
                         </button>
                     </div>
-                </div>
 
-                {/* 相关阅读矩阵 */}
-                {relatedArticles.length > 0 && (
-                    <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="mb-16 md:mb-24 pt-12 border-t border-slate-100 dark:border-white/5"
-                    >
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-8">
-                            Read Next
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {relatedArticles.map((related: any) => (
-                                <Link
-                                    key={related.id}
-                                    to={`/articles/${related.slug}`}
-                                    className="block group"
-                                >
-                                    <div className="aspect-[4/3] rounded-[24px] bg-slate-100 dark:bg-slate-800 mb-4 overflow-hidden border border-slate-200/50 dark:border-white/5">
-                                        {related.cover_image ? (
-                                            <OptimizedImage
-                                                src={related.cover_image}
-                                                alt={related.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
-                                                <span className="text-3xl opacity-50">📰</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg tracking-tight line-clamp-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-amber-500 transition-colors">
-                                        {related.title}
-                                    </h3>
+                    {/* 相关阅读 - 视觉磁贴 (Visual Tiles) */}
+                    {relatedArticles.length > 0 && (
+                        <section className="mb-24">
+                            <div className="flex items-end justify-between mb-10">
+                                <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+                                    Read Next
+                                </h2>
+                                <Link to="/articles" className="text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                                    查看全部
                                 </Link>
-                            ))}
-                        </div>
-                    </motion.section>
-                )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {relatedArticles.map((related: any) => {
+                                    const relCover = related.cover_image || getPlaceholderCover(related.category);
+                                    return (
+                                        <Link
+                                            key={related.id}
+                                            to={`/articles/${related.slug}`}
+                                            className="group relative h-[320px] rounded-[32px] overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-white/5 shadow-lg block"
+                                        >
+                                            <OptimizedImage
+                                                src={relCover}
+                                                alt={related.title}
+                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent p-8 flex flex-col justify-end">
+                                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">{related.category}</span>
+                                                <h3 className="text-xl font-black text-white leading-tight line-clamp-2">
+                                                    {related.title}
+                                                </h3>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    )}
 
-                {/* 评论区隔离与净化 */}
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <div className="pt-12 border-t border-slate-100 dark:border-white/5">
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-8">
-                            Discussions
-                        </h2>
+                    {/* 评论区 - 独立高奢岛 */}
+                    <section className="bg-white/50 dark:bg-slate-950/50 backdrop-blur-3xl p-8 md:p-12 rounded-[48px] border border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-4 mb-10">
+                            <div className="w-1.5 h-8 bg-blue-600 dark:bg-blue-500 rounded-full" />
+                            <h2 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+                                Discussions
+                            </h2>
+                        </div>
                         <CommentsSection articleId={article.id} comments={comments as any} />
-                    </div>
-                </motion.section>
+                    </section>
+                </div>
             </div>
         </div>
     );

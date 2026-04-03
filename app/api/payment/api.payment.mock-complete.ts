@@ -12,7 +12,13 @@ import { verifyPaymentSignature } from '~/services/payment/signature.server';
 import { redirect } from 'react-router';
 
 export async function loader({ request, context }: { request: Request; context: any }) {
-    const { anime_db, PAYMENT_SECRET } = context.cloudflare.env;
+    const { anime_db, PAYMENT_SECRET, ENVIRONMENT } = context.cloudflare.env;
+
+    // [安全加固] 严禁生产环境使用 Mock 支付
+    if (ENVIRONMENT === 'production') {
+        return new Response('Forbidden: Mock payment is disabled in production', { status: 403 });
+    }
+
     const url = new URL(request.url);
 
     // Extract parameters
