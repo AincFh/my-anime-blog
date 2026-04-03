@@ -1,11 +1,10 @@
 /**
- * 文章详情页
- * Apple HIG 阅读体验设计
+ * 文章详情页 - 使用主题系统
  */
 
 import { Link, useLoaderData } from "react-router";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock, ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock, ArrowRight, BookOpen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/articles.$slug";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
@@ -40,10 +39,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     try {
         const notionData = await getNotionArticleContent(slug!, context);
         if (notionData) {
-            article = {
-                ...notionData.metadata,
-                content: notionData.content,
-            };
+            article = { ...notionData.metadata, content: notionData.content };
             isNotion = true;
         }
     } catch (error) {
@@ -52,10 +48,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
     if (!article) {
         article = await db
-            .prepare(`
-                SELECT * FROM articles
-                WHERE slug = ? AND (status = 'published' OR status IS NULL)
-            `)
+            .prepare(`SELECT * FROM articles WHERE slug = ? AND (status = 'published' OR status IS NULL)`)
             .bind(slug)
             .first() as Article | null;
     }
@@ -64,82 +57,55 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         throw new Response("文章不存在", { status: 404 });
     }
 
-    // 增加阅读量（异步不阻塞）
     try {
         if (!isNotion) {
-            db.prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`)
-                .bind(article.id)
-                .run();
+            db.prepare(`UPDATE articles SET views = views + 1 WHERE id = ?`).bind(article.id).run();
         }
-
         const { getSessionToken, verifySession } = await import('~/services/auth.server');
         const { updateMissionProgress } = await import('~/services/membership/mission.server');
         const token = getSessionToken(request);
         if (token) {
             const { valid, user } = await verifySession(token, db);
-            if (valid && user) {
-                await updateMissionProgress(db, user.id, 'article_read');
-            }
+            if (valid && user) await updateMissionProgress(db, user.id, 'article_read');
         }
     } catch (err) {
         console.error("Non-fatal error:", err);
     }
 
-    // 获取相关文章
     let relatedArticles = { results: [] };
     try {
-        relatedArticles = (await db
-            .prepare(`
-                SELECT id, slug, title, cover_image, category, created_at
-                FROM articles
-                WHERE category = ? AND slug != ? AND (status = 'published' OR status IS NULL)
-                ORDER BY created_at DESC
-                LIMIT 3
-            `)
-            .bind(article.category, slug)
-            .all()) as any;
+        relatedArticles = (await db.prepare(`
+            SELECT id, slug, title, cover_image, category, created_at
+            FROM articles WHERE category = ? AND slug != ? AND (status = 'published' OR status IS NULL)
+            ORDER BY created_at DESC LIMIT 3
+        `).bind(article.category, slug).all()) as any;
     } catch (err) {
         console.error("Failed to fetch related articles:", err);
     }
 
-    // 获取评论
     let comments = { results: [] };
     try {
-        comments = (await db
-            .prepare(`
-                SELECT id, author, content, created_at, is_danmaku, avatar_style
-                FROM comments
-                WHERE article_id = ? AND status = 'approved'
-                ORDER BY created_at DESC
-            `)
-            .bind(article.id)
-            .all()) as any;
+        comments = (await db.prepare(`
+            SELECT id, author, content, created_at, is_danmaku, avatar_style
+            FROM comments WHERE article_id = ? AND status = 'approved'
+            ORDER BY created_at DESC
+        `).bind(article.id).all()) as any;
     } catch (err) {
         console.error("Failed to fetch comments:", err);
     }
 
-    return {
-        article,
-        relatedArticles: relatedArticles.results || [],
-        comments: comments.results || [],
-        isNotion
-    };
+    return { article, relatedArticles: relatedArticles.results || [], comments: comments.results || [], isNotion };
 }
 
 export function meta({ data }: Route.MetaArgs) {
     const article = data?.article;
-    if (!article) {
-        return [{ title: "文章未找到 - A.T. Field" }];
-    }
+    if (!article) return [{ title: "文章未找到 - A.T. Field" }];
     return [
         { title: `${article.title} - A.T. Field` },
         { name: "description", content: article.content?.slice(0, 160) || article.title },
         { property: "og:title", content: article.title },
-        { property: "og:description", content: article.content?.slice(0, 160) || '' },
         { property: "og:type", content: "article" },
         { property: "og:image", content: article.cover_image || '' },
-        { name: "article:published_time", content: new Date((article.created_at || 0) * 1000).toISOString() },
-        { name: "article:author", content: "Ainc" },
     ];
 }
 
@@ -171,25 +137,16 @@ export default function ArticleDetailPage() {
         });
     };
 
-    const estimateReadTime = (content: string) => {
-        const words = content.length;
-        const minutes = Math.ceil(words / 500);
-        return minutes;
-    };
+    const estimateReadTime = (content: string) => Math.ceil(content.length / 500);
 
     const parseTags = (tagsJson: string | null): string[] => {
         if (!tagsJson) return [];
-        try {
-            return JSON.parse(tagsJson);
-        } catch {
-            return [];
-        }
+        try { return JSON.parse(tagsJson); } catch { return []; }
     };
 
     const tags = parseTags(article.tags);
     const processedContent = (article.content || "").replace(/\\n/g, '\n');
 
-    // 提取目录
     const extractHeadings = (text: string) => {
         const headingLines = text.split('\n').filter(line => line.trim().match(/^#{2,3}\s/));
         return headingLines.map(line => {
@@ -206,30 +163,15 @@ export default function ArticleDetailPage() {
     const handleShare = async () => {
         const url = window.location.href;
         if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: article.title,
-                    text: article.content?.slice(0, 100) || '',
-                    url
-                });
-            } catch {
-                // 用户取消分享
-            }
+            try { await navigator.share({ title: article.title, url }); } catch {}
         } else {
             await navigator.clipboard.writeText(url);
-            // 可以加一个 toast 提示
         }
     };
 
     const handleLike = () => {
-        if (isLiked) {
-            setLikeCount(prev => prev - 1);
-            setIsLiked(false);
-        } else {
-            setLikeCount(prev => prev + 1);
-            setIsLiked(true);
-        }
-        // 实际提交到后端
+        setIsLiked(!isLiked);
+        setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
         fetch('/api/article/like', {
             method: 'POST',
             body: new URLSearchParams({ articleId: article.id.toString() })
@@ -237,63 +179,63 @@ export default function ArticleDetailPage() {
     };
 
     return (
-        <div ref={articleRef} className="min-h-screen bg-[var(--bg-primary)] dark:bg-[var(--bg-primary)]">
+        <div ref={articleRef} className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* 阅读进度条 */}
             <motion.div
                 className="fixed top-0 left-0 right-0 h-[3px] z-[100] origin-left"
                 style={{
                     scaleX: scrollYProgress,
-                    background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end), #d946ef)'
+                    background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end))'
                 }}
             />
 
             {/* 顶部导航 */}
-            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] border-b border-[var(--glass-border)] dark:border-[var(--glass-border)]">
+            <header className="sticky top-0 z-50 backdrop-blur-2xl border-b" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}>
                 <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-                    {/* 左侧 */}
                     <div className="flex items-center gap-4">
                         <Link
                             to="/articles"
-                            className="flex items-center gap-2 text-[15px] font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group"
+                            className="flex items-center gap-2 text-[15px] font-semibold hover:opacity-70 transition-colors"
+                            style={{ color: 'var(--text-secondary)' }}
                         >
                             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                             <span className="hidden sm:inline">返回</span>
                         </Link>
-
-                        {/* 进度指示器 */}
-                        <div className="hidden md:flex items-center gap-2 text-[13px] text-slate-400 dark:text-slate-500 font-medium">
-                            <div className="w-24 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div className="hidden md:flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                            <div className="w-24 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--glass-border)' }}>
                                 <motion.div
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
-                                    style={{ width: `${readProgress}%` }}
+                                    className="h-full rounded-full"
+                                    style={{
+                                        width: `${readProgress}%`,
+                                        background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end))'
+                                    }}
                                 />
                             </div>
                             <span>{readProgress}%</span>
                         </div>
                     </div>
 
-                    {/* 中间标题 */}
-                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 max-w-[300px] truncate text-[15px] font-bold text-slate-900 dark:text-white">
+                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 max-w-[300px] truncate text-[15px] font-bold">
                         {article.title}
                     </div>
 
-                    {/* 右侧操作 */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleLike}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${
-                                isLiked
-                                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                                    : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/15'
-                            }`}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all border"
+                            style={isLiked
+                                ? { backgroundColor: 'var(--color-primary-end)', color: 'white', borderColor: 'var(--color-primary-end)' }
+                                : { backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }
+                            }
                         >
-                            <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500' : ''}`} />
+                            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                             <span>{likeCount}</span>
                         </button>
 
                         <button
                             onClick={handleShare}
-                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/15 transition-all text-[13px] font-semibold"
+                            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all border"
+                            style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }}
                         >
                             <Share2 className="w-4 h-4" />
                             <span className="hidden sm:inline">分享</span>
@@ -302,19 +244,15 @@ export default function ArticleDetailPage() {
                 </div>
             </header>
 
-            {/* Hero 封面 */}
+            {/* 封面 */}
             {article.cover_image && (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 1 }}
                     className="relative w-full aspect-[21/9] md:aspect-[3/1] overflow-hidden"
                 >
-                    <OptimizedImage
-                        src={article.cover_image}
-                        alt={article.title}
-                        className="w-full h-full object-cover"
-                    />
+                    <OptimizedImage src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] dark:from-[var(--bg-primary)] via-transparent to-transparent" />
                 </motion.div>
             )}
@@ -329,41 +267,38 @@ export default function ArticleDetailPage() {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mb-12"
                 >
-                    {/* 分类和阅读时间 */}
                     <div className="flex items-center gap-4 mb-6">
                         <Link
                             to={`/articles?category=${article.category}`}
-                            className="px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-[11px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-indigo-500/25"
+                            className="px-4 py-1.5 text-white text-[11px] font-black uppercase tracking-wider rounded-full border border-transparent"
+                            style={{ background: 'linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end))' }}
                         >
                             {article.category || '无分类'}
                         </Link>
-                        <span className="flex items-center gap-2 text-[13px] text-slate-400 dark:text-slate-500 font-medium">
+                        <span className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
                             <Clock className="w-4 h-4" />
                             {estimateReadTime(processedContent)} 分钟阅读
                         </span>
                     </div>
 
-                    {/* 标题 */}
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-8 leading-[1.1] tracking-tight">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-8 leading-[1.1] tracking-tight">
                         {article.title}
                     </h1>
 
-                    {/* 作者信息 */}
-                    <div className="flex items-center justify-between py-6 border-y border-slate-200/80 dark:border-white/10">
+                    <div className="flex items-center justify-between py-6 border-y" style={{ borderColor: 'var(--glass-border)' }}>
                         <div className="flex items-center gap-4">
-                            {/* 头像 */}
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-indigo-500/25">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg" style={{ background: 'linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end))' }}>
                                 A
                             </div>
                             <div>
-                                <div className="font-bold text-slate-900 dark:text-white">Ainc</div>
-                                <div className="text-[13px] text-slate-500 dark:text-slate-400">
+                                <div className="font-bold">Ainc</div>
+                                <div className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
                                     {formatDate(article.created_at)}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-6 text-[13px] text-slate-400 dark:text-slate-500">
+                        <div className="flex items-center gap-6 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
                             <span className="flex items-center gap-2">
                                 <Eye className="w-4 h-4" />
                                 {(article.views + 1).toLocaleString()}
@@ -376,7 +311,7 @@ export default function ArticleDetailPage() {
                     </div>
                 </motion.header>
 
-                {/* 目录 (TOC) */}
+                {/* 目录 */}
                 {headings.length > 0 && (
                     <motion.aside
                         initial={{ opacity: 0, x: 20 }}
@@ -384,8 +319,8 @@ export default function ArticleDetailPage() {
                         transition={{ duration: 0.6, delay: 0.3 }}
                         className="hidden xl:block mb-12"
                     >
-                        <div className="sticky top-24 p-6 bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl rounded-[24px] border border-black/[0.06] dark:border-white/[0.08]">
-                            <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+                        <div className="sticky top-24 p-6 rounded-[24px] glass-card">
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
                                 <BookOpen className="w-4 h-4" />
                                 目录
                             </h4>
@@ -394,9 +329,8 @@ export default function ArticleDetailPage() {
                                     <a
                                         key={i}
                                         href={`#${h.id}`}
-                                        className={`text-[14px] font-medium transition-all hover:text-indigo-600 dark:hover:text-indigo-400 ${
-                                            h.level === 3 ? 'pl-4 opacity-60' : ''
-                                        }`}
+                                        className={`text-[14px] font-medium transition-all hover:opacity-70 ${h.level === 3 ? 'pl-4' : ''}`}
+                                        style={{ color: 'var(--text-primary)' }}
                                     >
                                         {h.title}
                                     </a>
@@ -411,21 +345,22 @@ export default function ArticleDetailPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="prose prose-lg md:prose-xl max-w-none dark:prose-invert
-                        prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white
-                        prose-h2:text-3xl md:prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:pb-4 prose-h2:border-b prose-h2:border-slate-200/80 dark:prose-h2:border-white/10
+                    className="prose prose-lg md:prose-xl max-w-none
+                        prose-headings:font-black prose-headings:tracking-tight
+                        prose-h2:text-3xl md:prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:pb-4 prose-h2:border-b
                         prose-h3:text-2xl md:prose-h3:text-3xl prose-h3:mt-10
-                        prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[1.9] prose-p:mb-8 font-medium
-                        prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-a:font-bold
+                        prose-p:leading-[1.9] prose-p:mb-8 font-medium
                         prose-code:bg-slate-100 dark:prose-code:bg-white/10 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:text-[0.875em] prose-code:before:content-none prose-code:after:content-none
                         prose-pre:bg-slate-900 dark:prose-pre:bg-black prose-pre:border prose-pre:border-white/10 prose-pre:rounded-2xl prose-pre:shadow-xl prose-pre:p-6 prose-pre:overflow-x-auto
-                        prose-pre:prose-pre:my-10
                         prose-img:rounded-3xl prose-img:shadow-xl prose-img:my-10
-                        prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:bg-indigo-500/5 dark:prose-blockquote:bg-indigo-500/10 prose-blockquote:rounded-r-2xl prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:not-italic prose-blockquote:font-semibold
+                        prose-blockquote:border-l-4 prose-blockquote:border-[var(--color-primary-start)] prose-blockquote:rounded-r-2xl prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:not-italic prose-blockquote:font-semibold
                         prose-ul:my-6 prose-li:my-2
-                        prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold
                         prose-hr:border-slate-200/50 dark:prose-hr:border-white/10 prose-hr:my-12
                     "
+                    style={{
+                        '--tw-prose-body': 'var(--text-primary)',
+                        '--tw-prose-headings': 'var(--text-primary)',
+                    } as any}
                 >
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
@@ -454,12 +389,13 @@ export default function ArticleDetailPage() {
                         transition={{ duration: 0.6 }}
                         className="flex flex-wrap gap-3 mt-16 mb-12"
                     >
-                        <Tag className="w-5 h-5 text-slate-400 dark:text-slate-500 mt-1" />
+                        <Tag className="w-5 h-5 mt-1" style={{ color: 'var(--text-secondary)' }} />
                         {tags.map((tag, i) => (
                             <Link
                                 key={i}
                                 to={`/articles?q=${encodeURIComponent(tag)}`}
-                                className="px-4 py-2 bg-white dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/10 text-slate-600 dark:text-slate-400 rounded-full text-[13px] font-semibold hover:border-indigo-500/50 dark:hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+                                className="px-4 py-2 rounded-full text-[13px] font-semibold border transition-all hover:opacity-80"
+                                style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }}
                             >
                                 #{tag}
                             </Link>
@@ -472,20 +408,21 @@ export default function ArticleDetailPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="p-8 md:p-10 bg-gradient-to-br from-indigo-500/5 via-violet-500/5 to-fuchsia-500/5 dark:from-indigo-500/10 dark:via-violet-500/10 dark:to-fuchsia-500/10 rounded-[32px] border border-indigo-500/10 dark:border-indigo-500/20 mb-16"
+                    className="p-8 md:p-10 rounded-[32px] border mb-16"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(255, 159, 67, 0.08), rgba(255, 107, 107, 0.05))',
+                        borderColor: 'var(--glass-border)'
+                    }}
                 >
                     <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
                         <div className="flex-1 text-center md:text-left">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                                喜欢这篇文章吗？
-                            </h3>
-                            <p className="text-slate-500 dark:text-slate-400">
-                                如果内容对你有帮助，欢迎分享给更多的小伙伴！
-                            </p>
+                            <h3 className="text-2xl font-black mb-2">喜欢这篇文章吗？</h3>
+                            <p style={{ color: 'var(--text-secondary)' }}>如果内容对你有帮助，欢迎分享给更多的小伙伴！</p>
                         </div>
                         <button
                             onClick={handleShare}
-                            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full font-bold text-[14px] shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all"
+                            className="flex items-center gap-3 px-8 py-4 rounded-full font-bold text-[14px] text-white transition-all hover:opacity-80"
+                            style={{ background: 'linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end))' }}
                         >
                             <Share2 className="w-5 h-5" />
                             分享文章
@@ -497,16 +434,15 @@ export default function ArticleDetailPage() {
                 {relatedArticles.length > 0 && (
                     <section className="mb-16">
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                                <Sparkles className="w-6 h-6 text-indigo-500" />
+                            <h2 className="text-2xl md:text-3xl font-black flex items-center gap-3">
                                 相关阅读
                             </h2>
                             <Link
                                 to="/articles"
-                                className="text-[13px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                                className="text-[13px] font-semibold flex items-center gap-1 hover:opacity-70 transition-all"
+                                style={{ color: 'var(--color-primary-start)' }}
                             >
-                                查看全部
-                                <ArrowRight className="w-4 h-4" />
+                                查看全部 <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>
 
@@ -520,7 +456,7 @@ export default function ArticleDetailPage() {
                                 >
                                     <Link
                                         to={`/articles/${related.slug}`}
-                                        className="group block rounded-[24px] overflow-hidden bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                                        className="group block rounded-[24px] overflow-hidden glass-card"
                                     >
                                         <div className="relative aspect-[16/9] overflow-hidden">
                                             <OptimizedImage
@@ -529,14 +465,10 @@ export default function ArticleDetailPage() {
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                            <span className="absolute bottom-3 left-3 text-white text-[10px] font-bold uppercase tracking-wider">
-                                                {related.category}
-                                            </span>
+                                            <span className="absolute bottom-3 left-3 text-white text-[10px] font-bold uppercase tracking-wider">{related.category}</span>
                                         </div>
                                         <div className="p-5">
-                                            <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                                {related.title}
-                                            </h3>
+                                            <h3 className="font-bold line-clamp-2 group-hover:opacity-70 transition-opacity">{related.title}</h3>
                                         </div>
                                     </Link>
                                 </motion.div>
@@ -546,30 +478,22 @@ export default function ArticleDetailPage() {
                 )}
 
                 {/* 评论区 */}
-                <section className="bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl p-8 md:p-12 rounded-[32px] border border-black/[0.06] dark:border-white/[0.08] mb-16">
+                <section className="p-8 md:p-12 rounded-[32px] glass-card mb-16">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="w-1.5 h-8 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-full" />
-                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
-                            评论区
-                        </h2>
-                        <span className="px-3 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[12px] font-bold rounded-full">
+                        <div className="w-1.5 h-8 rounded-full" style={{ background: 'linear-gradient(180deg, var(--color-primary-start), var(--color-primary-end))' }} />
+                        <h2 className="text-2xl md:text-3xl font-black">评论区</h2>
+                        <span className="px-3 py-1 text-[12px] font-bold rounded-full" style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>
                             {comments.length} 条
                         </span>
                     </div>
-                    <CommentsSection
-                        articleId={article.id}
-                        comments={comments as any}
-                    />
+                    <CommentsSection articleId={article.id} comments={comments as any} />
                 </section>
             </article>
 
-            {/* 底部导航 */}
-            <footer className="border-t border-slate-200/50 dark:border-white/10 py-8">
-                <div className="max-w-[800px] mx-auto px-6 text-center text-[13px] text-slate-400 dark:text-slate-500">
-                    <Link
-                        to="/articles"
-                        className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
-                    >
+            {/* 底部 */}
+            <footer className="border-t py-8" style={{ borderColor: 'var(--glass-border)' }}>
+                <div className="max-w-[800px] mx-auto px-6 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                    <Link to="/articles" className="inline-flex items-center gap-2 font-semibold hover:opacity-70 transition-all" style={{ color: 'var(--color-primary-start)' }}>
                         <ArrowLeft className="w-4 h-4" />
                         返回文章专栏
                     </Link>
