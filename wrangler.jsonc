@@ -21,8 +21,13 @@
 		"CSRF_SECRET": "",
 		"SESSION_SECRET": "",
 		"ENVIRONMENT": "development",
-		// 使用 wrangler secret put NOTION_TOKEN 设置
+		// Notion 文章库
 		"NOTION_DATABASE_ID": "f9e50175c2fe408d86f46d2067e2ec53",
+		// Notion 其他内容库
+		"NOTION_TIMELINE_DATABASE_ID": "7c109de2528e48189c6885a81cab2761",
+		"NOTION_SITE_CONTENT_DATABASE_ID": "a4b83be5b0734eb983fffbd7dbf05bb4",
+		"NOTION_CHANGELOG_DATABASE_ID": "33253a043a88439f87dc4aa3f184166c",
+		"NOTION_ANNOUNCEMENT_DATABASE_ID": "76304e0ca64a4ac28e851a1cddc68467",
 		"PAYMENT_CALLBACK_IPS": "127.0.0.1,::1"
 	},
 	"observability": {
@@ -57,5 +62,11 @@
 			"binding": "ANALYTICS",
 			"dataset": "my_anime_blog_analytics"
 		}
-	]
+	],
+	// Cron Trigger: 每 6 小时自动同步 Notion
+	"triggers": {
+		"crons": [
+			"0 */6 * * *"  // 每天 00:00, 06:00, 12:00, 18:00 执行
+		]
+	}
 }

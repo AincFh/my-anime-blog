@@ -21,4 +21,12 @@ export interface Env {
     SESSION_SECRET: string;
     ENVIRONMENT: 'development' | 'production';
     PAYMENT_CALLBACK_IPS: string;
+
+    // Notion Integration
+    NOTION_TOKEN: string;
+    NOTION_DATABASE_ID: string;
+    NOTION_TIMELINE_DATABASE_ID: string;
+    NOTION_SITE_CONTENT_DATABASE_ID: string;
+    NOTION_CHANGELOG_DATABASE_ID: string;
+    NOTION_ANNOUNCEMENT_DATABASE_ID: string;
 }
