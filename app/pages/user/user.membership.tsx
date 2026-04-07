@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useLoaderData, useFetcher, Link } from "react-router";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
-import { ClientOnly } from "~/components/common/ClientOnly";
+import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { PrivilegeComparisonTable } from "~/components/membership/PrivilegeComparisonTable";
 import { useUser } from "~/hooks/useUser";
 import { getSessionToken, verifySession } from "~/services/auth.server";

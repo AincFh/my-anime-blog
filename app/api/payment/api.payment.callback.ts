@@ -56,7 +56,11 @@ export async function action({ request, context }: { request: Request; context: 
             metadata: { reason: 'IP 不在白名单', ip: clientIP },
             riskLevel: 'high',
         });
-        return new Response('Forbidden', { status: 403 });
+        // 生产环境未配置白名单也会触发此分支，此时返回 500 表示服务端配置错误
+        return new Response(
+            isDevelopment ? 'Forbidden' : 'Service Configuration Error',
+            { status: isDevelopment ? 403 : 500 }
+        );
     }
 
     try {

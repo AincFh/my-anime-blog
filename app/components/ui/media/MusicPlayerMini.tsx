@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, SkipBack, SkipForward, ListMusic, X, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import type { Song } from "~/hooks/useMusicPlayer";
 
 /**
  * 局部态组件 (Component A): 原有的小尺寸悬浮播放器
@@ -21,6 +22,35 @@ export const PreloadLazyImage = ({ src, alt, className, crossOrigin }: PreloadLa
     </div>
   );
 };
+
+export interface MusicPlayerMiniProps {
+  songs: Song[];
+  currentSong: Song | null;
+  currentIndex: number;
+  setCurrentIndex: (index: number) => void;
+  isPlaying: boolean;
+  togglePlay: () => void;
+  handleNext: () => void;
+  handlePrev: () => void;
+  currentTime: number;
+  duration: number;
+  handleSeek: (time: number) => void;
+  volume: number;
+  setVolume: (volume: number) => void;
+  isMuted: boolean;
+  setIsMuted: (muted: boolean) => void;
+  isLoading: boolean;
+  currentTimeRef: React.RefObject<HTMLSpanElement | null>;
+  progressBarRef: React.RefObject<HTMLInputElement | null>;
+  progressFillRef: React.RefObject<HTMLDivElement | null>;
+  isExpanded: boolean;
+  toggleExpand: () => void;
+  showPlaylist: boolean;
+  setShowPlaylist: (show: boolean) => void;
+  stylusState: "iddle" | "lifting" | "playing";
+  audioData: Uint8Array | null;
+  onFullscreen: () => void;
+}
 
 export function MusicPlayerMini({
   songs = [],
@@ -49,7 +79,7 @@ export function MusicPlayerMini({
   stylusState,
   audioData,
   onFullscreen
-}: any) {
+}: MusicPlayerMiniProps) {
 
   const formatTime = (time: number) => {
     if (time === Infinity || !isFinite(time)) return "LIVE";

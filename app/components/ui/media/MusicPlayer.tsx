@@ -48,7 +48,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
         const ctx = new AudioCtx();
         const source = ctx.createMediaElementSource(audioRef.current);
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 64;
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.65;
         source.connect(analyser);
         analyser.connect(ctx.destination);
 
@@ -88,34 +89,33 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   // 极限守护：完全跳过 React 状态树直接修改 DOM 取进度
   useEffect(() => {
     let lastTime = -1;
-    let rafId: number;
-    const updateProgress = () => {
+    const intervalId = setInterval(() => {
       const audio = audioRef.current;
-      if (audio && !audio.paused && isFinite(audio.duration)) {
-        const safeDuration = audio.duration > 0 ? audio.duration : 100;
-        const progressPercent = Math.max(0, Math.min((audio.currentTime / safeDuration) * 100, 100)) || 0;
+      if (!audio || audio.paused || isNaN(audio.duration)) return;
 
-        if (progressFillRef.current) progressFillRef.current.style.width = `${progressPercent}%`;
-        if (progressBarRef.current) progressBarRef.current.value = String(audio.currentTime);
+      const safeDuration = audio.duration > 0 ? audio.duration : 100;
+      const progressPercent = Math.max(0, Math.min((audio.currentTime / safeDuration) * 100, 100)) || 0;
 
+      if (progressFillRef.current) progressFillRef.current.style.width = `${progressPercent}%`;
+      if (progressBarRef.current) progressBarRef.current.value = String(audio.currentTime);
+
+      if (Math.abs(audio.currentTime - lastTime) >= 1) {
+        lastTime = audio.currentTime;
         if (currentTimeRef.current) {
           const time = audio.currentTime;
-          const mins = Math.floor(time / 60);
-          const secs = Math.floor(time % 60);
-          currentTimeRef.current.innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
+          if (time === Infinity || !isFinite(time)) currentTimeRef.current.innerText = "LIVE";
+          else {
+             const mins = Math.floor(time / 60);
+             const secs = Math.floor(time % 60);
+             currentTimeRef.current.innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
+          }
         }
-        
-        // 高频同步：每帧更新状态以供歌词计算，不再有 1s 限制
         setCurrentTime(audio.currentTime);
-
-        const currentDur = audio.duration;
-        if (currentDur && currentDur !== duration) setDuration(currentDur);
       }
-      rafId = requestAnimationFrame(updateProgress);
-    };
-
-    rafId = requestAnimationFrame(updateProgress);
-    return () => cancelAnimationFrame(rafId);
+      const currentDur = audio.duration;
+      if (currentDur && currentDur !== duration) setDuration(currentDur);
+    }, 250);
+    return () => clearInterval(intervalId);
   }, [audioRef, setCurrentTime, setDuration, duration]);
 
   // Escape 劫持退出全屏
@@ -137,13 +137,9 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
   if (!isMounted || !isVisible) return null;
 
-  // 引入 0.5s 的提前量补偿，解决歌词滞后问题
-  const SYNC_OFFSET = 0.5;
   const activeLyricIndex = currentLyrics.findIndex((l: any, i: number) =>
-    l.time <= (currentTime + SYNC_OFFSET) && (!currentLyrics[i + 1] || currentLyrics[i + 1].time > (currentTime + SYNC_OFFSET))
+    l.time <= currentTime && (!currentLyrics[i + 1] || currentLyrics[i + 1].time > currentTime)
   );
-
-
 
   const sharedProps = {
     songs, currentSong, currentIndex, setCurrentIndex,

@@ -51,7 +51,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         const header = new Uint8Array(arrayBuffer.slice(0, 4));
         const hex = Array.from(header).map(b => b.toString(16).padStart(2, '0')).join('');
 
-        // 常见图片魔数
+        // 常见图片魔数（SVG 已禁用以防止 XSS）
         // JPEG: FFD8FF
         // PNG: 89504E47
         // GIF: 47494638

@@ -31,20 +31,20 @@ export async function uploadToR2(
     return { success: false, error: `文件大小超过限制（最大 ${maxSize / 1024 / 1024}MB）` };
   }
 
-  // 检查文件类型
+  // 检查文件类型（禁止 SVG 以防止 XSS 攻击）
   const allowedTypes = [
     'image/jpeg',
     'image/png',
     'image/gif',
     'image/webp',
-    'image/svg+xml',
+    // 'image/svg+xml' 已移除 - SVG 文件可能包含恶意脚本，存在 XSS 风险
     'audio/mpeg',
     'audio/mp3',
     'audio/wav',
   ];
 
   if (!allowedTypes.includes(file.type)) {
-    return { success: false, error: '不支持的文件类型' };
+    return { success: false, error: '不支持的文件类型，仅支持 JPG/PNG/GIF/WEBP/MP3/WAV' };
   }
 
   try {
@@ -109,7 +109,7 @@ function getFileExtension(originalName: string, mimeType: string): string {
     'image/png': '.png',
     'image/gif': '.gif',
     'image/webp': '.webp',
-    'image/svg+xml': '.svg',
+    // SVG 已禁用 - 存在 XSS 风险
     'audio/mpeg': '.mp3',
     'audio/mp3': '.mp3',
     'audio/wav': '.wav',

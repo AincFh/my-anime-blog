@@ -26,6 +26,11 @@
 			"database_name": "my-anime-blog",
 			"database_id": "8402c527-79c1-4d4a-87d6-b7c2d44d0ab7",
 			"remote": true
+		},
+		{
+			"binding": "anime_db_local",
+			"database_name": "anime-db-local",
+			"database_id": "8ca52341-a718-49a2-a360-f8e3268f7b7e"
 		}
 	],
 	"kv_namespaces": [

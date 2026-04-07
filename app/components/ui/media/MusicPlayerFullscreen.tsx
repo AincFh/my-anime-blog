@@ -1,12 +1,44 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, SkipBack, SkipForward, ListMusic, X, Volume2, VolumeX, Minimize2, Maximize2, Repeat, Shuffle, List } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, ListMusic, X, Volume2, VolumeX, Minimize2, Repeat, Shuffle, List } from "lucide-react";
 import { PreloadLazyImage } from "./MusicPlayerMini";
+import type { Song, LyricLine } from "~/hooks/useMusicPlayer";
 
 /**
  * 局部态组件 (Component B): 全屏沉浸式流媒体播放舱
  * 设计语言：Apple Music 高强模糊 + 网易云 PC 端巨幕排版
  */
+
+export interface MusicPlayerFullscreenProps {
+  songs: Song[];
+  currentSong: Song | null;
+  currentIndex: number;
+  setCurrentIndex: (index: number) => void;
+  isPlaying: boolean;
+  togglePlay: () => void;
+  handleNext: () => void;
+  handlePrev: () => void;
+  currentTime: number;
+  duration: number;
+  handleSeek: (time: number) => void;
+  volume: number;
+  setVolume: (volume: number) => void;
+  isMuted: boolean;
+  setIsMuted: (muted: boolean) => void;
+  isLoading: boolean;
+  currentTimeRef: React.RefObject<HTMLSpanElement | null>;
+  progressBarRef: React.RefObject<HTMLInputElement | null>;
+  progressFillRef: React.RefObject<HTMLDivElement | null>;
+  showPlaylist: boolean;
+  setShowPlaylist: (show: boolean) => void;
+  currentLyrics: LyricLine[];
+  activeLyricIndex: number;
+  stylusState: "iddle" | "lifting" | "playing";
+  analyserNode: AnalyserNode | null;
+  onClose: () => void;
+  onMinimize: () => void;
+}
+
 export function MusicPlayerFullscreen({
   songs, currentSong, currentIndex, setCurrentIndex,
   isPlaying, togglePlay, handleNext, handlePrev,
@@ -16,10 +48,10 @@ export function MusicPlayerFullscreen({
   currentTimeRef, progressBarRef, progressFillRef,
   showPlaylist, setShowPlaylist,
   currentLyrics, activeLyricIndex, stylusState,
-  analyserNode, // 大脑传过来的分析器
+  analyserNode,
   onClose,
   onMinimize
-}: any) {
+}: MusicPlayerFullscreenProps) {
 
   const formatTime = (time: number) => {
     if (time === Infinity || !isFinite(time)) return "LIVE";
@@ -29,11 +61,9 @@ export function MusicPlayerFullscreen({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // P5: 歌词动态高度物理偏移系统
   const [lyricOffsets, setLyricOffsets] = useState<{ top: number; height: number }[]>([]);
   const lyricListRef = useRef<HTMLDivElement>(null);
 
-  // 测量歌词行物理位置 (使用 useCallback 保证引用稳定)
   const measureLyrics = React.useCallback(() => {
     if (lyricListRef.current) {
       const children = Array.from(lyricListRef.current.children) as HTMLElement[];
@@ -47,9 +77,7 @@ export function MusicPlayerFullscreen({
 
   React.useLayoutEffect(() => {
     measureLyrics();
-    // 增加延迟测量以确保换行布局、字体渲染完成
     const timer = setTimeout(measureLyrics, 150);
-    
     window.addEventListener('resize', measureLyrics);
     return () => {
       window.removeEventListener('resize', measureLyrics);
@@ -57,21 +85,17 @@ export function MusicPlayerFullscreen({
     };
   }, [currentLyrics, measureLyrics]);
 
-
-  // ==================== 网易云级水波纹可视化引擎 ====================
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const waveStateRef = useRef({
     phase: 0,
-    // 平滑后的频谱值（指数衰减阻尼），消除抖动
     smoothLow: 0,
     smoothMid: 0,
     smoothHigh: 0,
     smoothOverall: 0,
   });
-  // 从封面图提取的主色调
   const [dominantColor, setDominantColor] = useState<[number, number, number]>([255, 122, 0]);
+  const svgIds = React.useId().replace(/:/g, "");
 
-  // ==================== 封面图色彩提取 ====================
   useEffect(() => {
     if (!currentSong?.pic) return;
     const img = new Image();
@@ -81,23 +105,19 @@ export function MusicPlayerFullscreen({
         const sampleCanvas = document.createElement("canvas");
         const sCtx = sampleCanvas.getContext("2d");
         if (!sCtx) return;
-        // 缩小至 8x8 用于快速色彩取样
         sampleCanvas.width = 8;
         sampleCanvas.height = 8;
         sCtx.drawImage(img, 0, 0, 8, 8);
         const pixels = sCtx.getImageData(0, 0, 8, 8).data;
-        // 取所有像素的加权平均色，跳过过暗/过亮像素
         let rSum = 0, gSum = 0, bSum = 0, count = 0;
         for (let i = 0; i < pixels.length; i += 4) {
           const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
           const brightness = r * 0.299 + g * 0.587 + b * 0.114;
-          // 过滤过暗(<30)和过亮(>220)的像素，避免提取到黑/白边
           if (brightness > 30 && brightness < 220) {
             rSum += r; gSum += g; bSum += b; count++;
           }
         }
         if (count > 0) {
-          // 轻微提高饱和度：将 RGB 偏移向远离灰度的方向
           const avg = (rSum + gSum + bSum) / (count * 3);
           const boost = 1.3;
           const r = Math.min(255, Math.round(avg + (rSum / count - avg) * boost));
@@ -105,104 +125,168 @@ export function MusicPlayerFullscreen({
           const b = Math.min(255, Math.round(avg + (bSum / count - avg) * boost));
           setDominantColor([r, g, b]);
         }
-      } catch { /* 跨域失败时保持默认橙色 */ }
+      } catch { }
     };
     img.src = currentSong.pic;
   }, [currentSong?.pic]);
 
-  // ==================== Canvas 渲染主循环（P1: 查找表 + 半段优化） ====================
   useEffect(() => {
-    if (!analyserNode || !canvasRef.current) return;
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
+    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio ?? 1, 2) : 1;
+    const cssSize = 560;
+    canvas.width = Math.round(cssSize * dpr);
+    canvas.height = Math.round(cssSize * dpr);
+    canvas.style.width = `${cssSize}px`;
+    canvas.style.height = `${cssSize}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     let rafId: number;
-    const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
     const state = waveStateRef.current;
-    const SMOOTH = 0.82;
-    
-    // P1: 预计算三角函数查找表（90段，计算量减半）
-    const SEG = 90;
-    const cosLUT = new Float32Array(SEG + 1);
-    const sinLUT = new Float32Array(SEG + 1);
-    for (let j = 0; j <= SEG; j++) {
-      const a = (j / SEG) * Math.PI * 2;
-      cosLUT[j] = Math.cos(a);
-      sinLUT[j] = Math.sin(a);
-    }
-    
-    // P3: 渐变缓存
-    let cachedGlowRadius = -1;
-    let cachedGradient: CanvasGradient | null = null;
-    
+    const dataArray = analyserNode ? new Uint8Array(analyserNode.frequencyBinCount) : null;
+
     const render = () => {
       rafId = requestAnimationFrame(render);
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!isPlaying) return;
-      
-      analyserNode.getByteFrequencyData(dataArray);
-      state.phase += 0.015;
-      
-      let lowRaw = 0, midRaw = 0, highRaw = 0;
-      for (let i = 0; i < 6; i++) lowRaw += dataArray[i];
-      for (let i = 6; i < 16; i++) midRaw += dataArray[i];
-      for (let i = 16; i < 28; i++) highRaw += dataArray[i];
-      lowRaw /= 6; midRaw /= 10; highRaw /= 12;
-      
-      state.smoothLow = Math.max(state.smoothLow * SMOOTH, lowRaw * (1 - SMOOTH) + state.smoothLow * SMOOTH);
-      state.smoothMid = Math.max(state.smoothMid * SMOOTH, midRaw * (1 - SMOOTH) + state.smoothMid * SMOOTH);
-      state.smoothHigh = Math.max(state.smoothHigh * SMOOTH, highRaw * (1 - SMOOTH) + state.smoothHigh * SMOOTH);
-      state.smoothOverall = (state.smoothLow * 0.5 + state.smoothMid * 0.3 + state.smoothHigh * 0.2);
-      
-      const { smoothLow, smoothMid, smoothHigh, smoothOverall, phase } = state;
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
+      ctx.clearRect(0, 0, cssSize, cssSize);
+
+      const cx = cssSize / 2;
+      const cy = cssSize / 2;
       const [cr, cg, cb] = dominantColor;
-      
-      // 绘制 5 层同心波环（P1: 90 段代替 180 段）
-      for (let ri = 0; ri < 5; ri++) {
-        const baseRadius = 200 + ri * 18;
-        const ringEnergy = ri < 2 ? smoothLow : ri < 4 ? smoothMid : smoothHigh;
-        const ne = ringEnergy / 255;
-        const wc = 4 + ri;
-        const ws = 0.8 + ri * 0.15;
-        const ma = (12 - ri * 1.5) * (0.3 + ne * 0.7);
-        const alpha = (0.25 - ri * 0.04) * (0.4 + ne * 0.6);
-        
-        ctx.beginPath();
-        for (let j = 0; j <= SEG; j++) {
-          const a = (j / SEG) * Math.PI * 2;
-          const w1 = Math.sin(a * wc + phase * ws) * ma;
-          const w2 = Math.sin(a * (wc + 2) - phase * ws * 1.3) * ma * 0.4;
-          const w3 = cosLUT[j] * phase * 0.5 > 0 ? Math.cos(a * 2 + phase * 0.5) * ma * 0.2 : -Math.cos(a * 2 + phase * 0.5) * ma * 0.2;
-          const r = baseRadius + w1 + w2 + (Math.cos(a * 2 + phase * 0.5) * ma * 0.2);
-          if (j === 0) ctx.moveTo(cx + cosLUT[j] * r, cy + sinLUT[j] * r);
-          else ctx.lineTo(cx + cosLUT[j] * r, cy + sinLUT[j] * r);
+      const discR = 190;
+      const innerHoleR = discR + 3;
+      state.phase += isPlaying ? 0.026 : 0.014;
+
+      if (analyserNode && dataArray) {
+        analyserNode.getByteFrequencyData(dataArray);
+      }
+
+      let bass = 0.14;
+      if (isPlaying && dataArray && dataArray.length > 0) {
+        let s = 0;
+        const n = Math.min(24, dataArray.length);
+        for (let i = 0; i < n; i++) {
+          s += dataArray[i]!;
         }
-        ctx.closePath();
-        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, ${alpha.toFixed(3)})`;
-        ctx.lineWidth = Math.max(1, 2.5 - ri * 0.3);
-        ctx.stroke();
+        bass = s / n / 255;
       }
-      
-      // P3: 渐变缓存复用
-      const gi = smoothOverall / 255;
-      const gr = Math.round(200 + gi * 30);
-      if (gr !== cachedGlowRadius || !cachedGradient) {
-        cachedGlowRadius = gr;
-        cachedGradient = ctx.createRadialGradient(cx, cy, 160, cx, cy, gr + 80);
-        cachedGradient.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${(0.06 * gi).toFixed(3)})`);
-        cachedGradient.addColorStop(0.6, `rgba(${cr}, ${cg}, ${cb}, ${(0.03 * gi).toFixed(3)})`);
-        cachedGradient.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`);
-      }
+
+      const binCount = dataArray?.length ?? 1;
+      const SEG = 128;
+
+      const ringPoints = (bumpScale: number, phaseShift: number, floorH: number) => {
+        const pts: { x: number; y: number }[] = [];
+        for (let i = 0; i <= SEG; i++) {
+          const a = (i / SEG) * Math.PI * 2;
+          let w = 0.22;
+          if (isPlaying && dataArray) {
+            const idx = Math.min(binCount - 1, Math.floor((i / SEG) * binCount));
+            w = dataArray[idx]! / 255;
+          } else {
+            w = 0.16 + 0.14 * Math.sin(state.phase * 1.7 + a * 2.2 + phaseShift);
+          }
+          const flow = Math.sin(state.phase * 3.4 + a * 5 + phaseShift * 1.3) * (isPlaying ? 0.42 : 0.24);
+          // 只做轻微「水纹起伏」，禁止用过小的方位系数（曾导致右侧一整段塌掉）
+          const shape = 0.8 + 0.2 * Math.abs(Math.cos(a * 0.5 + phaseShift));
+          const h = Math.max(floorH, (w * bumpScale + flow * bumpScale * 0.38) * shape);
+          const r = innerHoleR + 10 + h;
+          const x = cx + Math.cos(a) * r;
+          const y = cy + Math.sin(a) * r;
+          pts.push({ x, y });
+        }
+        return pts;
+      };
+
+      const bumpOut = isPlaying ? 58 + bass * 52 : 28;
+      const bumpMid = isPlaying ? 36 + bass * 36 : 16;
+      const outerPts = ringPoints(bumpOut, 0, 14);
+      const midPts = ringPoints(bumpMid, 0.9, 10);
+
+      const haloR = discR + 48 + bass * 64;
+      const halo = ctx.createRadialGradient(cx, cy, discR - 28, cx, cy, haloR + 130);
+      halo.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${0.07 + bass * 0.09})`);
+      halo.addColorStop(0.38, `rgba(${cr}, ${cg}, ${cb}, ${0.16 + bass * 0.14})`);
+      halo.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = halo;
       ctx.beginPath();
-      ctx.arc(cx, cy, gr + 80, 0, Math.PI * 2);
-      ctx.fillStyle = cachedGradient!;
+      ctx.arc(cx, cy, haloR + 130, 0, Math.PI * 2);
       ctx.fill();
+
+      // 主旋律水波：外圈环形水体（挖空唱片，不挡封面）
+      ctx.beginPath();
+      ctx.moveTo(outerPts[0]!.x, outerPts[0]!.y);
+      for (let i = 1; i <= SEG; i++) {
+        ctx.lineTo(outerPts[i]!.x, outerPts[i]!.y);
+      }
+      ctx.closePath();
+      ctx.moveTo(cx + innerHoleR, cy);
+      ctx.arc(cx, cy, innerHoleR, 0, Math.PI * 2, true);
+      const wGrad = ctx.createRadialGradient(cx, cy, innerHoleR - 8, cx, cy, innerHoleR + bumpOut + 60);
+      wGrad.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0.12)`);
+      wGrad.addColorStop(0.42, `rgba(${cr}, ${cg}, ${cb}, ${isPlaying ? 0.48 : 0.26})`);
+      wGrad.addColorStop(0.72, `rgba(${Math.min(255, cr + 35)}, ${Math.min(255, cg + 28)}, ${Math.min(255, cb + 18)}, ${isPlaying ? 0.32 : 0.16})`);
+      wGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = wGrad;
+      ctx.fill("evenodd");
+
+      // 内层水环（外圈与中圈之间的夹层，增强液体层次）
+      ctx.beginPath();
+      ctx.moveTo(outerPts[0]!.x, outerPts[0]!.y);
+      for (let i = 1; i <= SEG; i++) {
+        ctx.lineTo(outerPts[i]!.x, outerPts[i]!.y);
+      }
+      ctx.closePath();
+      ctx.moveTo(midPts[SEG]!.x, midPts[SEG]!.y);
+      for (let i = SEG - 1; i >= 0; i--) {
+        ctx.lineTo(midPts[i]!.x, midPts[i]!.y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${isPlaying ? 0.14 : 0.07})`;
+      ctx.fill("evenodd");
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      ctx.beginPath();
+      for (let i = 0; i <= SEG; i++) {
+        const p = outerPts[i]!;
+        if (i === 0) {
+          ctx.moveTo(p.x, p.y);
+        } else {
+          ctx.lineTo(p.x, p.y);
+        }
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(${Math.min(255, cr + 45)}, ${Math.min(255, cg + 38)}, ${Math.min(255, cb + 25)}, 0.4)`;
+      ctx.lineWidth = 5;
+      ctx.shadowColor = `rgba(${cr}, ${cg}, ${cb}, 0.6)`;
+      ctx.shadowBlur = isPlaying ? 22 : 12;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${isPlaying ? 0.5 : 0.28})`;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i <= SEG; i++) {
+        const p = midPts[i]!;
+        if (i === 0) {
+          ctx.moveTo(p.x, p.y);
+        } else {
+          ctx.lineTo(p.x, p.y);
+        }
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${isPlaying ? 0.22 : 0.12})`;
+      ctx.lineWidth = 1.1;
+      ctx.shadowColor = `rgba(${cr}, ${cg}, ${cb}, 0.45)`;
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     };
-    
+
     render();
     return () => cancelAnimationFrame(rafId);
   }, [analyserNode, isPlaying, dominantColor]);
@@ -216,101 +300,147 @@ export function MusicPlayerFullscreen({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed inset-0 w-full h-full z-[60] flex flex-col overflow-hidden bg-black text-white"
     >
-      {/* 沉浸式情绪背景 (The Immersive Ambient Layer) - 高色彩穿透滤膜 */}
+      {/* 沉浸式情绪背景 (The Immersive Ambient Layer) */}
       {currentSong?.pic && (
         <div className="absolute inset-0 z-0 pointer-events-none group" style={{ WebkitTransform: 'translateZ(0)' }}>
-          {/* 放开透明度至 opacity-70 允许强烈色彩渗出，与黑胶网易云光影同频 */}
           <div className="absolute inset-[-10%] scale-110 opacity-70 saturate-[1.8] will-change-transform bg-center bg-cover" style={{ backgroundImage: `url(${currentSong.pic})`, filter: 'blur(60px)' }} />
           <div className="absolute inset-0 bg-black/20" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
         </div>
       )}
 
-      {/* 顶部控制岛 (Top Islands) - 剥离 Relative 流，使用 Fixed 几何坐标与主导航栏严丝合缝平齐 */}
+      {/* 顶部控制岛 */}
       <div className="fixed top-12 left-12 z-[100] flex items-center gap-4 bg-white/[0.08] backdrop-blur-md px-6 py-3 rounded-[2rem] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] transition-colors pointer-events-auto">
         <span className="text-primary-start font-black text-[13px] tracking-widest uppercase mb-[1px]">Hi-Fi</span>
         <div className="w-px h-4 bg-white/20" />
         <span className="text-white/90 text-[13px] font-bold tracking-wide mb-[1px]">Premium Audio</span>
       </div>
         
-      {/* 右上角：收紧胶囊外宽，回归苹果系统精致感，剥离臃肿 */}
       <div className="fixed top-12 right-12 z-[100] flex items-center gap-2 bg-white/[0.08] backdrop-blur-md px-2 py-1.5 rounded-[2rem] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] transition-colors pointer-events-auto">
-        <button onClick={onMinimize} title="缩小至局域卡片" className="w-8 h-8 rounded-[1rem] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all active:scale-95">
+        <button onClick={onMinimize} title="缩小至迷你模式" className="w-8 h-8 rounded-[1rem] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all active:scale-95">
           <Minimize2 size={16} />
         </button>
         <div className="w-px h-3 bg-white/20 mx-0.5" />
-        <button onClick={onClose} title="退出全屏并保持播放" className="w-8 h-8 rounded-[1rem] flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500/20 transition-all active:scale-95">
+        <button onClick={onClose} title="隐藏播放器 (后台播放)" className="w-8 h-8 rounded-[1rem] flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500/20 transition-all active:scale-95">
           <X size={18} />
         </button>
-
       </div>
 
-      {/* 核心中轴：绝对 50-50 切割区，完全居中，不再故意失衡上下排压 */}
+      {/* 核心中轴面板 */}
       <div className="flex-1 relative z-10 flex w-full max-w-[1600px] mx-auto overflow-hidden py-[10vh]">
         
-        {/* 左域 (50%)：神级转机与跳动核 */}
-        <div className="w-[50%] h-full flex flex-col items-center justify-center relative">
-          <canvas ref={canvasRef} width={600} height={600} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none opacity-80" />
-          
-          <div className={`relative w-[380px] h-[380px] rounded-full bg-[#0a0a0a] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden ring-[8px] ring-white/10 z-10 ${isPlaying ? 'animate-[spin_6s_linear_infinite]' : ''}`}>
-            {/* P4: 纯 CSS 黑胶沟槽纹理（移除外部 CDN 依赖） */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ background: 'repeating-radial-gradient(circle at center, transparent 0px, transparent 3px, rgba(255,255,255,0.03) 3px, rgba(255,255,255,0.03) 4px)' }} />
-            <div className="absolute inset-2 border border-white/5 rounded-full pointer-events-none" />
-            <div className="absolute inset-4 border border-white/5 rounded-full pointer-events-none" />
-            <div className="absolute inset-[15%] rounded-full overflow-hidden border-8 border-[#1a1a1a] shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
-              {currentSong ? (
-                <img src={currentSong.pic} alt="" className="w-full h-full object-cover saturate-110" crossOrigin="anonymous" />
-              ) : (
-                <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-                  <ListMusic size={40} className="text-white/10" />
-                </div>
-              )}
+        {/* 左域 (50%)：唱机 — 固定 560 舞台，避免唱针用「半屏 50%」定位溢出到歌词区 */}
+        <div className="w-[50%] h-full flex flex-col items-center justify-center relative min-h-0">
+          <div className="relative h-[560px] w-[560px] max-w-full shrink-0 overflow-visible">
+            <canvas
+              ref={canvasRef}
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 opacity-70"
+              aria-hidden
+            />
+
+            <div
+              className={`absolute left-1/2 top-1/2 z-10 h-[380px] w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#0a0a0a] shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-[8px] ring-white/10 overflow-hidden ${isPlaying ? "animate-[spin_6s_linear_infinite]" : ""}`}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay"
+                style={{
+                  background:
+                    "repeating-radial-gradient(circle at center, transparent 0px, transparent 3px, rgba(255,255,255,0.03) 3px, rgba(255,255,255,0.03) 4px)",
+                }}
+              />
+              <div className="pointer-events-none absolute inset-2 rounded-full border border-white/5" />
+              <div className="pointer-events-none absolute inset-4 rounded-full border border-white/5" />
+
+              <div className="absolute inset-[15%] overflow-hidden rounded-full border-8 border-[#1a1a1a] shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
+                {currentSong ? (
+                  <img src={currentSong.pic} alt="" className="h-full w-full object-cover saturate-110" crossOrigin="anonymous" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-900">
+                    <ListMusic size={40} className="text-white/10" />
+                  </div>
+                )}
+              </div>
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full border-4 border-white/10 bg-[#111] shadow-inner" />
+              </div>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-8 h-8 rounded-full bg-[#111] border-4 border-white/10 shadow-inner" />
-            </div>
+
+            {/* 唱针：对齐网易云 PC 黑胶 — 支点在盘心正上方，曲线力臂落在上右外圈（SVG 与 560 舞台坐标一致） */}
+            <svg
+              viewBox="0 0 560 560"
+              className="pointer-events-none absolute inset-0 z-[21] h-full w-full overflow-visible drop-shadow-[0_10px_24px_rgba(0,0,0,0.5)]"
+              aria-hidden
+            >
+              <defs>
+                <linearGradient id={`netease-arm-${svgIds}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fafafa" />
+                  <stop offset="40%" stopColor="#e4e4e7" />
+                  <stop offset="100%" stopColor="#a1a1aa" />
+                </linearGradient>
+                <linearGradient id={`netease-base-${svgIds}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#f4f4f5" />
+                  <stop offset="100%" stopColor="#9ca3af" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(280, 64)">
+                <rect
+                  x="-44"
+                  y="-52"
+                  width="88"
+                  height="36"
+                  rx="10"
+                  fill={`url(#netease-base-${svgIds})`}
+                  stroke="rgba(255,255,255,0.22)"
+                  strokeWidth="1"
+                />
+                <circle cx="0" cy="8" r="12" fill="#f4f4f5" stroke="#71717a" strokeWidth="1" />
+                <motion.g
+                  style={{ transformOrigin: "0px 8px" }}
+                  animate={{
+                    rotate:
+                      stylusState === "playing" ? 15 : stylusState === "lifting" ? 5 : -11,
+                  }}
+                  transition={{ type: "spring", stiffness: 76, damping: 19, mass: 0.82 }}
+                >
+                  <path
+                    d="M 0 8 C 14 96, 78 118, 138 128 C 152 130, 162 128, 174 122"
+                    fill="none"
+                    stroke={`url(#netease-arm-${svgIds})`}
+                    strokeWidth="3.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <g transform="translate(174, 122) rotate(38)">
+                    <rect
+                      x="-10"
+                      y="-8"
+                      width="22"
+                      height="30"
+                      rx="3"
+                      fill="#18181b"
+                      stroke="rgba(255,255,255,0.14)"
+                      strokeWidth="1"
+                    />
+                    <rect x="-6" y="-4" width="12" height="3" rx="1" fill="rgba(255,255,255,0.08)" />
+                    <line
+                      x1="0"
+                      y1="16"
+                      x2="0"
+                      y2="24"
+                      stroke="rgba(255,255,255,0.35)"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                    />
+                  </g>
+                </motion.g>
+              </g>
+            </svg>
           </div>
-
-          {/* 大型质感工业唱臂 (拟物化深度重构：配重块 + 复合转轴 + 高精拾音头) */}
-          <motion.div
-            animate={{ rotate: stylusState === "playing" ? 28 : stylusState === "lifting" ? 10 : 0 }}
-            transition={{ type: "spring", stiffness: 35, damping: 20, mass: 1.5 }}
-            style={{ transformOrigin: "64px 64px" }} // 绝对中轴支点
-            className="absolute top-[12%] left-[calc(50%+190px)] w-32 h-[420px] z-20 pointer-events-none drop-shadow-2xl"
-          >
-            {/* 后置平衡配重块 (Counterweight) */}
-            <div className="absolute top-0 left-12 w-8 h-12 bg-gradient-to-r from-[#888] via-[#eee] to-[#666] rounded-sm border border-white/10 shadow-lg z-10" />
-            <div className="absolute top-4 left-10 w-12 h-4 bg-[#222] rounded-full z-10 border border-white/5" />
-            
-            {/* 核心转轴总成 (Pivot Assembly) */}
-            <div className="absolute top-4 left-4 w-24 h-24 rounded-full bg-gradient-to-br from-[#f5f5f5] via-[#a0a0a0] to-[#666] border-[2.5px] border-white/20 shadow-[-5px_10px_20px_rgba(0,0,0,0.5)] z-20" />
-            <div className="absolute top-10 left-10 w-12 h-12 rounded-full bg-[#111] border border-white/10 z-30 shadow-[inset_0_2px_8px_rgba(0,0,0,1)] flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-primary-start/60 blur-[1px]" />
-            </div>
-            
-            {/* 唱臂杆体 (Tonearm Tube) */}
-            <div className="absolute top-[90px] left-[61px] w-1.5 h-[260px] bg-gradient-to-r from-[#ccc] via-[#fff] to-[#999] rounded-full shadow-[3px_0_12px_rgba(0,0,0,0.4)] z-10" />
-            
-            {/* 高精拾音头组 (Cartridge & Headshell) */}
-            <div className="absolute top-[340px] left-[38px] w-[54px] h-6 bg-gradient-to-b from-[#777] to-[#444] rounded-sm rotate-[22deg] origin-right border-r border-white/20 shadow-md" />
-            <div className="absolute top-[355px] left-4 w-12 h-16 bg-gradient-to-br from-[#2a2a2a] via-[#111] to-black rounded-[2px] rotate-[22deg] shadow-[-10px_10px_30px_rgba(0,0,0,0.8)] border border-white/5 flex flex-col items-center pt-2">
-              <div className="w-8 h-1 bg-white/10 rounded-full" />
-              <div className="w-6 h-0.5 bg-white/5 rounded-full mt-2" />
-              <div className="mt-auto mb-2 w-full h-px bg-primary-start/20" />
-            </div>
-            {/* 针尖悬挂 (Stylus Tip) */}
-            <div className="absolute top-[410px] left-[35px] w-0.5 h-4 bg-white/40 rounded-full blur-[0.5px] rotate-[22deg]" />
-          </motion.div>
-
         </div>
 
-
-        {/* 右域 (50%)：歌词区靠左对齐以收窄左右间距 */}
+        {/* 右域 (50%)：艺术化歌词流 */}
         <div className="w-[50%] h-full flex flex-col items-start relative overflow-hidden group/lyrics pl-8">
-          {/* 安全模具：限制最大宽度为 600px，靠左对齐拉近与 CD 的视觉距离 */}
           <div className="w-full max-w-[600px] h-full relative">
-            
-            {/* 绝对置顶的抬头信息 */}
             <div className="absolute top-[8%] left-0 z-20 pointer-events-none">
               <h1 className="text-5xl font-black text-white/90 tracking-tight drop-shadow-lg mb-4">{currentSong?.title || "未知曲目"}</h1>
               <div className="flex items-center gap-4 text-white/60">
@@ -320,7 +450,6 @@ export function MusicPlayerFullscreen({
               </div>
             </div>
 
-            {/* 全局巨幕滚动手势歌词 - 绝对满屏，绝对50%死锁居中 */}
             <div 
               className="absolute inset-0 w-full h-full overflow-hidden"
               style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)' }}
@@ -331,20 +460,17 @@ export function MusicPlayerFullscreen({
                   ref={lyricListRef}
                   className="absolute inset-x-0 w-full flex flex-col will-change-transform pb-[60vh]"
                   style={{ top: '50%' }}
-                  // 物理对齐：将当前行的中心点偏移到视口中心。如果尚未测量，退回到估算的线性偏移
                   animate={{ 
                     y: lyricOffsets[activeLyricIndex] !== undefined 
                       ? -(lyricOffsets[activeLyricIndex].top + lyricOffsets[activeLyricIndex].height / 2) 
-                      : -(Math.max(0, activeLyricIndex) * 84 + 42)
+                      : 0 // 初始态强制对齐顶部，防止跳变
                   }} 
                   transition={{ type: "spring", stiffness: 90, damping: 24, mass: 0.7 }}
                 >
                   {currentLyrics.map((lyric: any, idx: number) => {
                     const isActive = idx === activeLyricIndex;
                     const isNear = Math.abs(idx - activeLyricIndex) <= 1;
-                    // 处理翻译内容 (通常 Netease 用 / 或 空格 分隔)
                     const parts = lyric.text.split(/ \/ | \/\/ /);
-                    
                     return (
                       <div
                         key={idx} 
@@ -354,7 +480,6 @@ export function MusicPlayerFullscreen({
                             : isNear ? 'text-white/60 opacity-60 hover:text-white/80' 
                             : 'text-white/20 opacity-20 hover:text-white/40'}`}
                       >
-                        {/* 强制分层排版：pi=0 为原词(主)，pi>0 为翻译(从) */}
                         {parts.map((p: string, pi: number) => (
                           <p 
                             key={pi}
@@ -373,13 +498,8 @@ export function MusicPlayerFullscreen({
                         ))}
                       </div>
                     );
-
                   })}
                 </motion.div>
-
-
-
-
               ) : (
                 <div className="w-full h-full flex items-center pl-0 text-white/20 text-2xl font-bold tracking-widest">
                   暂无歌词数据 / Instrumental
@@ -390,24 +510,18 @@ export function MusicPlayerFullscreen({
         </div>
       </div>
 
-      {/* 底域：极简高奢控制台 (The Industrial Console) - 缩减体量释放上方视区 */}
+      {/* 底域控制台 */}
       <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/95 via-black/80 to-transparent z-20 flex flex-col justify-end px-12 pt-16 pb-6">
-        
-        {/* 超长精度音频轨道 */}
         <div className="w-full max-w-[1000px] mx-auto mb-4 flex items-center gap-6">
           <span ref={currentTimeRef} className="text-xs text-white/50 min-w-[48px] text-right font-mono">{formatTime(currentTime)}</span>
-          
           <div className="relative group cursor-pointer h-6 flex-1 flex items-center">
-            {/* 隐形的大面积原生滚动捕捉 */}
             <input 
                ref={progressBarRef} type="range" min="0" max={(duration && isFinite(duration) && duration > 0) ? duration : 100} step="0.1" 
                defaultValue={currentTime || 0} onChange={(e) => handleSeek(Number(e.target.value))} 
                className="absolute z-20 w-full h-full opacity-0 cursor-pointer" 
             />
-            {/* 骨架 */}
             <div className="w-full h-1 bg-white/10 rounded-full relative overflow-visible">
               <div ref={progressFillRef} className="absolute top-0 left-0 h-full bg-primary-start rounded-full min-w-[8px] max-w-full pointer-events-none shadow-[0_0_15px_rgba(255,122,0,0.6)]">
-                {/* 显性点球 */}
                 <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] scale-0 group-hover:scale-100 transition-transform z-10 hidden md:block" />
               </div>
             </div>
@@ -415,10 +529,7 @@ export function MusicPlayerFullscreen({
           <span className="text-xs text-white/30 min-w-[48px] text-left font-mono">{formatTime(duration)}</span>
         </div>
 
-        {/* 核心控制中枢：无误差三宫格矩阵，彻底封杀 Baseline 沉降误差 */}
         <div className="w-full max-w-[1000px] mx-auto grid grid-cols-3 items-center h-20 relative pointer-events-auto">
-          
-          {/* 左侧区：向左推死锚定 */}
           <div className="flex items-center justify-start gap-4">
             <button className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all active:scale-95 duration-200">
               <Repeat size={20} />
@@ -427,8 +538,6 @@ export function MusicPlayerFullscreen({
               <Shuffle size={16} />
             </button>
           </div>
-
-          {/* 中央区：物理绝对中轴 */}
           <div className="flex items-center justify-center gap-8">
             <button onClick={handlePrev} className="w-12 h-12 flex items-center justify-center text-white/70 hover:text-white transition-transform hover:scale-110 active:scale-95">
               <SkipBack size={24} className="fill-current" />
@@ -440,8 +549,6 @@ export function MusicPlayerFullscreen({
               <SkipForward size={24} className="fill-current" />
             </button>
           </div>
-
-          {/* 右侧区：向右推死锚定 */}
           <div className="flex items-center justify-end gap-6 group/vol relative">
             <div className="flex items-center gap-4">
               <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-white transition-colors">
@@ -451,31 +558,27 @@ export function MusicPlayerFullscreen({
                 <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume} onChange={(e) => { const v = Number(e.target.value); setVolume(v); if (v > 0) setIsMuted(false); }} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white shadow-[0_0_10px_rgba(255,255,255,0.2)]" style={{ background: `linear-gradient(to right, #ffffff ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.1) ${(isMuted ? 0 : volume) * 100}%)` }} />
               </div>
             </div>
-            
             <div className="w-px h-6 bg-white/20" />
-            
             <button onClick={() => setShowPlaylist(!showPlaylist)} className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors ${showPlaylist ? 'bg-primary-start/20 text-primary-start' : 'text-white/60 hover:text-white hover:bg-white/10'}`}>
               <List size={22} />
             </button>
 
-            {/* 桌面级：全屏端侧滑播放列表平窗 (苹果侧边栏逻辑) */}
             <AnimatePresence>
               {showPlaylist && (
                 <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed top-0 right-0 w-[420px] h-screen bg-black/90 backdrop-blur-xl border-l border-white/10 overflow-hidden shadow-2xl flex flex-col z-[100]">
                   <div className="px-8 mt-[10vh] pb-6 border-b border-white/10 flex items-center justify-between">
-                    <h2 className="text-white font-bold text-2xl tracking-wide">播放队列 <span className="text-primary-start text-sm ml-2">({songs.length} 首)</span></h2>
+                    <h2 className="text-white font-bold text-2xl tracking-wide">播放队列 <span className="text-primary-start text-sm ml-2">({songs?.length || 0} 首)</span></h2>
                     <button onClick={() => setShowPlaylist(false)} className="text-white/50 hover:text-white transition-colors">
                       <X size={24} />
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-2 hidden-scrollbar">
-                    {songs.map((song: any, idx: number) => (
-                      <button key={idx} onClick={() => { setCurrentIndex(idx); }} className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${currentIndex === idx ? 'bg-primary-start/20 text-primary-start' : 'hover:bg-white/10'} group`}>
+                    {songs?.map((song: any, idx: number) => (
+                      <button key={idx} onClick={() => { setCurrentIndex(idx); }} className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${currentIndex === idx ? 'bg-primary-start/20 text-primary-start' : 'hover:bg-slate-100 dark:hover:bg-white/5'}`}>
                         <div className="relative shrink-0">
                           <PreloadLazyImage src={song.pic} alt={song.title} className="w-12 h-12 rounded-xl object-cover" crossOrigin="anonymous" />
                           {currentIndex === idx && isPlaying && (
                             <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
-                              {/* V4: 纯 CSS 动画替代 framer-motion JS 驱动 */}
                               <div className="w-4 h-4 flex items-end justify-between gap-0.5">
                                 <div className="w-1 bg-white rounded-t-sm animate-[eqBar1_0.8s_ease-in-out_infinite]" style={{ height: '40%' }} />
                                 <div className="w-1 bg-white rounded-t-sm animate-[eqBar2_0.6s_ease-in-out_infinite]" style={{ height: '80%' }} />
@@ -494,7 +597,6 @@ export function MusicPlayerFullscreen({
                 </motion.div>
               )}
             </AnimatePresence>
-
           </div>
         </div>
       </div>

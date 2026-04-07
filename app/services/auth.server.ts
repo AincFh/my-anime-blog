@@ -32,13 +32,20 @@ export interface Session {
 
 /**
  * 发送验证码
+ * @param email 邮箱地址
+ * @param request 请求对象
+ * @param kv KV 命名空间
+ * @param useMailChannels 是否使用 MailChannels
+ * @param resendApiKey Resend API Key
+ * @param codeType 验证码类型：'register' | 'reset_password'（默认 'register'）
  */
 export async function sendVerificationCode(
   email: string,
   request: Request,
   kv: KVNamespace | null,
   useMailChannels: boolean = true,
-  resendApiKey?: string
+  resendApiKey?: string,
+  codeType: 'register' | 'reset_password' = 'register'
 ): Promise<{ success: boolean; error?: string }> {
   // 邮箱格式验证
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -67,9 +74,16 @@ export async function sendVerificationCode(
   // 生成验证码
   const code = generateVerificationCode();
 
-  // 存储到 KV（5分钟过期）
+  // 存储到 KV（带类型标识，15分钟过期）
   if (kv) {
-    await kv.put(`verify:${email}`, code, { expirationTtl: AUTH_CONFIG.codeExpiration });
+    const codeData = {
+      code,
+      type: codeType,
+      createdAt: Date.now(),
+    };
+    await kv.put(`verify_code:${email}`, JSON.stringify(codeData), {
+      expirationTtl: 15 * 60 // 15 分钟
+    });
   }
 
   // 发送邮件

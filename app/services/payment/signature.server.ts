@@ -134,21 +134,29 @@ export async function verifyCallbackSignature(
 
 /**
  * 验证回调 IP 是否在白名单内
+ * @param ip 客户端 IP
+ * @param allowedIPs 白名单 IP 列表（逗号分隔）
+ * @param isDevelopment 是否为开发环境
+ * @returns 是否允许访问
  */
 export function isCallbackIPAllowed(
     ip: string,
-    allowedIPs: string,
+    allowedIPs: string | undefined,
     isDevelopment: boolean
 ): boolean {
-    // 开发环境跳过 IP 验证
+    // 开发环境跳过 IP 验证（但不跳过警告）
     if (isDevelopment) {
+        if (!allowedIPs || allowedIPs.trim() === '') {
+            console.warn('[开发模式] 支付回调 IP 白名单未配置，已跳过验证');
+        }
         return true;
     }
 
-    // 未配置白名单则放行（但会记录警告）
+    // 生产环境：必须配置 IP 白名单
     if (!allowedIPs || allowedIPs.trim() === '') {
-        console.warn('支付回调 IP 白名单未配置，建议生产环境配置');
-        return true;
+        console.error('[严重安全警告] 生产环境未配置支付回调 IP 白名单，拒绝处理请求');
+        // 返回 false 并记录错误，防止未授权的支付回调被处理
+        return false;
     }
 
     const ipList = allowedIPs.split(',').map(s => s.trim()).filter(Boolean);

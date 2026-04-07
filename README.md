@@ -263,8 +263,15 @@
 
 **新增数据库迁移:**
 - `migration_005_performance_indexes.sql` - 性能索引优化
+- `migration_006_membership_shop_if_missing.sql` - 会员商城表（可重复执行）
 - `migration_007_tags_and_categories.sql` - 标签分类系统
 - `migration_008_notion_sync.sql` - Notion 同步表
+- `schema_membership.sql` - 完整会员系统表（会员、订阅、支付、积分、商城、任务等 19 表）
+
+**本地开发数据库:**
+- 已创建本地 D1 数据库 `anime-db-local`（绑定: `anime_db_local`）
+- 所有迁移已在本地测试通过
+- 详细说明见 `database/PENDING_MIGRATIONS.md`
 
 </details>
 
