@@ -15,20 +15,7 @@
 		"binding": "ASSETS"
 	},
 	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
-		// ⚠️ 生产环境必须使用 wrangler secret 注入，此处留空
-		"PAYMENT_SECRET": "",
-		"CSRF_SECRET": "",
-		"SESSION_SECRET": "",
-		"ENVIRONMENT": "development",
-		// Notion 文章库
-		"NOTION_DATABASE_ID": "f9e50175c2fe408d86f46d2067e2ec53",
-		// Notion 其他内容库
-		"NOTION_TIMELINE_DATABASE_ID": "7c109de2528e48189c6885a81cab2761",
-		"NOTION_SITE_CONTENT_DATABASE_ID": "a4b83be5b0734eb983fffbd7dbf05bb4",
-		"NOTION_CHANGELOG_DATABASE_ID": "33253a043a88439f87dc4aa3f184166c",
-		"NOTION_ANNOUNCEMENT_DATABASE_ID": "76304e0ca64a4ac28e851a1cddc68467",
-		"PAYMENT_CALLBACK_IPS": "127.0.0.1,::1"
+		"ENVIRONMENT": "production"
 	},
 	"observability": {
 		"enabled": true
@@ -36,37 +23,35 @@
 	"d1_databases": [
 		{
 			"binding": "anime_db",
-			"database_name": "my-anime-blog-db",
-			"database_id": "8402c527-79c1-4d4a-87d6-b7c2d44d0ab7"
+			"database_name": "REPLACE_WITH_YOUR_D1_DB_NAME",
+			"database_id": "REPLACE_WITH_YOUR_D1_DB_ID"
 		}
 	],
 	"kv_namespaces": [
 		{
 			"binding": "CACHE_KV",
-			"id": "c4d47b9eb05b4638ae5ef5e91bd59fb0"
+			"id": "REPLACE_WITH_YOUR_KV_ID"
 		}
 	],
 	"r2_buckets": [
 		{
 			"binding": "IMAGES_BUCKET",
-			"bucket_name": "my-anime-blog"
+			// ⚠️ 替换为你的 R2 存储桶名称
+			"bucket_name": "your-r2-bucket-placeholder"
 		}
 	],
-	// Workers AI - Cloudflare 原生 AI 模型
 	"ai": {
 		"binding": "AI"
 	},
-	// Analytics Engine - 访问统计
 	"analytics_engine_datasets": [
 		{
 			"binding": "ANALYTICS",
-			"dataset": "my_anime_blog_analytics"
+			"dataset": "REPLACE_WITH_YOUR_DATASET_NAME"
 		}
 	],
-	// Cron Trigger: 每 6 小时自动同步 Notion
 	"triggers": {
 		"crons": [
-			"0 */6 * * *"  // 每天 00:00, 06:00, 12:00, 18:00 执行
+			"0 */6 * * *"
 		]
 	}
 }

@@ -15,53 +15,94 @@ import { RECHARGE_PACKAGES } from "~/config/game";
 import { confirmModal } from "~/components/ui/Modal";
 import { toast } from "~/components/ui/Toast";
 
+function isMissingShopSchemaError(e: unknown): boolean {
+    const msg = e instanceof Error ? e.message : String(e);
+    return msg.includes("no such table");
+}
+
 // Loader: Fetch Shop Data
 export async function loader({ request, context }: { request: Request; context: any }) {
     const { anime_db } = context.cloudflare.env;
 
-    // 商品和会员档位 — 无论是否登录都加载
-    const [shopItemsRes, tiers] = await Promise.all([
-        anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY id DESC").all(),
-        getAllTiers(anime_db)
-    ]);
-    const shopItems = shopItemsRes?.results || [];
-
-    const rechargePackages = RECHARGE_PACKAGES;
-
-    // 登录态 — 额外获取余额
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
+
+    let shopItems: any[] = [];
+    let tiers: Awaited<ReturnType<typeof getAllTiers>> = [];
+    let schemaIncomplete = false;
+
+    try {
+        const [shopItemsRes, tiersRes] = await Promise.all([
+            anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY id DESC").all(),
+            getAllTiers(anime_db),
+        ]);
+        shopItems = shopItemsRes?.results || [];
+        tiers = tiersRes;
+    } catch (e) {
+        if (isMissingShopSchemaError(e)) {
+            schemaIncomplete = true;
+            console.warn(
+                "[shop] D1 缺少商城/会员表。本地执行: npx wrangler d1 execute YOUR_DB_NAME --local --file=database/migration_006_membership_shop_if_missing.sql"
+            );
+        } else {
+            throw e;
+        }
+    }
+
+    const rechargePackages = RECHARGE_PACKAGES;
 
     if (!valid || !user) {
         return {
             loggedIn: false,
             user: null,
             stats: { coins: 0 },
-            shopItems: shopItems,
+            shopItems,
             tiers,
             rechargePackages,
+            schemaIncomplete,
         };
     }
 
     const coins = await getUserCoins(anime_db, user.id);
 
-    // 获取详细会员信息
-    const { getUserMembershipTier } = await import("~/services/membership/tier.server");
-    const { tier } = await getUserMembershipTier(anime_db, user.id);
+    let tierSummary: {
+        name: string;
+        display_name: string;
+        badge_color: string | null;
+        privileges: Record<string, unknown>;
+    } | null = null;
+
+    try {
+        const { getUserMembershipTier } = await import("~/services/membership/tier.server");
+        const { tier } = await getUserMembershipTier(anime_db, user.id);
+        if (tier) {
+            tierSummary = {
+                name: tier.name,
+                display_name: tier.display_name,
+                badge_color: tier.badge_color,
+                privileges: JSON.parse(tier.privileges || "{}") as Record<string, unknown>,
+            };
+        }
+    } catch (e) {
+        if (isMissingShopSchemaError(e)) {
+            schemaIncomplete = true;
+        } else {
+            throw e;
+        }
+    }
 
     return {
         loggedIn: true,
-        user: { ...user, avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}` },
-        tier: tier ? {
-            name: tier.name,
-            display_name: tier.display_name,
-            badge_color: tier.badge_color,
-            privileges: JSON.parse(tier.privileges || '{}')
-        } : null,
+        user: {
+            ...user,
+            avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`,
+        },
+        tier: tierSummary,
         stats: { coins },
-        shopItems: shopItems,
+        shopItems,
         tiers,
-        rechargePackages
+        rechargePackages,
+        schemaIncomplete,
     };
 }
 
@@ -245,6 +286,21 @@ export default function ShopPage() {
                             </div>
                         </div>
                     </div>
+
+                    {loaderData.schemaIncomplete && (
+                        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/90 flex items-start gap-3">
+                            <AlertCircle className="shrink-0 mt-0.5" size={18} />
+                            <div>
+                                <p className="font-semibold text-amber-50">商城数据库表尚未初始化</p>
+                                <p className="text-amber-100/70 mt-1">
+                                    本地请在项目根目录执行：
+                                    <code className="mx-1 rounded bg-black/30 px-1.5 py-0.5 text-xs">
+                                        npx wrangler d1 execute YOUR_DB_NAME --local --file=database/migration_006_membership_shop_if_missing.sql
+                                    </code>
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Success Notification */}
                     <AnimatePresence>
@@ -584,4 +640,32 @@ export default function ShopPage() {
             )}
         </>
     );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  let message = "商店加载失败";
+  let details = "无法显示商店内容，请稍后重试";
+  let stack: string | undefined;
+
+  if (error instanceof Error) {
+    details = error.message;
+    if (import.meta.env.DEV) {
+      stack = error.stack;
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-red-400 mb-4">{message}</h1>
+        <p className="text-slate-600 dark:text-slate-300 mb-6">{details}</p>
+        {stack && import.meta.env.DEV && (
+          <pre className="text-xs text-left bg-slate-900 text-red-300 p-4 rounded-lg overflow-x-auto max-w-2xl">{stack}</pre>
+        )}
+        <a href="/shop" className="mt-4 inline-block px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+          刷新商店
+        </a>
+      </div>
+    </div>
+  );
 }

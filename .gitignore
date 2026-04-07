@@ -1,5 +1,4 @@
 .DS_Store
-.env
 /node_modules/
 *.tsbuildinfo
 
@@ -13,6 +12,11 @@
 .dev.vars*
 worker-configuration.d.ts
 
-
-!.dev.vars.example
+# 环境变量 (安全)
+.env
+.env.*
+# 例外：允许 .env.example 作为模板
 !.env.example
+
+# Wrangler 私有配置 (包含真实 ID)
+wrangler.toml

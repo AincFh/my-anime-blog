@@ -110,7 +110,7 @@ export async function searchAnime(keyword: string, limit: number = 10): Promise<
 
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'my-anime-blog/1.0 (https://my-anime-blog.fhainc.workers.dev)',
+                'User-Agent': 'my-anime-blog/1.0',
                 'Accept': 'application/json',
             },
         });
@@ -152,7 +152,7 @@ export async function getAnimeDetail(subjectId: number): Promise<BangumiSubject 
 
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'my-anime-blog/1.0 (https://my-anime-blog.fhainc.workers.dev)',
+                'User-Agent': 'my-anime-blog/1.0',
                 'Accept': 'application/json',
             },
         });
@@ -179,7 +179,7 @@ export async function getAnimeCharacters(subjectId: number): Promise<BangumiChar
 
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'my-anime-blog/1.0 (https://my-anime-blog.fhainc.workers.dev)',
+                'User-Agent': 'my-anime-blog/1.0',
                 'Accept': 'application/json',
             },
         });
@@ -206,7 +206,7 @@ export async function getAnimeStaff(subjectId: number): Promise<BangumiPerson[]>
 
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'my-anime-blog/1.0 (https://my-anime-blog.fhainc.workers.dev)',
+                'User-Agent': 'my-anime-blog/1.0',
                 'Accept': 'application/json',
             },
         });
