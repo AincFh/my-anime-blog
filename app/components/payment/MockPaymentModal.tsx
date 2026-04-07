@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle, XCircle, Clock, QrCode, CreditCard, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, QrCode, CreditCard, ShieldCheck, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
-import QRCodeLib from "qrcode";
+import { IconEmoji } from "~/components/ui/IconEmoji";
 
 interface MockPaymentModalProps {
     isOpen: boolean;
@@ -28,19 +28,28 @@ export function MockPaymentModal({ isOpen, onClose, orderNo, amount, productName
         }
     }, [isOpen]);
 
-    // Generate QR code when entering QR step
+    // Generate QR code when entering QR step（动态 import，避免路由预加载时拉取 qrcode 预构建导致 504 / 整页 reload）
     useEffect(() => {
-        if (step === "qr" && payUrl) {
-            // Build full URL for QR code
-            const fullUrl = window.location.origin + payUrl;
-            QRCodeLib.toDataURL(fullUrl, {
-                width: 200,
-                margin: 2,
-                color: { dark: "#000000", light: "#ffffff" }
+        if (step !== "qr" || !payUrl) return;
+        const fullUrl = window.location.origin + payUrl;
+        let cancelled = false;
+        import("qrcode")
+            .then((mod) => {
+                if (cancelled) return;
+                const QR = mod.default ?? mod;
+                return QR.toDataURL(fullUrl, {
+                    width: 200,
+                    margin: 2,
+                    color: { dark: "#000000", light: "#ffffff" },
+                });
             })
-                .then((url: string) => setQrDataUrl(url))
-                .catch((err: Error) => console.error("QR Generation failed:", err));
-        }
+            .then((url) => {
+                if (!cancelled && typeof url === "string") setQrDataUrl(url);
+            })
+            .catch((err: unknown) => console.error("QR Generation failed:", err));
+        return () => {
+            cancelled = true;
+        };
     }, [step, payUrl]);
 
     // Countdown timer
@@ -205,7 +214,7 @@ export function MockPaymentModal({ isOpen, onClose, orderNo, amount, productName
                             onClick={handleMockScan}
                             className="w-full py-3 bg-green-500/20 hover:bg-green-500/30 text-green-400 font-bold rounded-xl border border-green-500/30 transition-colors"
                         >
-                            🔧 模拟扫码支付 (测试用)
+                            <IconEmoji emoji="🔧" size={16} /> 模拟扫码支付 (测试用)
                         </button>
 
                         <button onClick={onClose} className="text-sm text-white/40 hover:text-white underline">

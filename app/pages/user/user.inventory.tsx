@@ -43,7 +43,10 @@ export async function loader({ request, context }: { request: Request; context: 
     let prefs = {};
     try {
         prefs = JSON.parse(user.preferences || '{}');
-    } catch (e) { }
+    } catch (e) {
+        console.warn('[inventory] 解析偏好设置失败，使用默认:', e);
+        prefs = {};
+    }
 
     return {
         loggedIn: true,
@@ -95,7 +98,10 @@ export async function action({ request, context }: { request: Request; context: 
     let prefs: any = {};
     try {
         prefs = JSON.parse(user.preferences || '{}');
-    } catch (e) { }
+    } catch (e) {
+        console.warn('[inventory] 解析偏好设置失败，使用默认:', e);
+        prefs = {};
+    }
 
     const isEquipped = item.type === 'avatar_frame' ? prefs.equipped_avatar_frame === item.image_url :
         item.type === 'theme' ? prefs.equipped_theme === item.image_url : false;

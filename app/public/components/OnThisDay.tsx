@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router";
+import { ScrollText } from "lucide-react";
 
 /**
  * 那年今日回顾 (On This Day)
@@ -24,7 +25,7 @@ export function OnThisDay({ articles }: OnThisDayProps) {
       animate={{ opacity: 1, y: 0 }}
     >
       <h3 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
-        <span>📜</span>
+        <ScrollText className="w-5 h-5" />
         <span>来自过去的胶囊</span>
       </h3>
 

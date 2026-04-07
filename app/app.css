@@ -1037,6 +1037,20 @@
   animation: spin-slow 8s linear infinite;
 }
 
+/* 播放列表音波 EQ 动画（替代 framer-motion JS 驱动） */
+@keyframes eqBar1 {
+  0%, 100% { height: 40%; }
+  50% { height: 100%; }
+}
+@keyframes eqBar2 {
+  0%, 100% { height: 80%; }
+  50% { height: 30%; }
+}
+@keyframes eqBar3 {
+  0%, 100% { height: 50%; }
+  50% { height: 90%; }
+}
+
 /* Bokeh 光晕动画 - 替代 Framer Motion */
 @keyframes bokeh-1 {
 

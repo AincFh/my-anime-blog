@@ -3,10 +3,11 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "react-router build",
+		"build": "react-router build && node scripts/copy-live2d.cjs",
 		"cf-typegen": "wrangler types",
 		"deploy": "npm run build && wrangler deploy",
 		"dev": "react-router dev",
+		"dev:wrangler": "wrangler dev --remote --port 5173",
 		"postinstall": "npm run cf-typegen",
 		"preview": "npm run build && vite preview",
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
@@ -32,6 +33,7 @@
 		"notion-to-md": "^3.1.9",
 		"qrcode": "^1.5.4",
 		"react": "^19.1.1",
+		"react-countup": "^6.5.3",
 		"react-dom": "^19.1.1",
 		"react-markdown": "^10.1.0",
 		"react-router": "^7.9.2",
@@ -57,6 +59,7 @@
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.7",
+		"vite-plugin-node-polyfills": "^0.26.0",
 		"vite-tsconfig-paths": "^5.1.4",
 		"vitest": "^3.2.4",
 		"wrangler": "^4.51.0"

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Coins, Sparkles, Plus, Crown } from "lucide-react";
 import { Link } from "react-router";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
+import CountUp from "react-countup";
 
 interface StatusHUDProps {
     user: {
@@ -30,7 +31,9 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
     let prefs: any = {};
     try {
         if (user.preferences) prefs = JSON.parse(user.preferences);
-    } catch (e) { }
+    } catch (e) {
+        console.warn('[StatusHUD] 解析偏好设置失败，使用默认:', e);
+    }
 
     return (
         <div className="fixed top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none z-[60]">
@@ -111,7 +114,13 @@ export function StatusHUD({ user, stats }: StatusHUDProps) {
                         <Coins className="w-4 h-4 text-yellow-400" />
                     </div>
                     <span className="text-white font-bold font-mono mr-3 min-w-[60px] text-right">
-                        {stats.coins.toLocaleString()}
+                        <CountUp
+                            end={stats.coins}
+                            duration={1.5}
+                            separator=","
+                            useGrouping={true}
+                            preserveValue={true}
+                        />
                     </span>
                     <div className="w-6 h-6 bg-white/10 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
                         <Plus className="w-3 h-3 text-white" />

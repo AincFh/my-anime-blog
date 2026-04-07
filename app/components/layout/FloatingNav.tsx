@@ -7,6 +7,7 @@ import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { OnboardingTooltip } from "../ui/OnboardingTooltip";
 import { useUser } from "~/hooks/useUser";
 import { UserHUD } from "../ui/system/UserHUD";
+import { IconEmoji } from "~/components/ui/IconEmoji";
 
 interface NavItem {
   name: string;
@@ -42,7 +43,7 @@ export function FloatingNav() {
     <>
       {/* 导航栏容器 */}
       <motion.nav
-        className="hidden md:block fixed top-[calc(env(safe-area-inset-top)+1rem)] md:top-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100vw-2rem)] md:w-auto max-w-[95vw]"
+        className="hidden md:block fixed top-[calc(env(safe-area-inset-top)+1rem)] md:top-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100vw-2rem)] md:w-auto max-w-[95vw]"
         style={{ y }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -141,7 +142,7 @@ export function FloatingNav() {
           <OnboardingTooltip
             stepKey="shop_nav"
             targetId="nav-item-shop"
-            content="欢迎光临星尘商店！签到获得的积分可以在这里兑换头像框和主题哦 ✨"
+            content={<><IconEmoji emoji="✨" size={16} /> 签到获得的积分可以在这里兑换头像框和主题哦</>}
             position="bottom"
           />
         )}

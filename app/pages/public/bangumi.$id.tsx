@@ -1,6 +1,6 @@
 import { Link, useLoaderData, Await } from "react-router";
 import { motion } from "framer-motion";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "../../components/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import type { Route } from "./+types/bangumi.$id";
 import { Suspense } from "react";

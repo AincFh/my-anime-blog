@@ -1,5 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router";
+import {
+  Sparkles, Home, Star, Book, BookOpen, Pen, Tv,
+  UtensilsCrossed, Film, Gem, ShoppingCart, Gift,
+  Image, Rainbow, Lock, Key, FileText, Rocket,
+  BarChart3, Swords, Settings, Wrench, Backpack, MapPin, Palette
+} from "lucide-react";
 
 /**
  * 标题栏离开/回来效果 & 路由感应
@@ -8,6 +14,71 @@ import { useLocation } from "react-router";
  * 2. 回来时显示欢迎语
  * 3. 切换路由时根据不同页面显示不同小词话
  */
+
+// 路由对应的词语 (Route Hints) - 用于 document.title
+const routeTitleHints: Record<string, string[]> = {
+  "/": ["欢迎光临星影小站", "欢迎回家，观测者", "探索无尽的二次元"],
+  "/articles": ["正在翻阅馆藏...", "知识库加载中", "文明轨迹的记录"],
+  "/bangumi": ["追番的时间到了！", "准备好零食了吗？", "帧间的感动"],
+  "/shop": ["欢迎光临星尘集市", "剁手时间到！", "看看有什么新品"],
+  "/gallery": ["艺术长廊漫步中", "定格的绝美瞬间", "色彩在跳动"],
+  "/login": ["身份有效性核准", "开启异世界大门"],
+  "/register": ["成为新的观测者", "新旅程的起点"],
+  "/user/dashboard": ["指挥中心已上线", "司令部实时播报", "当前坐标：核心区"],
+  "/user/inventory": ["正在整理口袋...", "检查现役装备"],
+  "/user/settings": ["调整系统底层参数", "正在微调世界规律"],
+};
+
+// 路由对应的词语 (Route Hints) - 用于 UI 显示，带图标
+const routeHints: Record<string, { icon: React.ReactNode; text: string }[]> = {
+  "/": [
+    { icon: <Sparkles className="w-4 h-4" />, text: "欢迎光临星影小站" },
+    { icon: <Home className="w-4 h-4" />, text: "欢迎回家，观测者" },
+    { icon: <Star className="w-4 h-4" />, text: "探索无尽的二次元" },
+  ],
+  "/articles": [
+    { icon: <Book className="w-4 h-4" />, text: "正在翻阅馆藏..." },
+    { icon: <BookOpen className="w-4 h-4" />, text: "知识库加载中" },
+    { icon: <Pen className="w-4 h-4" />, text: "文明轨迹的记录" },
+  ],
+  "/bangumi": [
+    { icon: <Tv className="w-4 h-4" />, text: "追番的时间到了！" },
+    { icon: <UtensilsCrossed className="w-4 h-4" />, text: "准备好零食了吗？" },
+    { icon: <Film className="w-4 h-4" />, text: "帧间的感动" },
+  ],
+  "/shop": [
+    { icon: <Gem className="w-4 h-4" />, text: "欢迎光临星尘集市" },
+    { icon: <ShoppingCart className="w-4 h-4" />, text: "剁手时间到！" },
+    { icon: <Gift className="w-4 h-4" />, text: "看看有什么新品" },
+  ],
+  "/gallery": [
+    { icon: <Palette className="w-4 h-4" />, text: "艺术长廊漫步中" },
+    { icon: <Image className="w-4 h-4" />, text: "定格的绝美瞬间" },
+    { icon: <Rainbow className="w-4 h-4" />, text: "色彩在跳动" },
+  ],
+  "/login": [
+    { icon: <Lock className="w-4 h-4" />, text: "身份有效性核准" },
+    { icon: <Key className="w-4 h-4" />, text: "开启异世界大门" },
+  ],
+  "/register": [
+    { icon: <FileText className="w-4 h-4" />, text: "成为新的观测者" },
+    { icon: <Rocket className="w-4 h-4" />, text: "新旅程的起点" },
+  ],
+  "/user/dashboard": [
+    { icon: <Rocket className="w-4 h-4" />, text: "指挥中心已上线" },
+    { icon: <BarChart3 className="w-4 h-4" />, text: "司令部实时播报" },
+    { icon: <MapPin className="w-4 h-4" />, text: "当前坐标：核心区" },
+  ],
+  "/user/inventory": [
+    { icon: <Backpack className="w-4 h-4" />, text: "正在整理口袋..." },
+    { icon: <Swords className="w-4 h-4" />, text: "检查现役装备" },
+  ],
+  "/user/settings": [
+    { icon: <Settings className="w-4 h-4" />, text: "调整系统底层参数" },
+    { icon: <Wrench className="w-4 h-4" />, text: "正在微调世界规律" },
+  ],
+};
+
 export function TitleChanger() {
   const location = useLocation();
   const originalTitleRef = useRef(document.title);
@@ -73,7 +144,7 @@ export function TitleChanger() {
         
         setTimeout(() => {
           // 恢复为当前路由的标题
-          const hints = routeHints[location.pathname] || [originalTitleRef.current];
+          const hints = routeTitleHints[location.pathname] || [originalTitleRef.current];
           document.title = hints[Math.floor(Math.random() * hints.length)];
         }, 1500);
       }
@@ -86,7 +157,7 @@ export function TitleChanger() {
 
   // 监听路由变化更新标题
   useEffect(() => {
-    const hints = routeHints[location.pathname];
+    const hints = routeTitleHints[location.pathname];
     if (hints && hints.length > 0) {
       // 从数组中随机选择一个标题
       const hint = hints[Math.floor(Math.random() * hints.length)];

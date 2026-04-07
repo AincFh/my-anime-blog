@@ -3,22 +3,47 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import path from "path";
 
 export default defineConfig({
   plugins: [
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
+    cloudflare({
+      viteEnvironment: { name: "ssr" },
+      injectNodeGlobals: true,
+    }),
     tailwindcss(),
     reactRouter(),
     tsconfigPaths(),
   ],
   resolve: {
     alias: {
-      // 模拟 process 模块，解决 Cloudflare Workers 环境问题
-      "node:process": "process",
-      "process": "process/browser",
+      "~": path.resolve(__dirname, "app"),
+    },
+  },
+  server: {
+    hmr: {
+      overlay: false,
     },
   },
   optimizeDeps: {
-    include: ["process/browser"],
+    include: [
+      "react",
+      "react-dom",
+      "react-dom/client",
+      "react-router",
+      "framer-motion",
+      "lucide-react",
+      "clsx",
+      "tailwind-merge",
+      "remix-themes",
+      "highlight.js",
+      "recharts",
+      "marked",
+      "marked-react",
+      "react-markdown",
+      "react-countup",
+      "qrcode",
+      "isbot",
+    ],
   },
 });

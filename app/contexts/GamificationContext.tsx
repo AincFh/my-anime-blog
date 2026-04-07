@@ -48,7 +48,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
         id: "first_visit",
         name: "初次到访",
         description: "欢迎来到 A.T. Field！",
-        icon: "🎉",
+        icon: "sparkles",
         rarity: "common",
         unlocked: false,
     },
@@ -56,7 +56,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
         id: "first_read",
         name: "博览群书",
         description: "阅读了第一篇文章",
-        icon: "📖",
+        icon: "book",
         rarity: "common",
         unlocked: false,
     },
@@ -64,7 +64,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
         id: "gacha_master",
         name: "扭蛋大师",
         description: "进行了首次扭蛋",
-        icon: "🎰",
+        icon: "gift",
         rarity: "rare",
         unlocked: false,
     },
@@ -72,7 +72,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
         id: "level_10",
         name: "资深旅人",
         description: "达到等级 10",
-        icon: "⭐",
+        icon: "star",
         rarity: "epic",
         unlocked: false,
     },
@@ -94,17 +94,23 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         if (savedStats) {
             try {
                 setStats(JSON.parse(savedStats));
-            } catch (e) { }
+            } catch (e) {
+                console.warn('[Gamification] 恢复 stats 失败，使用默认:', e);
+            }
         }
         if (savedAchievements) {
             try {
                 setAchievements(JSON.parse(savedAchievements));
-            } catch (e) { }
+            } catch (e) {
+                console.warn('[Gamification] 恢复 achievements 失败，使用默认:', e);
+            }
         }
         if (savedInventory) {
             try {
                 setInventory(JSON.parse(savedInventory));
-            } catch (e) { }
+            } catch (e) {
+                console.warn('[Gamification] 恢复 inventory 失败，使用默认:', e);
+            }
         }
         setIsHydrated(true);
     }, []);

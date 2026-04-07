@@ -1,11 +1,11 @@
 /**
  * AI 聊天机器人组件
- * 悬浮在页面右下角的 Glassmorphism 风格聊天界面
+ * AI-Native 极光玻璃态风格：右上角悬浮入口 + 沉浸式对话窗口
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Sparkles, RefreshCw } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, RotateCcw, Zap } from "lucide-react";
 import type { AIMessage } from "~/services/ai.server";
 
 interface ChatConfig {
@@ -46,7 +46,6 @@ export function AIChatBot() {
                     setConfig(data);
                     setRemaining(data.remaining);
 
-                    // 添加欢迎消息
                     if (data.enabled && data.chatbot?.welcomeMessage) {
                         setMessages([
                             {
@@ -93,7 +92,6 @@ export function AIChatBot() {
         setIsLoading(true);
 
         try {
-            // 构建历史消息（排除欢迎消息）
             const history: AIMessage[] = messages
                 .filter((m) => m.id !== "welcome")
                 .map((m) => ({
@@ -126,7 +124,6 @@ export function AIChatBot() {
                     setRemaining(data.remaining);
                 }
             } else {
-                // 显示错误消息
                 setMessages((prev) => [
                     ...prev,
                     {
@@ -137,8 +134,7 @@ export function AIChatBot() {
                     },
                 ]);
             }
-        } catch (error) {
-            console.error("Chat error:", error);
+        } catch {
             setMessages((prev) => [
                 ...prev,
                 {
@@ -180,172 +176,346 @@ export function AIChatBot() {
     // 如果未启用，不渲染
     if (!config?.enabled) return null;
 
-    const botName = config.chatbot?.name || "小绫";
+    const botName = config.chatbot?.name || "AI 助手";
+
+    // 流式打字动画
+    const TypingDots = () => (
+        <div className="flex gap-1.5 px-1">
+            {[0, 0.15, 0.3].map((delay, i) => (
+                <motion.span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-indigo-400"
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ repeat: Infinity, duration: 1.2, delay }}
+                />
+            ))}
+        </div>
+    );
 
     return (
         <>
-            {/* 悬浮按钮 - 放在右侧中间偏下，避开 Live2D (移动端彻底屏蔽) */}
+            {/* ============================================================
+                入口：右上角悬浮星云光球
+                位置：top-6 right-6，避开 Live2D 右下角区域
+                ============================================================ */}
             <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                className="hidden md:flex fixed bottom-[280px] right-4 z-50 w-12 h-12 rounded-full items-center justify-center shadow-lg hover:shadow-xl"
+                className="hidden md:flex fixed top-6 right-6 z-[100010] w-14 h-14 rounded-2xl items-center justify-center cursor-pointer group"
                 style={{
-                    background: "linear-gradient(135deg, #FF9F43, #FF6B6B)",
+                    background: "linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3))",
+                    boxShadow: isOpen
+                        ? "0 0 0 2px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.3)"
+                        : "0 0 0 1px rgba(99, 102, 241, 0.2), 0 0 20px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)",
+                    backdropFilter: "blur(20px)",
                 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, y: 20 }}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
+                transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                aria-label={isOpen ? "关闭 AI 助手" : "打开 AI 助手"}
             >
+                {/* 背景光晕动画 */}
+                <motion.div
+                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100"
+                    style={{
+                        background: "radial-gradient(circle at center, rgba(99, 102, 241, 0.4) 0%, transparent 70%)",
+                    }}
+                    animate={{ scale: [1, 1.15, 1], opacity: [0, 0.6, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                />
+
                 <AnimatePresence mode="wait">
                     {isOpen ? (
                         <motion.div
                             key="close"
-                            initial={{ rotate: -90, opacity: 0 }}
-                            animate={{ rotate: 0, opacity: 1 }}
-                            exit={{ rotate: 90, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                            initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                            exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                            transition={{ duration: 0.25, type: "spring", stiffness: 300 }}
                         >
-                            <X className="w-5 h-5 text-white" />
+                            <X className="w-6 h-6 text-indigo-300 relative z-10" />
                         </motion.div>
                     ) : (
                         <motion.div
                             key="open"
-                            initial={{ rotate: 90, opacity: 0 }}
-                            animate={{ rotate: 0, opacity: 1 }}
-                            exit={{ rotate: -90, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                            initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                            exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                            transition={{ duration: 0.25, type: "spring", stiffness: 300 }}
+                            className="relative z-10"
                         >
-                            <MessageCircle className="w-5 h-5 text-white" />
+                            <Sparkles className="w-6 h-6 text-indigo-300" />
                         </motion.div>
                     )}
                 </AnimatePresence>
             </motion.button>
 
-            {/* 聊天窗口 */}
+            {/* ============================================================
+                聊天窗口：右上角玻璃态面板，宽度收窄避免与 Live2D 冲突
+                ============================================================ */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-[340px] right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden shadow-2xl"
+                        initial={{ opacity: 0, x: 40, scale: 0.92 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 40, scale: 0.92 }}
+                        transition={{ type: "spring", damping: 26, stiffness: 280 }}
+                        className="fixed top-6 right-6 z-[100010] w-[360px] max-w-[calc(100vw-2rem)] flex flex-col overflow-hidden"
                         style={{
-                            background: "var(--card-bg)",
-                            backdropFilter: "blur(20px)",
-                            border: "1px solid var(--glass-border)",
+                            maxHeight: "calc(100vh - 3rem)",
+                            height: "580px",
                         }}
                     >
-                        {/* 头部 */}
+                        {/* 外层玻璃框 */}
                         <div
-                            className="px-4 py-3 flex items-center justify-between"
+                            className="flex flex-col h-full rounded-3xl overflow-hidden"
                             style={{
-                                background: "linear-gradient(135deg, rgba(255, 159, 67, 0.9), rgba(255, 107, 107, 0.9))",
+                                background: "rgba(10, 10, 20, 0.65)",
+                                backdropFilter: "blur(30px) saturate(160%)",
+                                border: "1px solid rgba(139, 92, 246, 0.25)",
+                                boxShadow: "0 0 0 1px rgba(99, 102, 241, 0.1), 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
                             }}
                         >
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-white" />
-                                <span className="font-bold text-white">{botName}</span>
-                                <span className="text-xs text-white/70">AI 助手</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {remaining !== null && (
-                                    <span className="text-xs text-white/70">
-                                        剩余 {remaining} 次
-                                    </span>
-                                )}
-                                <button
-                                    onClick={clearChat}
-                                    className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
-                                    title="清空对话"
-                                >
-                                    <RefreshCw className="w-4 h-4 text-white" />
-                                </button>
-                            </div>
-                        </div>
+                            {/* 顶部装饰条（极光效果） */}
+                            <div
+                                className="h-px w-full"
+                                style={{
+                                    background: "linear-gradient(90deg, transparent 5%, rgba(99, 102, 241, 0.6) 30%, rgba(139, 92, 246, 0.6) 70%, transparent 95%)",
+                                }}
+                            />
 
-                        {/* 消息列表 */}
-                        <div className="h-80 overflow-y-auto p-4 space-y-3">
-                            {messages.map((msg) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                                >
-                                    <div
-                                        className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.role === "user"
-                                            ? "bg-gradient-to-r from-primary-start to-primary-end text-white rounded-br-sm"
-                                            : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-sm"
-                                            }`}
-                                    >
-                                        {msg.content}
+                            {/* 头部 */}
+                            <div
+                                className="px-5 py-4 flex items-center justify-between shrink-0"
+                                style={{
+                                    background: "rgba(99, 102, 241, 0.08)",
+                                    borderBottom: "1px solid rgba(139, 92, 246, 0.15)",
+                                }}
+                            >
+                                <div className="flex items-center gap-3">
+                                    {/* AI 状态灯 */}
+                                    <div className="relative">
+                                        <div
+                                            className="w-2.5 h-2.5 rounded-full"
+                                            style={{ background: "rgba(99, 102, 241, 0.8)" }}
+                                        />
+                                        <motion.div
+                                            className="absolute inset-0 rounded-full"
+                                            style={{ background: "rgba(99, 102, 241, 0.5)" }}
+                                            animate={{ scale: [1, 2, 1], opacity: [0.6, 0, 0.6] }}
+                                            transition={{ repeat: Infinity, duration: 2 }}
+                                        />
                                     </div>
-                                </motion.div>
-                            ))}
-
-                            {/* 加载中指示器 */}
-                            {isLoading && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="flex justify-start"
-                                >
-                                    <div className="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl rounded-bl-sm">
-                                        <div className="flex gap-1">
-                                            <motion.span
-                                                className="w-2 h-2 bg-slate-400 rounded-full"
-                                                animate={{ y: [-2, 2, -2] }}
-                                                transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
-                                            />
-                                            <motion.span
-                                                className="w-2 h-2 bg-slate-400 rounded-full"
-                                                animate={{ y: [-2, 2, -2] }}
-                                                transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }}
-                                            />
-                                            <motion.span
-                                                className="w-2 h-2 bg-slate-400 rounded-full"
-                                                animate={{ y: [-2, 2, -2] }}
-                                                transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }}
-                                            />
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <Sparkles className="w-4 h-4 text-indigo-400" aria-hidden />
+                                            <span className="font-bold text-sm text-white/90">{botName}</span>
                                         </div>
+                                        <p className="text-[11px] text-indigo-300/60 mt-0.5">AI 智能助手 · 随时为您效劳</p>
                                     </div>
-                                </motion.div>
-                            )}
+                                </div>
 
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* 输入区域 */}
-                        <div className="p-3 border-t border-slate-200/50 dark:border-slate-700/50">
-                            <div className="flex items-center gap-2">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder={`和${botName}聊点什么...`}
-                                    disabled={isLoading || remaining === 0}
-                                    className="flex-1 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary-start/50 transition-all disabled:opacity-50"
-                                    maxLength={500}
-                                />
-                                <motion.button
-                                    onClick={sendMessage}
-                                    disabled={!inputValue.trim() || isLoading || remaining === 0}
-                                    className="p-2.5 rounded-xl bg-gradient-to-r from-primary-start to-primary-end text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <Send className="w-5 h-5" />
-                                </motion.button>
+                                <div className="flex items-center gap-2">
+                                    {/* 剩余次数 */}
+                                    {remaining !== null && (
+                                        <div
+                                            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] text-indigo-300/80"
+                                            style={{
+                                                background: "rgba(99, 102, 241, 0.1)",
+                                                border: "1px solid rgba(99, 102, 241, 0.2)",
+                                            }}
+                                        >
+                                            <Zap className="w-3 h-3" aria-hidden />
+                                            <span>{remaining} 次</span>
+                                        </div>
+                                    )}
+                                    {/* 清空按钮 */}
+                                    <button
+                                        onClick={clearChat}
+                                        className="p-2 rounded-xl transition-all duration-200 cursor-pointer"
+                                        style={{
+                                            background: "rgba(255,255,255,0.04)",
+                                            border: "1px solid rgba(255,255,255,0.06)",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                                        }}
+                                        title="清空对话"
+                                        aria-label="清空对话"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5 text-white/40" />
+                                    </button>
+                                </div>
                             </div>
-                            {remaining === 0 && (
-                                <p className="text-xs text-red-500 mt-2 text-center">
-                                    今日对话次数已用完，明天再来吧～
-                                </p>
-                            )}
+
+                            {/* 消息列表 */}
+                            <div
+                                className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3"
+                                style={{
+                                    scrollbarWidth: "thin",
+                                    scrollbarColor: "rgba(99, 102, 241, 0.3) transparent",
+                                }}
+                            >
+                                {messages.map((msg, idx) => {
+                                    const isUser = msg.role === "user";
+                                    const isFirst = idx === 0 || messages[idx - 1]?.role !== msg.role;
+
+                                    return (
+                                        <motion.div
+                                            key={msg.id}
+                                            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                                            className={`flex ${isUser ? "justify-end" : "justify-start"} ${isFirst ? "mt-1" : ""}`}
+                                        >
+                                            {/* AI 头像（左侧） */}
+                                            {!isUser && (
+                                                <div
+                                                    className="w-7 h-7 rounded-xl mr-2 shrink-0 flex items-center justify-center self-end mb-0.5"
+                                                    style={{
+                                                        background: "linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5))",
+                                                        border: "1px solid rgba(99, 102, 241, 0.3)",
+                                                    }}
+                                                >
+                                                    <Sparkles className="w-3.5 h-3.5 text-indigo-200" aria-hidden />
+                                                </div>
+                                            )}
+
+                                            <div
+                                                className="max-w-[75%] px-4 py-3 text-sm leading-relaxed"
+                                                style={{
+                                                    borderRadius: isUser
+                                                        ? "18px 18px 4px 18px"
+                                                        : "18px 18px 18px 4px",
+                                                    ...(isUser
+                                                        ? {
+                                                              background: "linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.85))",
+                                                              color: "rgba(255,255,255,0.95)",
+                                                              boxShadow: "0 2px 12px rgba(99, 102, 241, 0.3)",
+                                                          }
+                                                        : {
+                                                              background: "rgba(255, 255, 255, 0.06)",
+                                                              color: "rgba(255,255,255,0.88)",
+                                                              border: "1px solid rgba(255, 255, 255, 0.08)",
+                                                          }),
+                                                }}
+                                            >
+                                                {msg.content}
+                                            </div>
+
+                                            {/* 用户头像（右侧） */}
+                                            {isUser && (
+                                                <div
+                                                    className="w-7 h-7 rounded-xl ml-2 shrink-0 flex items-center justify-center self-end mb-0.5"
+                                                    style={{
+                                                        background: "rgba(99, 102, 241, 0.25)",
+                                                        border: "1px solid rgba(99, 102, 241, 0.2)",
+                                                    }}
+                                                >
+                                                    <svg className="w-3.5 h-3.5 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                                        <circle cx="12" cy="7" r="4" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    );
+                                })}
+
+                                {/* 加载中 */}
+                                {isLoading && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex items-end gap-2"
+                                    >
+                                        <div
+                                            className="w-7 h-7 rounded-xl shrink-0 flex items-center justify-center mb-0.5"
+                                            style={{
+                                                background: "linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5))",
+                                                border: "1px solid rgba(99, 102, 241, 0.3)",
+                                            }}
+                                        >
+                                            <Sparkles className="w-3.5 h-3.5 text-indigo-200" aria-hidden />
+                                        </div>
+                                        <div
+                                            className="px-4 py-3"
+                                            style={{
+                                                borderRadius: "18px 18px 18px 4px",
+                                                background: "rgba(255, 255, 255, 0.06)",
+                                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                                            }}
+                                        >
+                                            <TypingDots />
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* 输入区域 */}
+                            <div
+                                className="px-4 pb-4 pt-2 shrink-0"
+                                style={{
+                                    borderTop: "1px solid rgba(139, 92, 246, 0.12)",
+                                    background: "rgba(0,0,0,0.2)",
+                                }}
+                            >
+                                <div
+                                    className="flex items-end gap-2 px-3 py-2.5 rounded-2xl"
+                                    style={{
+                                        background: "rgba(255, 255, 255, 0.05)",
+                                        border: "1px solid rgba(139, 92, 246, 0.2)",
+                                        transition: "border-color 0.2s",
+                                    }}
+                                    onFocusCapture={(e) => {
+                                        (e.currentTarget as HTMLElement).style.borderColor = "rgba(99, 102, 241, 0.5)";
+                                    }}
+                                    onBlurCapture={(e) => {
+                                        (e.currentTarget as HTMLElement).style.borderColor = "rgba(139, 92, 246, 0.2)";
+                                    }}
+                                >
+                                    <textarea
+                                        ref={inputRef}
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="问点什么吧…"
+                                        rows={1}
+                                        className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/30 resize-none outline-none leading-relaxed"
+                                        style={{ minHeight: "24px", maxHeight: "80px" }}
+                                        onInput={(e) => {
+                                            const el = e.currentTarget;
+                                            el.style.height = "auto";
+                                            el.style.height = Math.min(el.scrollHeight, 80) + "px";
+                                        }}
+                                        aria-label="输入消息"
+                                    />
+                                    <button
+                                        onClick={sendMessage}
+                                        disabled={!inputValue.trim() || isLoading}
+                                        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                                        style={{
+                                            background: inputValue.trim() && !isLoading
+                                                ? "linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9))"
+                                                : "rgba(255,255,255,0.05)",
+                                            boxShadow: inputValue.trim() && !isLoading
+                                                ? "0 2px 12px rgba(99, 102, 241, 0.4)"
+                                                : "none",
+                                        }}
+                                        whileTap={inputValue.trim() && !isLoading ? { scale: 0.88 } : {}}
+                                        aria-label="发送消息"
+                                    >
+                                        <Send className="w-3.5 h-3.5 text-white" />
+                                    </button>
+                                </div>
+                                <p className="text-center text-[10px] text-white/20 mt-2">AI 助手由 DeepSeek 驱动 · 支持多轮对话</p>
+                            </div>
                         </div>
                     </motion.div>
                 )}

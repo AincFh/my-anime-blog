@@ -1,0 +1,489 @@
+---
+alwaysApply: true
+globs: "**/*.{ts,tsx}"
+description: 错误处理最佳实践 - 错误类型定义、错误边界、日志规范
+---
+
+# 错误处理最佳实践
+
+## 错误类型定义
+
+### 自定义错误类
+
+```typescript
+// app/utils/errors.ts
+
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly statusCode: number = 500,
+    public readonly metadata?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      statusCode: this.statusCode,
+      metadata: this.metadata,
+    };
+  }
+}
+
+export class BadRequestError extends AppError {
+  constructor(message: string, metadata?: Record<string, unknown>) {
+    super(message, 'BAD_REQUEST', 400, metadata);
+  }
+}
+
+export class UnauthorizedError extends AppError {
+  constructor(message: string = '未授权访问', metadata?: Record<string, unknown>) {
+    super(message, 'UNAUTHORIZED', 401, metadata);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message: string = '无权限访问', metadata?: Record<string, unknown>) {
+    super(message, 'FORBIDDEN', 403, metadata);
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(resource: string, identifier?: string | number) {
+    const message = identifier !== undefined
+      ? `${resource}不存在: ${identifier}`
+      : `${resource}不存在`;
+    super(message, 'NOT_FOUND', 404, { resource, identifier });
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(
+    message: string,
+    public readonly errors: Record<string, string[]>
+  ) {
+    super(message, 'VALIDATION_ERROR', 400, { errors });
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message: string, metadata?: Record<string, unknown>) {
+    super(message, 'CONFLICT', 409, metadata);
+  }
+}
+
+export class InternalError extends AppError {
+  constructor(message: string = '服务器内部错误', metadata?: Record<string, unknown>) {
+    super(message, 'INTERNAL_ERROR', 500, metadata);
+  }
+}
+
+export class ServiceUnavailableError extends AppError {
+  constructor(message: string = '服务暂时不可用', metadata?: Record<string, unknown>) {
+    super(message, 'SERVICE_UNAVAILABLE', 503, metadata);
+  }
+}
+```
+
+## 统一错误响应格式
+
+### API 响应工具
+
+```typescript
+// app/utils/api-response.ts
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, string[]>;
+  };
+  meta?: {
+    timestamp: string;
+    requestId?: string;
+  };
+}
+
+export function successResponse<T>(
+  data: T,
+  options?: { requestId?: string }
+): ApiResponse<T> {
+  return {
+    success: true,
+    data,
+    meta: {
+      timestamp: new Date().toISOString(),
+      requestId: options?.requestId,
+    },
+  };
+}
+
+export function errorResponse(
+  error: AppError | Error,
+  options?: { requestId?: string }
+): ApiResponse {
+  if (error instanceof AppError) {
+    return {
+      success: false,
+      error: {
+        code: error.code,
+        message: error.message,
+        details: error.metadata?.errors as Record<string, string[]> | undefined,
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: options?.requestId,
+      },
+    };
+  }
+
+  // 未知错误
+  return {
+    success: false,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: '服务器内部错误，请稍后重试',
+    },
+    meta: {
+      timestamp: new Date().toISOString(),
+      requestId: options?.requestId,
+    },
+  };
+}
+```
+
+## 路由错误处理
+
+### Loader 错误处理
+
+```typescript
+// ✅ 正确处理 Loader 错误
+export async function loader({ params, env }: LoaderFunctionArgs) {
+  const slug = params.slug;
+  
+  try {
+    const article = await articleService.getBySlug(env, slug);
+    
+    if (!article) {
+      throw new NotFoundError('文章', slug);
+    }
+    
+    return successResponse({ article });
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw data(error.toJSON(), { status: error.statusCode });
+    }
+    
+    logger.error('加载文章失败', {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    
+    throw data(
+      { code: 'INTERNAL_ERROR', message: '加载文章失败' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Action 错误处理
+
+```typescript
+// ✅ Action 统一错误处理
+export async function action({ request, env }: ActionFunctionArgs) {
+  const contentType = request.headers.get('Content-Type') ?? '';
+  
+  if (!contentType.includes('application/json') && !contentType.includes('form')) {
+    return errorResponse(
+      new BadRequestError('无效的请求类型'),
+      { requestId: getRequestId(request) }
+    );
+  }
+  
+  try {
+    const body = contentType.includes('application/json')
+      ? await request.json()
+      : Object.fromEntries(await request.formData());
+    
+    const result = await articleService.create(env, body);
+    
+    return successResponse(result, { requestId: getRequestId(request) });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return errorResponse(error, { requestId: getRequestId(request) });
+    }
+    
+    if (error instanceof UnauthorizedError) {
+      return errorResponse(error, { requestId: getRequestId(request) });
+    }
+    
+    logger.error('创建文章失败', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    
+    return errorResponse(
+      new InternalError('创建文章失败'),
+      { requestId: getRequestId(request) }
+    );
+  }
+}
+```
+
+## React 组件错误处理
+
+### ErrorBoundary 组件
+
+```typescript
+// app/components/common/ErrorBoundary.tsx
+'use client';
+
+import { Component, type ReactNode } from 'react';
+import { isRouteErrorResponse, useRouteError } from 'react-router';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-500">出错了</h2>
+            <p className="text-gray-400 mt-2">
+              {this.state.error?.message ?? '发生了未知错误'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"
+            >
+              刷新页面
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// 路由级别错误处理
+export function RouteErrorBoundary() {
+  const error = useRouteError();
+  
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-6xl font-bold text-white/20">{error.status}</h1>
+          <p className="text-xl text-gray-400 mt-4">{error.statusText}</p>
+          <p className="text-gray-500 mt-2">{error.data?.message}</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error instanceof Error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-red-500">发生错误</h1>
+          <p className="text-gray-400 mt-4">{error.message}</p>
+          <pre className="mt-4 p-4 bg-white/5 rounded-lg text-left text-sm overflow-auto">
+            {error.stack}
+          </pre>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-400">发生了未知错误</p>
+    </div>
+  );
+}
+```
+
+## 异步错误处理
+
+### 统一异步处理包装
+
+```typescript
+// app/utils/async-handler.ts
+
+type AsyncFunction<T> = (...args: unknown[]) => Promise<T>;
+
+export function asyncHandler<T>(
+  fn: AsyncFunction<T>,
+  errorHandler?: (error: Error) => AppError
+): AsyncFunction<T | AppError> {
+  return async (...args: unknown[]) => {
+    try {
+      return await fn(...args);
+    } catch (error) {
+      if (errorHandler && error instanceof Error) {
+        throw errorHandler(error);
+      }
+      throw error;
+    }
+  };
+}
+
+// 使用示例
+export const safeGetArticle = asyncHandler(
+  (slug: string) => articleService.getBySlug(env, slug),
+  (error) => {
+    if (error.message.includes('not found')) {
+      return new NotFoundError('文章', slug);
+    }
+    return new InternalError('获取文章失败');
+  }
+);
+```
+
+## 日志记录规范
+
+### 统一日志工具
+
+```typescript
+// app/utils/logger.ts
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogEntry {
+  level: LogLevel;
+  message: string;
+  context?: Record<string, unknown>;
+  timestamp: string;
+}
+
+const SENSITIVE_KEYS = new Set([
+  'password', 'token', 'secret', 'apiKey', 'authorization',
+  'creditCard', 'ssn', 'cookie', 'session',
+]);
+
+class Logger {
+  private static instance: Logger;
+  private logs: LogEntry[] = [];
+  private readonly maxLogs = 1000;
+
+  private constructor() {}
+
+  static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
+
+  private sanitize(data: Record<string, unknown>): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+        sanitized[key] = '[REDACTED]';
+      } else if (typeof value === 'object' && value !== null) {
+        sanitized[key] = this.sanitize(value as Record<string, unknown>);
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    
+    return sanitized;
+  }
+
+  private log(level: LogLevel, message: string, context?: Record<string, unknown>) {
+    const entry: LogEntry = {
+      level,
+      message,
+      context: context ? this.sanitize(context) : undefined,
+      timestamp: new Date().toISOString(),
+    };
+    
+    this.logs.push(entry);
+    
+    if (this.logs.length > this.maxLogs) {
+      this.logs.shift();
+    }
+    
+    const prefix = `[${entry.timestamp}] [${level.toUpperCase()}]`;
+    const logMessage = context
+      ? `${prefix} ${message} ${JSON.stringify(entry.context)}`
+      : `${prefix} ${message}`;
+    
+    switch (level) {
+      case 'debug':
+      case 'info':
+        console.log(logMessage);
+        break;
+      case 'warn':
+        console.warn(logMessage);
+        break;
+      case 'error':
+        console.error(logMessage);
+        break;
+    }
+  }
+
+  debug(message: string, context?: Record<string, unknown>) {
+    if (process.env.NODE_ENV === 'production') return;
+    this.log('debug', message, context);
+  }
+
+  info(message: string, context?: Record<string, unknown>) {
+    this.log('info', message, context);
+  }
+
+  warn(message: string, context?: Record<string, unknown>) {
+    this.log('warn', message, context);
+  }
+
+  error(message: string, context?: Record<string, unknown>) {
+    this.log('error', message, context);
+  }
+}
+
+export const logger = Logger.getInstance();
+```
+
+## 错误处理检查清单
+
+- [ ] 所有 async 函数都有 try-catch
+- [ ] 错误返回统一的 JSON 格式
+- [ ] 敏感信息在日志中脱敏
+- [ ] 错误有适当的 HTTP 状态码
+- [ ] 用户看到友好的错误消息
+- [ ] 内部错误详情不暴露给用户
+- [ ] ErrorBoundary 捕获组件错误
+- [ ] 关键错误有审计日志记录

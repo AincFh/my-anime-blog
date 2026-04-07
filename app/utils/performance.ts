@@ -3,58 +3,56 @@
  * 功能：设备检测、降级策略、性能监控、动态调整
  */
 
-export type PerformanceLevel = "high" | "medium" | "low";
+// 统一从 device.ts 导入类型，避免重复定义
+export type { PerformanceLevel } from './device';
 
-// 性能偏好存储 key
-const PERFORMANCE_PREFERENCE_KEY = 'anime-blog-performance-level';
+export const PERFORMANCE_PREFERENCE_KEY = 'anime-blog-performance-level';
+
+// 直接复用 device.ts 的检测函数
+export { getDeviceInfo, isTouchDevice, getPerformanceConfig, getPerformanceLevel } from './device';
 
 /**
- * 检测是否为移动设备
+ * 兼容旧调用 —— isMobileDevice（内联实现，避免 re-export 在 SSR 下找不到）
+ * 仅在客户端执行
  */
 export function isMobileDevice(): boolean {
-  if (typeof window === "undefined") return false;
-  if (typeof navigator === "undefined") return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  ) || (window.innerWidth < 768);
+    if (typeof window === 'undefined') return false;
+    const width = window.innerWidth;
+    return width < 768;
 }
 
 /**
  * 检测设备性能（简单版）
  * 基于硬件并发数和设备内存（如果可用）
  */
-export function getDevicePerformance(): PerformanceLevel {
+export function getDevicePerformance(): 'high' | 'medium' | 'low' {
   if (typeof window === "undefined") return "high";
 
   // 检查用户偏好
   const savedPreference = getSavedPerformancePreference();
   if (savedPreference) return savedPreference;
 
-  const isMobile = isMobileDevice();
+  const isMobile = typeof window !== "undefined" && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')
+    || window.innerWidth < 768
+  );
   const hardwareConcurrency = navigator.hardwareConcurrency || 2;
   const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory || 4;
 
   if (isMobile) {
-    // 移动设备默认中等或低性能
-    if (hardwareConcurrency >= 6 && deviceMemory >= 4) {
-      return "medium";
-    }
+    if (hardwareConcurrency >= 6 && deviceMemory >= 4) return "medium";
     return "low";
   }
 
-  // PC设备
-  if (hardwareConcurrency >= 8 && deviceMemory >= 8) {
-    return "high";
-  } else if (hardwareConcurrency >= 4 && deviceMemory >= 4) {
-    return "medium";
-  }
+  if (hardwareConcurrency >= 8 && deviceMemory >= 8) return "high";
+  if (hardwareConcurrency >= 4 && deviceMemory >= 4) return "medium";
   return "low";
 }
 
 /**
  * 保存用户性能偏好
  */
-export function savePerformancePreference(level: PerformanceLevel): void {
+export function savePerformancePreference(level: 'high' | 'medium' | 'low'): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(PERFORMANCE_PREFERENCE_KEY, level);
 }
@@ -62,12 +60,10 @@ export function savePerformancePreference(level: PerformanceLevel): void {
 /**
  * 获取保存的性能偏好
  */
-export function getSavedPerformancePreference(): PerformanceLevel | null {
+export function getSavedPerformancePreference(): 'high' | 'medium' | 'low' | null {
   if (typeof localStorage === "undefined") return null;
   const saved = localStorage.getItem(PERFORMANCE_PREFERENCE_KEY);
-  if (saved === "high" || saved === "medium" || saved === "low") {
-    return saved;
-  }
+  if (saved === "high" || saved === "medium" || saved === "low") return saved;
   return null;
 }
 
@@ -75,20 +71,25 @@ export function getSavedPerformancePreference(): PerformanceLevel | null {
  * 是否应该启用高性能特效
  */
 export function shouldEnableHighPerformanceEffects(): boolean {
-  const performance = getDevicePerformance();
-  return performance === "high" && !isMobileDevice();
+  const perf = getDevicePerformance();
+  const isMobile = typeof window !== "undefined" && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')
+    || window.innerWidth < 768
+  );
+  return perf === "high" && !isMobile;
 }
 
 /**
  * 是否应该启用粒子特效
  */
 export function shouldEnableParticles(): boolean {
-  if (isMobileDevice()) return false; // 严格执行移动端减负，全面禁用无用装饰性粒子
-
-  const performance = getDevicePerformance();
-  // 低性能PC设备完全禁用粒子
-  if (performance === "low") return false;
-  // PC 设备中等以上启用
+  const isMobile = typeof window !== "undefined" && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')
+    || window.innerWidth < 768
+  );
+  if (isMobile) return false;
+  const perf = getDevicePerformance();
+  if (perf === "low") return false;
   return true;
 }
 
@@ -97,7 +98,6 @@ export function shouldEnableParticles(): boolean {
  * 用户要求保留毛玻璃作为网站主题，不降级
  */
 export function shouldUseGlassmorphism(): boolean {
-  // 毛玻璃效果是网站主题的一部分，始终启用
   return true;
 }
 
@@ -105,12 +105,14 @@ export function shouldUseGlassmorphism(): boolean {
  * 获取推荐的粒子数量
  */
 export function getRecommendedParticleCount(baseCount: number): number {
-  const performance = getDevicePerformance();
-  const isMobile = isMobileDevice();
-
+  const perf = getDevicePerformance();
+  const isMobile = typeof window !== "undefined" && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')
+    || window.innerWidth < 768
+  );
   if (isMobile) return Math.floor(baseCount * 0.3);
-  if (performance === "low") return Math.floor(baseCount * 0.4);
-  if (performance === "medium") return Math.floor(baseCount * 0.7);
+  if (perf === "low") return Math.floor(baseCount * 0.4);
+  if (perf === "medium") return Math.floor(baseCount * 0.7);
   return baseCount;
 }
 

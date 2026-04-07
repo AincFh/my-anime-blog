@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live2D 模型一览</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0a0a1a; color: #fff; padding: 20px; }
+    h1 { text-align: center; margin: 30px 0; font-size: 2em; background: linear-gradient(90deg, #00d4ff, #ff00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; backdrop-filter: blur(10px); transition: transform 0.3s, box-shadow 0.3s; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,212,255,0.2); }
+    .card img { width: 100%; height: 280px; object-fit: contain; background: #0d0d20; display: block; }
+    .card-body { padding: 14px; }
+    .card-title { font-size: 1.1em; font-weight: bold; color: #00d4ff; margin-bottom: 5px; }
+    .card-desc { font-size: 0.8em; color: #aaa; line-height: 1.5; margin-bottom: 8px; }
+    .card-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.3); padding: 2px 10px; border-radius: 20px; font-size: 0.7em; color: #00d4ff; }
+    .tag.male { background: rgba(255,0,255,0.15); border-color: rgba(255,0,255,0.3); color: #ff00ff; }
+    .tag.cute { background: rgba(255,100,100,0.15); border-color: rgba(255,100,100,0.3); color: #ff6464; }
+    .tag.tech { background: rgba(100,255,100,0.15); border-color: rgba(100,255,100,0.3); color: #64ff64; }
+    .tag.dark { background: rgba(150,100,255,0.15); border-color: rgba(150,100,255,0.3); color: #9664ff; }
+    .missing { color: #ff4444; font-size: 0.75em; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Live2D 看板娘模型一览</h1>
+  <div class="grid">
+
+    <!-- shizuku -->
+    <div class="card">
+      <img src="shizuku/moc/shizuku.1024/texture_00.png" alt="shizuku">
+      <div class="card-body">
+        <div class="card-title">shizuku (静香)</div>
+        <div class="card-desc">日系少女，蓝色短发<br>多表情动作，经典看板娘</div>
+        <div class="card-meta"><span class="tag">可爱系</span><span class="tag">通用</span></div>
+      </div>
+    </div>
+
+    <!-- miku -->
+    <div class="card">
+      <img src="miku/moc/miku.2048/texture_00.png" alt="miku">
+      <div class="card-body">
+        <div class="card-title">miku (初音未来)</div>
+        <div class="card-desc">葱绿双马尾，经典看板娘<br>Vocaloid 虚拟歌手</div>
+        <div class="card-meta"><span class="tag">经典</span><span class="tag">Vocaloid</span></div>
+      </div>
+    </div>
+
+    <!-- tsumiki -->
+    <div class="card">
+      <img src="tsumiki/moc/tsumiki.2048/texture_00.png" alt="tsumiki">
+      <div class="card-body">
+        <div class="card-title">tsumiki (积木)</div>
+        <div class="card-desc">蓝色短发，矮小可爱少女<br>天然呆，害羞萌</div>
+        <div class="card-meta"><span class="tag cute">天然呆</span><span class="tag cute">可爱</span></div>
+      </div>
+    </div>
+
+    <!-- koharu -->
+    <div class="card">
+      <img src="koharu/moc/koharu.2048/texture_00.png" alt="koharu">
+      <div class="card-body">
+        <div class="card-title">koharu (小春)</div>
+        <div class="card-desc">橙发双马尾，甜美少女<br>Blue Archive 角色</div>
+        <div class="card-meta"><span class="tag cute">甜美</span><span class="tag cute">双马尾</span></div>
+      </div>
+    </div>
+
+    <!-- chitose -->
+    <div class="card">
+      <img src="chitose/moc/chitose.2048/texture_00.png" alt="chitose">
+      <div class="card-body">
+        <div class="card-title">chitose (千斗五十铃)</div>
+        <div class="card-desc">金发大小姐，高冷华丽风<br>御姐气质，适合高端博客</div>
+        <div class="card-meta"><span class="tag">御姐</span><span class="tag">华丽</span></div>
+      </div>
+    </div>
+
+    <!-- haru01 -->
+    <div class="card">
+      <img src="haru01/moc/haru01.2048/texture_00.png" alt="haru01">
+      <div class="card-body">
+        <div class="card-title">haru01 (春)</div>
+        <div class="card-desc">棕色短发邻家女孩<br>自然亲切，轻松感</div>
+        <div class="card-meta"><span class="tag cute">可爱</span><span class="tag">日常</span></div>
+      </div>
+    </div>
+
+    <!-- haruto -->
+    <div class="card">
+      <img src="haruto/moc/haruto.2048/texture_00.png" alt="haruto">
+      <div class="card-body">
+        <div class="card-title">haruto (春人)</div>
+        <div class="card-desc">男性角色，黑发帅气<br>适合技术博客/男性向</div>
+        <div class="card-meta"><span class="tag male">男性</span><span class="tag tech">技术</span></div>
+      </div>
+    </div>
+
+    <!-- hibiki -->
+    <div class="card">
+      <img src="hibiki/moc/hibiki.2048/texture_00.png" alt="hibiki">
+      <div class="card-body">
+        <div class="card-title">hibiki (响)</div>
+        <div class="card-desc">粉色双马尾，活泼元气<br>元气少女，适合年轻化博客</div>
+        <div class="card-meta"><span class="tag cute">元气</span><span class="tag">活泼</span></div>
+      </div>
+    </div>
+
+    <!-- hijiki -->
+    <div class="card">
+      <img src="hijiki/moc/hijiki.2048/texture_00.png" alt="hijiki">
+      <div class="card-body">
+        <div class="card-title">hijiki (飞蚯蚓)</div>
+        <div class="card-desc">黑色海藻头，萌系吃货<br>二次元风格，海藻发</div>
+        <div class="card-meta"><span class="tag cute">萌系</span><span class="tag">二次元</span></div>
+      </div>
+    </div>
+
+    <!-- ni-j -->
+    <div class="card">
+      <img src="ni-j/moc/ni-j.2048/texture_00.png" alt="ni-j">
+      <div class="card-body">
+        <div class="card-title">ni-j (Nijisan)</div>
+        <div class="card-desc">戴眼镜男性，程序员风<br>斯文败类，技术宅</div>
+        <div class="card-meta"><span class="tag male">男性</span><span class="tag tech">程序员</span></div>
+      </div>
+    </div>
+
+    <!-- nico -->
+    <div class="card">
+      <img src="nico/moc/nico.2048/texture_00.png" alt="nico">
+      <div class="card-body">
+        <div class="card-title">nico (妮可)</div>
+        <div class="card-desc">粉色麻花辫，偶像感<br>LoveLive 妮可风</div>
+        <div class="card-meta"><span class="tag cute">偶像</span><span class="tag cute">甜美</span></div>
+      </div>
+    </div>
+
+    <!-- nietzsche -->
+    <div class="card">
+      <img src="nietzsche/moc/nietzsche.2048/texture_00.png" alt="nietzsche">
+      <div class="card-body">
+        <div class="card-title">nietzsche (尼采)</div>
+        <div class="card-desc">黑白风，哲学抽象角色<br>小众文艺，另类风格</div>
+        <div class="card-meta"><span class="tag dark">黑暗</span><span class="tag">文艺</span></div>
+      </div>
+    </div>
+
+    <!-- nipsilon -->
+    <div class="card">
+      <img src="nipsilon/moc/nipsilon.2048/texture_00.png" alt="nipsilon">
+      <div class="card-body">
+        <div class="card-title">nipsilon (Nipsilon)</div>
+        <div class="card-desc">黑白哥特，洛丽塔风格<br>暗黑系，高冷神秘</div>
+        <div class="card-meta"><span class="tag dark">哥特</span><span class="tag dark">暗黑</span></div>
+      </div>
+    </div>
+
+    <!-- nito -->
+    <div class="card">
+      <img src="nito/moc/nito.2048/texture_00.png" alt="nito">
+      <div class="card-body">
+        <div class="card-title">nito (猫兔)</div>
+        <div class="card-desc">猫耳+兔耳混搭，萌系<br>可爱到爆，双萌耳</div>
+        <div class="card-meta"><span class="tag cute">猫耳</span><span class="tag cute">兔耳</span></div>
+      </div>
+    </div>
+
+    <!-- tororo -->
+    <div class="card">
+      <img src="tororo/moc/tororo.2048/texture_00.png" alt="tororo">
+      <div class="card-body">
+        <div class="card-title">tororo (土豆狗)</div>
+        <div class="card-desc">白色柴犬，狗头人<br>轻松治愈，萌宠风</div>
+        <div class="card-meta"><span class="tag cute">动物</span><span class="tag">治愈</span></div>
+      </div>
+    </div>
+
+    <!-- unitychan -->
+    <div class="card">
+      <img src="unitychan/moc/unitychan.2048/texture_00.png" alt="unitychan">
+      <div class="card-body">
+        <div class="card-title">unitychan (虚拟偶像)</div>
+        <div class="card-desc">粉色长发，官方虚拟主播<br>Unity 官方角色</div>
+        <div class="card-meta"><span class="tag">官方</span><span class="tag">偶像</span></div>
+      </div>
+    </div>
+
+    <!-- wanko -->
+    <div class="card">
+      <img src="wanko/moc/wanko.2048/texture_00.png" alt="wanko">
+      <div class="card-body">
+        <div class="card-title">wanko (汪子)</div>
+        <div class="card-desc">白色柯基犬头，小狗<br>轻松可爱，治愈系</div>
+        <div class="card-meta"><span class="tag cute">动物</span><span class="tag">治愈</span></div>
+      </div>
+    </div>
+
+    <!-- z16 -->
+    <div class="card">
+      <img src="z16/moc/z16.2048/texture_00.png" alt="z16">
+      <div class="card-body">
+        <div class="card-title">z16 (Z16)</div>
+        <div class="card-desc">机器人/赛博风格<br>科技感强，未来感</div>
+        <div class="card-meta"><span class="tag tech">机器人</span><span class="tag tech">赛博</span></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

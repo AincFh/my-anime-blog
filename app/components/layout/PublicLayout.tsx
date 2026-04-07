@@ -1,5 +1,5 @@
-import { useScroll, useTransform, motion } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { FloatingNav } from "./FloatingNav";
 import { MobileNav } from "./MobileNav";
 import { DynamicBackground } from "~/components/ui/animations/DynamicBackground";
@@ -10,28 +10,31 @@ import { shouldEnableParticles } from "~/utils/performance";
 // 职责：视觉层（背景、粒子、导航），不负责功能组件（音乐播放器、彩蛋等由 root.tsx 统管）
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
-    const ref = useRef(null);
-    const { scrollY } = useScroll({ target: ref });
-    const y = useTransform(scrollY, [0, 1000], [0, 200]);
+    const [scrollY, setScrollY] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
     const [enableParticles, setEnableParticles] = useState(false);
 
     useEffect(() => {
         setIsMobile(window.innerWidth < 768);
-        // 移动端直接关闭粒子系统，桌面端按性能检测决定
         setEnableParticles(window.innerWidth >= 768 && shouldEnableParticles());
+
+        const handleScroll = () => setScrollY(window.scrollY);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const bgY = scrollY * 0.2;
+
     return (
-        <div ref={ref} className="relative min-h-screen overflow-hidden font-round text-slate-800 dark:text-slate-200 selection:bg-primary-start selection:text-white">
+        <div className="relative min-h-screen overflow-hidden font-round text-slate-800 dark:text-slate-200 selection:bg-primary-start selection:text-white">
             {/* 动态全屏背景系统 */}
             <div className="absolute inset-0 z-0" data-background-layer>
-                <motion.div
-                    style={{ y }}
+                <div
                     className="absolute inset-0"
+                    style={{ transform: `translateY(${bgY}px)`, transition: 'none' }}
                 >
                     <DynamicBackground />
-                </motion.div>
+                </div>
             </div>
 
             {/* Bokeh 光斑 — 仅桌面端（CSS hidden md:block 保证移动端零渲染） */}

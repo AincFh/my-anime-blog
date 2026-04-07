@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import { useState } from "react";
+import { Dice5 } from "lucide-react";
 
 /**
  * 世界线跳跃随机传送 (Random Jump)
@@ -47,7 +48,7 @@ export function RandomJump({ articles }: RandomJumpProps) {
       transition={{ duration: 0.5 }}
     >
       <span className="flex items-center gap-2">
-        <span>🎲</span>
+        <Dice5 className="w-5 h-5" />
         <span>跳跃至未知世界线</span>
       </span>
     </motion.button>

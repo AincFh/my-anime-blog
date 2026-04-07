@@ -2,50 +2,50 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Sparkles, Coins, Gift } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
-import { useGamification } from "~/contexts/GamificationContext";
-
-import { useRouteLoaderData } from "react-router";
+import { useFetcher } from "react-router";
 
 const GACHA_COST = 100;
 
-const GACHA_POOL = [
-    { id: "sticker_1", name: "初音未来贴纸", type: "sticker" as const, image: "🎤", rarity: "rare" as const },
-    { id: "sticker_2", name: "樱花贴纸", type: "sticker" as const, image: "🌸", rarity: "common" as const },
-    { id: "sticker_3", name: "星空贴纸", type: "sticker" as const, image: "✨", rarity: "epic" as const },
-    { id: "wallpaper_1", name: "赛博朋克壁纸", type: "wallpaper" as const, image: "🌃", rarity: "legendary" as const },
-    { id: "badge_1", name: "勇者徽章", type: "badge" as const, image: "🛡️", rarity: "epic" as const },
-];
-
 export function GachaMachine() {
-    const { stats, spendCoins, addToInventory, unlockAchievement } = useGamification();
+    const fetcher = useFetcher();
     const [isRolling, setIsRolling] = useState(false);
-    const [result, setResult] = useState<typeof GACHA_POOL[0] | null>(null);
+    const [result, setResult] = useState<{
+        id: string;
+        name: string;
+        type: "sticker" | "wallpaper" | "badge";
+        image: string;
+        rarity: "common" | "rare" | "epic" | "legendary";
+    } | null>(null);
 
-    const rootData = useRouteLoaderData("root") as any;
-    const playAnim = rootData?.userPrefs?.personalization?.gacha_animation !== false;
+    // 服务器返回的当前余额
+    const balance = fetcher.data?.balance as number | undefined;
+    const coins = balance ?? fetcher.data?.coins ?? 0;
 
     const handleGacha = () => {
-        if (stats.coins < GACHA_COST) {
+        if (isRolling) return;
+
+        if (coins < GACHA_COST) {
             toast.error("金币不足！");
             return;
         }
 
-        if (spendCoins(GACHA_COST)) {
-            if (playAnim) setIsRolling(true);
+        setIsRolling(true);
+        setResult(null);
 
-            // 依据用户设置，开启等待特效或瞬间发卡
-            setTimeout(() => {
-                const randomItem = GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)];
-                setResult(randomItem);
-                addToInventory({
-                    ...randomItem,
-                    obtainedAt: Date.now(),
-                });
-                unlockAchievement("gacha_master");
-                setIsRolling(false);
-            }, playAnim ? 2000 : 0);
-        }
+        fetcher.submit({}, { method: "post", action: "/api/user/gacha" });
     };
+
+    // 监听服务器响应
+    const responseData = fetcher.data;
+    if (responseData && !isRolling) {
+        if (responseData.success && responseData.item) {
+            setResult(responseData.item);
+            // 解锁成就
+            // unlockAchievement("gacha_master");
+        } else if (responseData.error) {
+            toast.error(responseData.error);
+        }
+    }
 
     return (
         <div className="relative">
@@ -66,9 +66,9 @@ export function GachaMachine() {
                                 animate={{ scale: [1, 1.2, 1], rotate: 360 }}
                                 exit={{ scale: 0 }}
                                 transition={{ duration: 0.5, repeat: 3 }}
-                                className="text-6xl"
+                                className="text-white"
                             >
-                                🎰
+                                <Sparkles className="w-12 h-12" />
                             </motion.div>
                         ) : result ? (
                             <motion.div
@@ -78,7 +78,9 @@ export function GachaMachine() {
                                 exit={{ scale: 0 }}
                                 className="text-center"
                             >
-                                <div className="text-7xl mb-2">{result.image}</div>
+                                <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+                                    <Gift className="w-12 h-12 text-white" />
+                                </div>
                                 <div className="text-white font-bold">{result.name}</div>
                                 <div className="text-sm text-yellow-300">{result.rarity.toUpperCase()}</div>
                             </motion.div>
@@ -87,9 +89,9 @@ export function GachaMachine() {
                                 key="idle"
                                 animate={{ y: [0, -10, 0] }}
                                 transition={{ duration: 2, repeat: Infinity }}
-                                className="text-6xl"
+                                className="text-white"
                             >
-                                🎁
+                                <Gift className="w-12 h-12" />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -118,12 +120,14 @@ export function GachaMachine() {
                 {/* Pull Button */}
                 <motion.button
                     onClick={handleGacha}
-                    disabled={isRolling || stats.coins < GACHA_COST}
-                    className="w-full bg-white text-purple-600 font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isRolling || fetcher.state === "submitting"}
+                    className="w-full bg-white text-purple-600 font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
-                    {isRolling ? "抽取中..." : `抽取 (${stats.coins} 💰)`}
+                    {isRolling || fetcher.state === "submitting"
+                        ? "抽取中..."
+                        : <><Sparkles className="w-5 h-5" /> 抽取 ({coins} 金币)</>}
                 </motion.button>
 
                 {result && (

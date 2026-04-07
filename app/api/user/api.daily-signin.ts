@@ -114,7 +114,9 @@ export async function action({ request, context }: { request: Request; context: 
             try {
                 const privileges = JSON.parse(tier.privileges || '{}');
                 baseCoins = privileges.dailySignInBonus || baseCoins;
-            } catch (e) { }
+            } catch (e) {
+                console.warn('[daily-signin] 解析会员特权失败:', e);
+            }
         }
     }
 

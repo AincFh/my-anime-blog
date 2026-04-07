@@ -1,0 +1,361 @@
+---
+alwaysApply: true
+globs: "**/*.{ts,tsx}"
+description: 代码风格和命名规范 - 变量命名、函数规范、注释要求
+---
+
+# 代码风格和命名规范
+
+## 变量命名
+
+### 通用规则
+
+```typescript
+// ✅ 好的命名 - 清晰表达意图
+const isLoading = true;
+const hasError = false;
+const userCount = 42;
+const articleList: Article[] = [];
+const userProfile = { name: '张三' };
+
+// ❌ 坏的命名 - 不清晰的缩写或无意义名称
+const isL = true;
+const flag = false;
+const cnt = 42;
+const list: Article[] = [];
+const u = { name: '张三' };
+```
+
+### 布尔值命名
+
+```typescript
+// ✅ 使用 is, has, can, should, will 前缀
+const isActive = true;
+const hasPermission = true;
+const canEdit = true;
+const shouldUpdate = false;
+const willRender = true;
+
+// ✅ 使用否定前缀
+const isNotEmpty = value.length > 0;
+const isDisabled = !enabled;
+const isNotFound = result === null;
+```
+
+### 函数命名
+
+```typescript
+// ✅ 动词 + 名词结构
+function getUserById(id: number): User { }
+function createArticle(data: ArticleInput): Article { }
+function updateUserProfile(id: number, data: ProfileData): User { }
+function deleteArticle(id: number): void { }
+function validateEmail(email: string): boolean { }
+
+// ✅ 使用动词前缀表示操作类型
+function fetchArticles(): Promise<Article[]> { }      // 获取数据
+function saveUserPreferences(data: Preferences): void { }  // 保存数据
+function handleFormSubmit(event: Event): void { }    // 处理事件
+function parseMarkdown(content: string): string { }  // 转换数据
+function calculateTotal(items: Item[]): number { }    // 计算
+function isValidEmail(email: string): boolean { }    // 布尔判断
+```
+
+### 常量命名
+
+```typescript
+// ✅ 使用 UPPER_SNAKE_CASE
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const DEFAULT_PAGE_SIZE = 20;
+const API_BASE_URL = 'https://api.example.com';
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
+
+// ✅ 相关常量组合成对象
+const HttpStatus = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  INTERNAL_ERROR: 500,
+} as const;
+
+const ArticleStatus = {
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived',
+} as const;
+```
+
+## 函数规范
+
+### 函数声明
+
+```typescript
+// ✅ 显式返回类型
+function greet(name: string): string {
+  return `你好，${name}！`;
+}
+
+// ✅ 箭头函数用于简短函数
+const double = (n: number): number => n * 2;
+
+// ✅ async 函数必须声明返回类型
+async function fetchUser(id: number): Promise<User> {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}
+```
+
+### 参数处理
+
+```typescript
+// ✅ 必选参数在前，可选参数在后
+function createButton(
+  label: string,           // 必选
+  onClick: () => void,      // 必选
+  variant?: 'primary' | 'secondary',  // 可选
+  disabled = false          // 可选，默认值
+): JSX.Element { }
+
+// ❌ 参数顺序混乱
+function createButton(
+  disabled = false,
+  variant?: 'primary' | 'secondary',
+  label: string,
+  onClick: () => void,
+): JSX.Element { }
+```
+
+### 错误处理
+
+```typescript
+// ✅ 使用 try-catch 并重新抛出有意义错误
+async function getArticle(slug: string): Promise<Article> {
+  try {
+    const article = await articleRepository.findBySlug(env.DB, slug);
+    
+    if (!article) {
+      throw new NotFoundError(`文章不存在: ${slug}`);
+    }
+    
+    return article;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    logger.error('获取文章失败', { slug, error });
+    throw new InternalError('获取文章时发生错误');
+  }
+}
+
+// ✅ 使用 Result 模式处理错误
+type Result<T, E = Error> = 
+  | { ok: true; value: T }
+  | { ok: false; error: E };
+
+async function getArticle(slug: string): Promise<Result<Article>> {
+  try {
+    const article = await articleRepository.findBySlug(env.DB, slug);
+    return article 
+      ? { ok: true, value: article }
+      : { ok: false, error: new NotFoundError('文章不存在') };
+  } catch (error) {
+    return { ok: false, error: error as Error };
+  }
+}
+```
+
+## 注释规范
+
+### 文档注释
+
+```typescript
+/**
+ * 获取用户信息
+ * 
+ * @param userId - 用户ID
+ * @returns 用户信息对象
+ * @throws {NotFoundError} 用户不存在时抛出
+ * 
+ * @example
+ * const user = await getUserById(123);
+ */
+async function getUserById(userId: number): Promise<User> {
+  // ...
+}
+```
+
+### 行内注释
+
+```typescript
+// ✅ 解释为什么这样做（意图，而非做什么）
+// 使用 setTimeout 确保在 DOM 更新后执行动画
+setTimeout(() => {
+  element.classList.add('visible');
+}, 100);
+
+// ❌ 解释代码在做什么（代码本身应该清晰）
+// 设置 isLoading 为 true
+const isLoading = true;
+
+// ✅ 标记待办和FIXME
+// TODO: 当后端支持分页后，添加分页功能
+// FIXME: 修复深色模式下颜色不正确的问题
+```
+
+## 代码组织
+
+### import 语句顺序
+
+```typescript
+// 1. React 相关
+import { useState, useEffect } from 'react';
+import { useFetcher } from 'react-router';
+
+// 2. 第三方库
+import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+
+// 3. 项目内部 - 绝对导入
+import { Button, Card } from '~/components/ui';
+import { articleService } from '~/services/article';
+import type { Article } from '~/types/article';
+
+// 4. 项目内部 - 相对导入
+import { formatDate } from '../utils/date';
+import { logger } from '~/utils/logger';
+
+// 5. 类型导入
+import type { LoaderFunctionArgs } from 'react-router';
+```
+
+### 模块导出
+
+```typescript
+// ✅ 统一使用命名导出
+export function ArticleCard() { }
+export function ArticleList() { }
+
+// ✅ 统一使用命名导入
+import { ArticleCard, ArticleList } from './components';
+
+// ✅ 导出类型
+export type { Article, ArticleInput } from './types/article';
+
+// ✅ 默认导出仅用于根组件
+export default function App() { }
+```
+
+## 格式规范
+
+### 缩进和空格
+
+```typescript
+// ✅ 使用 2 空格缩进
+function Example() {
+  if (condition) {
+    doSomething();
+  }
+}
+
+// ✅ 操作符周围添加空格
+const sum = a + b;
+const fullName = firstName + ' ' + lastName;
+const isValid = value !== null;
+
+// ❌ 移除不必要的空格
+const sum = a+b;  // 错误
+const name = firstName+lastName;  // 错误
+```
+
+### 引号使用
+
+```typescript
+// ✅ 字符串优先使用单引号
+const message = '你好，世界！';
+const path = '/api/users';
+
+// ✅ JSX 属性使用双引号
+return <div className="container">内容</div>;
+
+// ✅ 模板字符串用于复杂字符串
+const greeting = `用户 ${name}，您好！`;
+const sql = `SELECT * FROM users WHERE id = ${userId}`;
+```
+
+### 分号使用
+
+```typescript
+// ✅ 始终使用分号
+const name = '张三';
+function greet() {
+  return '你好';
+}
+```
+
+## 代码块顺序（类/组件内）
+
+```typescript
+export class ArticleService {
+  // 1. 静态属性和静态方法
+  static defaultConfig = { /* ... */ };
+  static createInstance() { /* ... */ };
+  
+  // 2. 实例属性
+  private cache: Map<string, Article>;
+  private env: Env;
+  
+  // 3. 构造函数
+  constructor(env: Env) {
+    this.env = env;
+    this.cache = new Map();
+  }
+  
+  // 4. 公共方法（按重要性/使用频率排序）
+  async getArticle(id: number): Promise<Article> { }
+  async createArticle(data: ArticleInput): Promise<Article> { }
+  async updateArticle(id: number, data: ArticleInput): Promise<Article> { }
+  
+  // 5. 私有方法
+  private async fetchFromDb(id: number): Promise<Article | null> { }
+  private invalidateCache(key: string): void { }
+}
+```
+
+## 禁止的做法
+
+```typescript
+// ❌ 禁止使用 var
+var name = '张三';  // 使用 let 或 const
+
+// ❌ 禁止使用 ==（隐式类型转换）
+if (value == null) { }  // 使用 === 或 == null
+
+// ❌ 禁止使用 eval
+eval('console.log("危险")');
+
+// ❌ 禁止使用 with
+with (obj) {
+  console.log(name);  // 不清晰
+}
+
+// ❌ 禁止修改函数参数
+function processData(data: Config) {
+  data.timeout = 5000;  // 不要这样做！
+  // ...
+}
+
+// ❌ 禁止使用 for...in 遍历数组
+const arr = [1, 2, 3];
+for (const i in arr) {
+  console.log(arr[i]);  // 不推荐
+}
+
+// ❌ 禁止使用 continue
+for (const item of items) {
+  if (skip(item)) continue;  // 优先使用 if-else 或 filter
+  process(item);
+}
+```

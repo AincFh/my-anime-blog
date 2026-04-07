@@ -5,11 +5,12 @@
 
 import type { Route } from "./+types/wallet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Sparkles, ArrowUp, ArrowDown, Clock, Gift, ChevronRight, Zap } from "lucide-react";
+import { Wallet, Sparkles, ArrowUp, ArrowDown, Clock, Gift, ChevronRight, Zap, Star } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { RECHARGE_PACKAGES } from "~/config/game";
 import { toast } from "~/components/ui/Toast";
+import { IconEmoji } from "~/components/ui/IconEmoji";
 
 // ==================== 数据加载 ====================
 
@@ -155,7 +156,10 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
                             <span className="text-6xl font-black tracking-tight tabular-nums">
                                 {balance.toLocaleString()}
                             </span>
-                            <span className="text-lg text-white/70 mb-2">✦ 星尘</span>
+                            <span className="text-lg text-white/70 mb-2 flex items-center gap-1">
+                                <IconEmoji emoji="✦" size={18} className="text-amber-400" />
+                                <span>星尘</span>
+                            </span>
                         </div>
                         <p className="text-xs text-white/60">
                             星尘为站内虚拟货币，充值后不支持退款。可在积分商城兑换头像框、主题皮肤等。

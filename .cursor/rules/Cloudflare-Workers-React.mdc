@@ -1,0 +1,58 @@
+---
+alwaysApply: true
+---
+
+---
+alwaysApply: true
+globs: "**/*.{ts,tsx,js,jsx}"
+description: Cloudflare Workers + React Router v7 全栈开发规范
+---
+
+# ☁️ Cloudflare Workers 开发规则
+1. 所有服务端代码必须兼容Cloudflare Workers运行环境
+2. 禁止使用Node.js特有的API（如fs、path、process），必须使用Cloudflare的原生API
+3. 环境变量必须从`env`对象中获取，不要使用`process.env`
+4. 所有数据库操作必须使用D1的参数化查询，防止SQL注入
+5. KV操作必须设置合理的TTL，不要永久存储临时数据
+6. R2上传必须验证文件类型和大小，防止恶意文件上传
+7. 所有API响应必须设置正确的CORS头
+8. 错误处理必须返回标准的JSON格式，包含`success`、`message`和`data`字段
+9. 不要在Worker中使用任何阻塞操作，所有IO必须异步
+
+# ⚛️ React Router v7 开发规则
+1. 这是React Router v7项目，使用App Router和SSR模式
+2. 数据获取优先使用Loader函数，不要在客户端组件中使用useEffect获取数据
+3. 表单提交优先使用Action函数和useFetcher
+4. 路由参数使用`params`对象获取，搜索参数使用`useSearchParams`
+5. 错误处理使用ErrorBoundary组件
+6. 加载状态使用Suspense组件
+7. 客户端组件必须在文件顶部添加`'use client'`指令
+8. 服务端组件不能使用任何客户端钩子（如useState、useEffect）
+9. 优先使用基于URL的状态，而非全局客户端状态
+
+# 🎨 Tailwind CSS 与玻璃态UI规范
+1. 所有样式使用Tailwind CSS v4，禁止使用内联样式
+2. 统一使用玻璃态设计风格：
+   - 背景：`bg-white/10 backdrop-blur-lg`
+   - 边框：`border border-white/20`
+   - 阴影：`shadow-lg shadow-black/20`
+3. 所有颜色和尺寸必须使用项目中定义的标准Token
+4. 组件必须实现响应式设计，适配移动端、平板和桌面端
+5. 动画使用Tailwind的transition和animate类，保持流畅自然
+
+# 🛡️ 安全规则
+1. 所有用户输入必须使用zod进行严格验证
+2. 所有输出必须进行HTML转义，防止XSS攻击
+3. 密码必须使用bcrypt或Argon2进行哈希存储，禁止明文存储
+4. 会话ID必须是随机的、不可预测的，并且有过期时间
+5. 所有敏感操作必须进行CSRF保护
+6. 禁止在日志中记录敏感信息（密码、令牌、信用卡号）
+7. 所有API端点必须进行适当的权限检查
+8. 不要在前端代码中暴露任何后端实现细节
+
+# 📝 代码风格规范
+- 文件命名：工具和服务使用kebab-case.ts，React组件使用PascalCase.tsx
+- 变量命名：普通变量和函数使用camelCase，常量使用UPPER_SNAKE_CASE
+- 严格使用TypeScript，绝对禁止使用any类型
+- 所有接口必须在app/types/目录中定义
+- 代码必须包含清晰的注释，函数必须说明用途、参数和返回值

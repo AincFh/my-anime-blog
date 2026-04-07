@@ -29,7 +29,18 @@ export function MusicPlayerMobile({ playlistId = "13641046209" }: { playlistId?:
       try {
         setIsLoading(true);
         const res = await fetch(`https://api.i-meto.com/meting/api?server=netease&type=playlist&id=${playlistId}`);
-        const data = await res.json();
+        const text = await res.text();
+        const trimmed = text.trim();
+        if (!res.ok || trimmed.startsWith("<") || (!trimmed.startsWith("[") && !trimmed.startsWith("{"))) {
+          console.warn("[MusicPlayerMobile] 歌单接口未返回 JSON", { status: res.status });
+          return;
+        }
+        let data: unknown;
+        try {
+          data = JSON.parse(trimmed) as unknown;
+        } catch {
+          return;
+        }
         if (Array.isArray(data) && data.length > 0 && isMounted) {
           setSongs(data);
         }

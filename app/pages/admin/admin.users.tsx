@@ -3,8 +3,9 @@ import { useState, useMemo, useEffect } from "react";
 import type { Route } from "./+types/admin.users";
 import { useFetcher, redirect } from "react-router";
 import { getSessionId } from "~/utils/auth";
-import { Search, Shield, User, Mail, Calendar, MoreVertical, ShieldAlert, CheckCircle2, UserCheck, UserX, Plus, Key, X as CloseIcon } from "lucide-react";
+import { Search, Shield, User, Mail, Calendar, MoreVertical, ShieldAlert, CheckCircle2, UserCheck, UserX, Plus, Key, X as CloseIcon, Coins, Sparkles, AlertCircle, Check } from "lucide-react";
 import { hashPassword } from "~/services/crypto.server";
+import { IconEmoji } from "~/components/ui/IconEmoji";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
     const sessionId = getSessionId(request);
@@ -154,9 +155,9 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
         if (fetcher.state === "idle" && fetcher.data) {
             const data = fetcher.data as any;
             if (data.error || !data.success) {
-                alert("🚨 指令执行失败: " + (data.error || data.message || "未知异常"));
+                alert(<IconEmoji emoji="🚨" size={16} /> + " 指令执行失败: " + (data.error || data.message || "未知异常"));
             } else if (data.success) {
-                alert("✅ " + data.message);
+                alert(<IconEmoji emoji="✅" size={16} /> + " " + data.message);
                 setShowAddModal(false);
                 setResetPasswordId(null);
                 setGodModeUser(null);
@@ -396,8 +397,8 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                                                         <span className="text-sm font-mono text-white font-medium">Lv. {user.level}</span>
                                                     </div>
                                                     <div className="flex items-center gap-3 text-[10px] font-bold">
-                                                        <span className="text-amber-400">💰 {user.coins}</span>
-                                                        <span className="text-blue-400">✨ {user.exp}</span>
+                                                        <span className="text-amber-400 flex items-center gap-1"><Coins size={12} /> {user.coins}</span>
+                                                        <span className="text-blue-400 flex items-center gap-1"><Sparkles size={12} /> {user.exp}</span>
                                                     </div>
                                                 </div>
                                             </td>

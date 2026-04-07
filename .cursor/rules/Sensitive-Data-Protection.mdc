@@ -1,0 +1,273 @@
+---
+alwaysApply: true
+globs: "**/*.{ts,tsx,json,jsonc}"
+description: 敏感信息保护规范 - 密钥管理、日志脱敏、环境变量、代码审查
+---
+
+# 敏感信息保护规范
+
+## 密钥和凭据管理
+
+### 禁止的实践
+
+```typescript
+// ❌ 严格禁止 - 硬编码密钥
+const API_KEY = 'sk_live_abc123xyz789';
+const DB_PASSWORD = 'SuperSecret123!';
+const JWT_SECRET = 'my-jwt-secret-key';
+
+// ❌ 严格禁止 - 在代码中记录密钥
+console.log('API Key:', process.env.API_KEY);
+console.debug('Secret:', sensitiveValue);
+
+// ❌ 严格禁止 - 在注释中暴露密钥
+// API Key: sk_live_abc123xyz789
+```
+
+### 正确的做法
+
+```typescript
+// ✅ 从env对象获取环境变量
+export async function handler(request: Request, env: Env): Promise<Response> {
+  const apiKey = env.API_KEY;
+  const dbPassword = env.DB_PASSWORD;
+  
+  if (!apiKey || !dbPassword) {
+    throw new Error('缺少必要的环境变量');
+  }
+}
+```
+
+## Cloudflare Secrets
+
+### 本地开发
+
+```bash
+# 使用 wrangler secret 存储敏感配置
+npx wrangler secret put API_KEY
+npx wrangler secret put DB_PASSWORD
+npx wrangler secret put JWT_SECRET
+
+# 本地开发使用 .dev.vars 文件
+```
+
+### .dev.vars 文件格式
+
+```bash
+# .dev.vars - 本地开发专用，不提交到版本控制
+API_KEY=sk_test_local_xxx
+DB_PASSWORD=dev_password_123
+JWT_SECRET=dev_jwt_secret_change_in_production
+RATE_LIMIT_SECRET=dev_rate_limit_key
+```
+
+### .gitignore 配置
+
+```gitignore
+# 确保敏感文件被忽略
+.env
+.env.*
+!.env.example
+.dev.vars
+*.local
+```
+
+## 日志脱敏
+
+### 必须脱敏的信息
+
+```typescript
+// 敏感数据类型
+const SENSITIVE_FIELDS = new Set([
+  'password',
+  'passwordHash',
+  'token',
+  'accessToken',
+  'refreshToken',
+  'apiKey',
+  'secret',
+  'privateKey',
+  'creditCard',
+  'ssn',
+  'phone',
+  'email',      // 根据业务决定
+  'address',    // 根据业务决定
+  'realName',   // 根据业务决定
+]);
+
+function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown> {
+  const sanitized = { ...data };
+  
+  for (const key of Object.keys(sanitized)) {
+    if (SENSITIVE_FIELDS.has(key.toLowerCase())) {
+      sanitized[key] = '[REDACTED]';
+    } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+      sanitized[key] = sanitizeLogData(sanitized[key] as Record<string, unknown>);
+    }
+  }
+  
+  return sanitized;
+}
+```
+
+### 安全日志记录
+
+```typescript
+// ❌ 危险 - 记录敏感信息
+logger.info('用户登录成功', { 
+  userId: user.id, 
+  password: user.password // 禁止！ 
+});
+
+// ✅ 安全 - 脱敏后记录
+logger.info('用户登录成功', sanitizeLogData({ 
+  userId: user.id,
+  email: user.email,  // 根据业务判断是否需要脱敏
+  ip: clientIp,
+  userAgent: clientUA,
+}));
+```
+
+### HTTP 请求日志
+
+```typescript
+// 记录HTTP请求时脱敏headers
+function sanitizeHeaders(headers: Headers): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+  const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key'];
+  
+  for (const [key, value] of headers.entries()) {
+    if (sensitiveHeaders.includes(key.toLowerCase())) {
+      sanitized[key] = '[REDACTED]';
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  
+  return sanitized;
+}
+```
+
+## 配置管理
+
+### wrangler.jsonc 安全配置
+
+```jsonc
+// ❌ 禁止在配置文件中存储密钥
+{
+  "vars": {
+    "API_KEY": "sk_live_xxx",  // 禁止！
+  }
+}
+
+// ✅ 使用 secrets
+{
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}
+```
+
+### 环境变量类型定义
+
+```typescript
+// app/types/env.ts
+interface Env {
+  // 公共变量
+  ENVIRONMENT: 'development' | 'staging' | 'production';
+  
+  // 敏感变量 - 使用 secret 存储
+  API_KEY: string;
+  JWT_SECRET: string;
+  DB_PASSWORD: string;
+  
+  // 绑定
+  DB: D1Database;
+  SESSIONS: KVNamespace;
+  R2_BUCKET: R2Bucket;
+}
+```
+
+## API 响应安全
+
+### 禁止暴露的信息
+
+```typescript
+// ❌ 危险 - 暴露内部结构
+Response.json({
+  success: true,
+  data: {
+    user: {
+      id: 1,
+      passwordHash: '$2a$12$xxx',  // 禁止！
+      internalNote: 'VIP客户',      // 禁止！
+      dbVersion: 'mysql-8.0.1',    // 禁止暴露版本
+    }
+  }
+});
+
+// ✅ 安全 - 只返回必要字段
+Response.json({
+  success: true,
+  data: {
+    user: {
+      id: 1,
+      name: '用户名',
+      email: 'user@example.com',
+    }
+  }
+});
+```
+
+### 错误响应脱敏
+
+```typescript
+// ❌ 危险 - 暴露实现细节
+catch (e) {
+  Response.json({
+    error: `数据库连接失败: ${e.message}`,
+    stack: e.stack,  // 禁止！
+    config: dbConfig, // 禁止！
+  });
+}
+
+// ✅ 安全 - 通用错误消息
+catch (e) {
+  logger.error('处理请求时发生错误', sanitizeLogData({ 
+    path: request.url,
+    method: request.method,
+    errorType: typeof e,
+  }));
+  
+  Response.json({
+    success: false,
+    message: '服务器内部错误，请稍后重试',
+  }, { status: 500 });
+}
+```
+
+## 数据库查询脱敏
+
+```typescript
+// ❌ 危险 - 记录完整SQL和参数
+logger.debug('执行查询', {
+  sql: 'SELECT * FROM users WHERE email = ?',
+  params: ['user@example.com', 'secret123'],  // 禁止！
+});
+
+// ✅ 安全 - 只记录查询类型
+logger.debug('执行用户查询', {
+  queryType: 'findByEmail',
+  hasParams: true,
+});
+```
+
+## 代码审查检查清单
+
+- [ ] 无硬编码的 API 密钥或密码
+- [ ] 日志记录已脱敏
+- [ ] API 响应不包含敏感字段
+- [ ] 错误消息不暴露内部结构
+- [ ] .gitignore 包含敏感文件
+- [ ] 使用 Cloudflare Secrets 而非 vars
+- [ ] 敏感数据使用 [REDACTED] 占位

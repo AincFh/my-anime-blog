@@ -17,16 +17,22 @@ export function parseLRC(lrc: string): LyricLine[] {
     if (!lrc) return [];
     const lines = lrc.split("\n");
     const result: LyricLine[] = [];
-    const timeRegex = /\[(\d+):(\d+\.\d+)\]/;
+    // 兼容多样化时间戳：[00:00], [00:00.00], [00:00.000], [00:00:00] 等
+    const timeRegex = /\[(\d+):(\d+)(?:[:.](\d+))?\]/g;
 
     lines.forEach((line) => {
-        const match = timeRegex.exec(line);
-        if (match) {
+        let match;
+        // 重置 regex 状态以便在同一行匹配多个时间戳（虽然不常用，但 LRC 规范支持）
+        while ((match = timeRegex.exec(line)) !== null) {
             const mins = parseInt(match[1]);
-            const secs = parseFloat(match[2]);
-            const text = line.replace(timeRegex, "").trim();
+            const secs = parseInt(match[2]);
+            const msStr = match[3] || "0";
+            // 将毫秒部分转为浮点秒
+            const ms = parseFloat("0." + msStr);
+            const time = mins * 60 + secs + ms;
+            const text = line.replace(/\[.*?\]/g, "").trim();
             if (text) {
-                result.push({ time: mins * 60 + secs, text });
+                result.push({ time, text });
             }
         }
     });
@@ -57,9 +63,6 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // 通过事件属性方式让 DOM 层面直接报告时间更新
-    // 不再这里自行 new Audio 制造孤点引用
-
     // 监听开关事件
     useEffect(() => {
         const handleToggle = () => setIsVisible(prev => !prev);
@@ -67,28 +70,55 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
         return () => window.removeEventListener(MUSIC_PLAYER_TOGGLE_EVENT, handleToggle);
     }, []);
 
-    // 获取数据 (带 sessionStorage 缓存)
+    // 获取数据 (带 localStorage 缓存 + 1h TTL)
     useEffect(() => {
         const fetchMusic = async () => {
             const cacheKey = `netease_playlist_${playlistId}`;
-            const cached = sessionStorage.getItem(cacheKey);
+            const cached = localStorage.getItem(cacheKey);
+            
+            // 用于合并旧歌词文本的引用
+            let existingLyricsMap: Record<string, string> = {};
+
             if (cached) {
                 try {
-                    const data = JSON.parse(cached);
-                    setSongs(data);
-                    return;
-                } catch (e) {
-                    sessionStorage.removeItem(cacheKey);
+                    const { data, ts } = JSON.parse(cached);
+                    // 记录现有的歌词文本数据，防止其后被网络请求覆盖
+                    if (Array.isArray(data)) {
+                        data.forEach((s: Song) => {
+                            if (s.lrc && !s.lrc.startsWith("http")) {
+                                existingLyricsMap[s.url] = s.lrc;
+                            }
+                        });
+                    }
+
+                    if (Date.now() - ts < 3600000) {
+                        setSongs(data);
+                        return;
+                    }
+                } catch {
+                    localStorage.removeItem(cacheKey);
                 }
             }
 
             try {
                 setIsLoading(true);
                 const res = await fetch(`${MUSIC_CONFIG.apiBase}?server=netease&type=playlist&id=${playlistId}`);
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    setSongs(data);
-                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+                const text = await res.text();
+                const trimmed = text.trim();
+                
+                if (!res.ok || trimmed.startsWith("<") || (!trimmed.startsWith("[") && !trimmed.startsWith("{"))) {
+                    return;
+                }
+                
+                let json = JSON.parse(trimmed);
+                if (Array.isArray(json) && json.length > 0) {
+                    // 合并缓存中的歌词文本
+                    const merged = json.map((s: Song) => ({
+                        ...s,
+                        lrc: existingLyricsMap[s.url] || s.lrc
+                    }));
+                    setSongs(merged);
+                    localStorage.setItem(cacheKey, JSON.stringify({ data: merged, ts: Date.now() }));
                 }
             } catch (err) {
                 console.error("Failed to fetch music list", err);
@@ -99,6 +129,57 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
 
         fetchMusic();
     }, [playlistId]);
+
+
+    // ==================== 歌词二次请求 ====================
+    // Meting API 的 lrc 字段返回的是 URL 而非文本，需要二次 fetch 获取真正的 LRC 内容
+    useEffect(() => {
+        if (songs.length === 0) return;
+        const song = songs[currentIndex];
+        if (!song?.lrc) return;
+        
+        // 判断是否为 URL（以 http 开头说明还没被替换为真正的歌词文本）
+        if (!song.lrc.startsWith("http")) return;
+        
+        const lrcUrl = song.lrc;
+        let cancelled = false;
+        
+        (async () => {
+            try {
+                const res = await fetch(lrcUrl);
+                if (!res.ok) return;
+                const text = await res.text();
+                const trimmed = text.trim();
+                // 安全校验：确认返回的是 LRC 格式而非 HTML
+                if (trimmed.startsWith("<") || !trimmed.includes("[")) return;
+                
+                if (!cancelled) {
+                    setSongs(prev => {
+                        const updated = prev.map((s, i) => 
+                            i === currentIndex ? { ...s, lrc: trimmed } : s
+                        );
+                        
+                        // 同步持久化缓存
+                        const cacheKey = `netease_playlist_${playlistId}`;
+                        const cached = localStorage.getItem(cacheKey);
+                        if (cached) {
+                            try {
+                                const { ts } = JSON.parse(cached);
+                                localStorage.setItem(cacheKey, JSON.stringify({ data: updated, ts }));
+                            } catch (e) {}
+                        }
+                        return updated;
+                    });
+                }
+            } catch {
+                // 网络错误时静默失败，不阻塞播放
+            }
+
+
+        })();
+        
+        return () => { cancelled = true; };
+    }, [currentIndex, songs.length]);
 
     // 播放状态同步
     useEffect(() => {
@@ -167,6 +248,7 @@ export function useMusicPlayer(playlistId: string = MUSIC_CONFIG.defaultPlaylist
         setIsMuted,
         isLoading,
         isVisible,
+        setIsVisible,
         audioRef
     };
 }

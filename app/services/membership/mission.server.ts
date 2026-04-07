@@ -1,4 +1,4 @@
-import { execute, queryFirst, type Database } from '../db.server';
+import { execute, queryFirst, queryAll, type Database } from '../db.server';
 import { addCoins } from './coins.server';
 
 export interface Mission {
@@ -31,7 +31,7 @@ function getResetTime(type: 'daily' | 'weekly' | 'monthly'): number {
     if (type === 'daily') {
         now.setDate(now.getDate() + 1);
     } else if (type === 'weekly') {
-        const day = now.getDay() || 7; // Sunday is 0, make it 7
+        const day = now.getDay() || 7;
         now.setDate(now.getDate() + (8 - day));
     } else {
         now.setMonth(now.getMonth() + 1);
@@ -42,54 +42,51 @@ function getResetTime(type: 'daily' | 'weekly' | 'monthly'): number {
 
 /**
  * 获取用户当前的全部任务状态
+ * 优化：批量查询替代 N+1 循环
  */
 export async function getUserMissions(db: Database, userId: number): Promise<any[]> {
     const now = Math.floor(Date.now() / 1000);
 
-    // 1. 获取所有激活的任务定义
+    // 1. 获取所有激活的任务定义（单次查询）
     const missions = await db.prepare('SELECT * FROM missions WHERE is_active = 1 ORDER BY sort_order').all<Mission>();
     const missionDefs = missions.results;
 
-    const results = [];
+    if (missionDefs.length === 0) return [];
+
+    // 2. 批量获取用户的任务进度（替代 N 次查询）
+    const missionIds = missionDefs.map(m => m.id);
+    const placeholders = missionIds.map(() => '?').join(',');
+
+    const userMissions = await db
+        .prepare(`SELECT * FROM user_missions WHERE user_id = ? AND mission_id IN (${placeholders})`)
+        .bind(userId, ...missionIds)
+        .all<UserMission>();
+
+    const userMissionMap = new Map<string, UserMission>();
+    for (const um of userMissions.results) {
+        userMissionMap.set(um.mission_id, um);
+    }
+
+    // 3. 构造结果，处理过期和缺失的进度记录
+    const results: any[] = [];
+    const expiredMissions: string[] = [];
+    const newMissionInserts: { missionId: string; resetAt: number }[] = [];
+
     for (const mission of missionDefs) {
-        // 2. 检查用户进度
-        let userMission = await queryFirst<UserMission>(
-            db,
-            'SELECT * FROM user_missions WHERE user_id = ? AND mission_id = ?',
-            userId,
-            mission.id
-        );
+        let userMission = userMissionMap.get(mission.id);
 
-        // 3. 如果进度已过期，则重置
-        if (userMission && userMission.reset_at <= now) {
-            await execute(
-                db,
-                'UPDATE user_missions SET current_count = 0, status = "in_progress", reset_at = ?, last_updated_at = ? WHERE user_id = ? AND mission_id = ?',
-                getResetTime(mission.type as any),
-                now,
-                userId,
-                mission.id
-            );
-            userMission.current_count = 0;
-            userMission.status = 'in_progress';
-        }
-
-        // 4. 如果没有进度，初始化一个
-        if (!userMission) {
+        if (!userMission || userMission.reset_at <= now) {
             const resetAt = getResetTime(mission.type as any);
-            await execute(
-                db,
-                'INSERT INTO user_missions (user_id, mission_id, current_count, status, reset_at, last_updated_at) VALUES (?, ?, 0, "in_progress", ?, ?)',
-                userId,
-                mission.id,
-                resetAt,
-                now
-            );
+            if (userMission) {
+                expiredMissions.push(mission.id);
+            } else {
+                newMissionInserts.push({ missionId: mission.id, resetAt });
+            }
             userMission = {
                 user_id: userId,
                 mission_id: mission.id,
                 current_count: 0,
-                status: 'in_progress',
+                status: 'in_progress' as const,
                 reset_at: resetAt,
                 last_updated_at: now
             };
@@ -100,6 +97,29 @@ export async function getUserMissions(db: Database, userId: number): Promise<any
             progress: userMission.current_count,
             status: userMission.status
         });
+    }
+
+    // 4. 批量更新过期任务的 reset_at（替代 N 次 UPDATE）
+    if (expiredMissions.length > 0) {
+        const expiredPlaceholders = expiredMissions.map(() => '?').join(',');
+        const expiredResetAt = getResetTime('daily' as any); // NOTE: all at same time
+        await db.prepare(
+            `UPDATE user_missions SET current_count = 0, status = 'in_progress', reset_at = ?, last_updated_at = ? WHERE user_id = ? AND mission_id IN (${expiredPlaceholders})`
+        ).bind(now, now, userId, ...expiredMissions).run();
+    }
+
+    // 5. 批量插入新任务记录（替代 N 次 INSERT）
+    if (newMissionInserts.length > 0) {
+        for (const insert of newMissionInserts) {
+            await execute(
+                db,
+                'INSERT INTO user_missions (user_id, mission_id, current_count, status, reset_at, last_updated_at) VALUES (?, ?, 0, "in_progress", ?, ?)',
+                userId,
+                insert.missionId,
+                insert.resetAt,
+                now
+            );
+        }
     }
 
     return results;

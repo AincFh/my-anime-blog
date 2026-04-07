@@ -1,28 +1,56 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "../../components/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import type { Route } from "./+types/gallery";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Camera } from "lucide-react";
+import { getWithCache } from "~/services/cache.server";
+
+/** 相册图片数据结构 */
+export interface GalleryImage {
+    id: number;
+    url: string;
+    description: string | null;
+    note?: string | null;
+    title?: string | null;
+    date?: string | null;
+    category: string | null;
+    created_at: number;
+}
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db, CACHE_KV } = context.cloudflare.env;
+
   try {
-    const images = await anime_db
-        .prepare(`SELECT * FROM gallery ORDER BY created_at DESC`)
-        .all();
-    return {
-        images: images.results || []
-    };
+    const images = await getWithCache<GalleryImage[]>(
+      CACHE_KV,
+      "gallery:all",
+      async () => {
+        const result = await anime_db
+          .prepare(`SELECT id, url, description, note, title, date, category, created_at FROM gallery ORDER BY created_at DESC`)
+          .all<GalleryImage>();
+        // 安全补全 optional 字段，避免渲染时 undefined
+        return (result.results || []).map(img => ({
+          ...img,
+          note: img.note ?? img.description ?? null,
+          title: img.title ?? img.note ?? img.description ?? null,
+          date: img.date ?? (img.created_at ? new Date(img.created_at * 1000).toLocaleDateString("zh-CN") : ""),
+        }));
+      },
+      { ttl: 600 } // 10分钟缓存
+    );
+
+    return { images };
   } catch (error) {
-    console.error("Failed to fetch gallery:", error);
+    console.error("Gallery loader error:", error);
+    // 如果表不存在或查询失败，返回空数组
     return { images: [] };
   }
 }
 
 export default function Gallery({ loaderData }: Route.ComponentProps) {
   const { images } = loaderData || { images: [] };
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
   // 生成随机旋转角度（-3到3度）
   const getRandomRotation = (index: number) => {
@@ -49,7 +77,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
 
       {/* iOS 极简相册网格布局 */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {images.map((image: any, index: number) => (
+        {images.map((image, index) => (
           <motion.div
             key={image.id}
             initial={{ opacity: 0, scale: 0.98 }}
@@ -87,13 +115,13 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
       </div>
 
       {images.length === 0 && (
-        <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-32 text-center"
         >
             <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-[32px] flex items-center justify-center mb-6 rotate-3">
-                <span className="text-4xl opacity-50">📸</span>
+                <Camera className="w-10 h-10 text-slate-300 dark:text-slate-600" />
             </div>
             <h3 className="text-2xl font-bold text-slate-700 dark:text-white mb-2">相册空空如也</h3>
             <p className="text-slate-500 max-w-sm mb-8">准备好用镜头定格下一个瞬息了吗？</p>
@@ -151,3 +179,24 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
   );
 }
 
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  let message = "图库加载失败";
+  let details = "无法显示图库内容，请稍后重试";
+  let stack: string | undefined;
+  if (error instanceof Error) {
+    details = error.message;
+    if (import.meta.env.DEV) stack = error.stack;
+  }
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-red-400 mb-4">{message}</h1>
+        <p className="text-slate-600 dark:text-slate-300 mb-6">{details}</p>
+        {stack && import.meta.env.DEV && (
+          <pre className="text-xs text-left bg-slate-900 text-red-300 p-4 rounded-lg overflow-x-auto max-w-2xl">{stack}</pre>
+        )}
+        <a href="/gallery" className="mt-4 inline-block px-6 py-2 bg-red-500 text-white rounded-lg">刷新</a>
+      </div>
+    </div>
+  );
+}

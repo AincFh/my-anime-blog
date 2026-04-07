@@ -1,7 +1,6 @@
-﻿import { useFetcher } from "react-router";
+import { useFetcher } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { GlassCard } from "~/components/layout/GlassCard";
 import { Send, MessageSquare } from "lucide-react";
 
 interface Comment {
@@ -38,17 +37,17 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
     }, [fetcher.state, isSuccess]);
 
     return (
-        <div className="mt-12">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+        <div className="mt-12 py-8 px-6 rounded-3xl bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                 <MessageSquare size={20} className="text-primary-start" />
                 评论区
-                <span className="text-sm text-slate-400 font-normal ml-2">
+                <span className="text-sm font-normal ml-2" style={{ color: 'var(--text-secondary)' }}>
                     ({initialComments.length})
                 </span>
             </h3>
 
-            {/* 评论表单 - 移至顶部并紧凑化 */}
-            <GlassCard className="p-6 mb-8 border-l-4 border-l-primary-start">
+            {/* 评论表单 */}
+            <div className="mb-8 p-6 rounded-2xl bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
                 <fetcher.Form
                     method="post"
                     action="/api/comments"
@@ -65,13 +64,15 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                     name="author"
                                     required
                                     placeholder="昵称 *"
-                                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    style={{ color: 'var(--text-primary)' }}
                                 />
                                 <input
                                     type="email"
                                     name="email"
                                     placeholder="邮箱 (可选)"
-                                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    style={{ color: 'var(--text-primary)' }}
                                 />
                             </div>
                             <textarea
@@ -79,7 +80,8 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                 required
                                 rows={3}
                                 placeholder="发表你的看法..."
-                                className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary-start transition-colors resize-none"
+                                className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors resize-none"
+                                style={{ color: 'var(--text-primary)' }}
                             />
                         </div>
 
@@ -87,8 +89,8 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                             <motion.button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`h-10 px-6 rounded-lg font-medium text-white text-sm transition-all flex items-center justify-center gap-2 ${isSubmitting
-                                    ? "bg-slate-600 cursor-not-allowed"
+                                className={`h-11 px-6 rounded-xl font-medium text-white text-sm transition-all flex items-center justify-center gap-2 ${isSubmitting
+                                    ? "bg-slate-400 cursor-not-allowed"
                                     : "bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/20"
                                     }`}
                                 whileHover={!isSubmitting ? { scale: 1.02 } : {}}
@@ -122,13 +124,13 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                         )}
                     </AnimatePresence>
                 </fetcher.Form>
-            </GlassCard>
+            </div>
 
             {/* 评论列表 */}
-            <div className="space-y-4">
+            <div className="space-y-4 mt-8">
                 {initialComments.length === 0 ? (
-                    <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10 border-dashed">
-                        <p className="text-slate-500 text-sm">暂无评论，来坐沙发！</p>
+                    <div className="text-center py-8 rounded-xl border border-dashed" style={{ borderColor: 'var(--glass-border)' }}>
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>暂无评论，来坐沙发！</p>
                     </div>
                 ) : (
                     initialComments.map((comment, index) => (
@@ -138,10 +140,10 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
                         >
-                            <div className="group flex gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                            <div className="group flex gap-4 p-4 rounded-xl transition-colors" style={{ backgroundColor: 'var(--glass-bg)' }}>
                                 {/* 头像 */}
                                 <div className="flex-shrink-0 mt-1">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center text-white font-bold text-sm shadow-inner border border-white/10">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-start to-primary-end flex items-center justify-center text-white font-bold text-sm shadow-lg">
                                         {comment.author[0].toUpperCase()}
                                     </div>
                                 </div>
@@ -149,12 +151,12 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                 {/* 内容 */}
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-1">
-                                        <span className="font-bold text-slate-200 text-sm">{comment.author}</span>
-                                        <span className="text-xs text-slate-500">
+                                        <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{comment.author}</span>
+                                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                                             {new Date(comment.created_at * 1000).toLocaleString()}
                                         </span>
                                     </div>
-                                    <p className="text-slate-300 text-sm leading-relaxed">{comment.content}</p>
+                                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{comment.content}</p>
                                 </div>
                             </div>
                         </motion.div>

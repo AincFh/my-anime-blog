@@ -55,6 +55,19 @@ export default {
           '0%, 100%': { transform: 'scale(1)', opacity: 0.7 },
           '50%': { transform: 'scale(1.1)', opacity: 0.9 },
         },
+        // 播放列表音波 EQ 动画（V4: 纯 CSS 替代 framer-motion）
+        eqBar1: {
+          '0%, 100%': { height: '40%' },
+          '50%': { height: '100%' },
+        },
+        eqBar2: {
+          '0%, 100%': { height: '80%' },
+          '50%': { height: '30%' },
+        },
+        eqBar3: {
+          '0%, 100%': { height: '50%' },
+          '50%': { height: '90%' },
+        },
       },
       boxShadow: {
         'soft-orange': '0 10px 30px -5px rgba(255, 159, 67, 0.2)',

@@ -1,0 +1,268 @@
+---
+alwaysApply: true
+globs: "**/*.ts"
+description: 认证和授权安全规范 - 会话管理、权限验证、JWT令牌最佳实践
+---
+
+# 认证和授权安全规范
+
+## 会话管理
+
+### 使用 Cloudflare KV 存储会话
+
+```typescript
+// 禁止在内存或本地存储中保存会话
+// 所有会话必须存储在 Cloudflare KV 中
+
+interface SessionData {
+  userId: number;
+  createdAt: number;
+  expiresAt: number;
+  permissions: string[];
+}
+
+const SESSION_TTL = 7 * 24 * 60 * 60; // 7天
+
+async function createSession(env: Env, userId: number): Promise<string> {
+  const sessionId = crypto.randomUUID();
+  const sessionData: SessionData = {
+    userId,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + SESSION_TTL * 1000,
+    permissions: await getUserPermissions(env, userId),
+  };
+  
+  await env.SESSIONS.put(sessionId, JSON.stringify(sessionData), {
+    expirationTtl: SESSION_TTL,
+  });
+  
+  return sessionId;
+}
+```
+
+### 会话验证
+
+```typescript
+async function validateSession(env: Env, sessionId: string): Promise<SessionData | null> {
+  const data = await env.SESSIONS.get(sessionId);
+  
+  if (!data) {
+    return null;
+  }
+  
+  const session: SessionData = JSON.parse(data);
+  
+  // 检查是否过期
+  if (session.expiresAt < Date.now()) {
+    await env.SESSIONS.delete(sessionId);
+    return null;
+  }
+  
+  return session;
+}
+```
+
+### 会话安全属性
+
+```typescript
+function createSessionCookie(sessionId: string): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Set-Cookie': [
+        `session=${sessionId}`,
+        'HttpOnly',        // 防止XSS访问Cookie
+        'Secure',          // 仅在HTTPS传输
+        'SameSite=Strict', // CSRF防护
+        'Path=/',           // 全路径可用
+        `Max-Age=${SESSION_TTL}`, // 过期时间
+      ].join('; '),
+    },
+  });
+}
+```
+
+## 权限验证
+
+### 权限检查装饰器模式
+
+```typescript
+type Permission = 'article:read' | 'article:write' | 'article:delete' | 'user:manage';
+
+async function requirePermission(
+  env: Env,
+  sessionId: string,
+  requiredPermission: Permission
+): Promise<SessionData> {
+  const session = await validateSession(env, sessionId);
+  
+  if (!session) {
+    throw new UnauthorizedError('请先登录');
+  }
+  
+  if (!session.permissions.includes(requiredPermission)) {
+    throw new ForbiddenError('无此操作权限');
+  }
+  
+  return session;
+}
+```
+
+### 路由权限保护
+
+```typescript
+// 在 loader 或 action 中使用
+export async function loader({ request, params, env }: LoaderFunctionArgs) {
+  const cookieHeader = request.headers.get('Cookie');
+  const sessionId = parseCookies(cookieHeader).session;
+  
+  const session = await requirePermission(env, sessionId, 'article:read');
+  
+  // 执行业务逻辑
+  const articles = await getArticles(env);
+  return Response.json({ articles });
+}
+```
+
+## API 认证
+
+### Bearer Token 验证
+
+```typescript
+async function validateBearerToken(authHeader: string | null): Promise<string | null> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  
+  const token = authHeader.substring(7);
+  
+  // 验证令牌格式和签名
+  return await verifyToken(token);
+}
+```
+
+### API 端点认证模板
+
+```typescript
+export async function action({ request, env }: ActionFunctionArgs) {
+  // 验证认证
+  const authHeader = request.headers.get('Authorization');
+  const userId = await validateBearerToken(authHeader);
+  
+  if (!userId) {
+    return Response.json(
+      { success: false, message: '未授权访问' },
+      { status: 401 }
+    );
+  }
+  
+  // 执行业务逻辑
+  // ...
+}
+```
+
+## 密码安全
+
+### 密码哈希（使用bcryptjs）
+
+```typescript
+import bcrypt from 'bcryptjs';
+
+const SALT_ROUNDS = 12;
+
+async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash);
+}
+```
+
+### 密码强度验证
+
+```typescript
+import { z } from 'zod';
+
+const PasswordSchema = z
+  .string()
+  .min(8, '密码至少8个字符')
+  .max(128, '密码最多128个字符')
+  .regex(/[A-Z]/, '密码必须包含大写字母')
+  .regex(/[a-z]/, '密码必须包含小写字母')
+  .regex(/[0-9]/, '密码必须包含数字')
+  .regex(/[^A-Za-z0-9]/, '密码必须包含特殊字符');
+
+function validatePassword(password: string): boolean {
+  try {
+    PasswordSchema.parse(password);
+    return true;
+  } catch {
+    return false;
+  }
+}
+```
+
+## 敏感操作二次验证
+
+### 高风险操作保护
+
+```typescript
+interface SensitiveOperation {
+  type: 'password_change' | 'email_change' | 'delete_account' | 'api_key_regenerate';
+  requiresRecentAuth?: boolean;
+}
+
+const SENSITIVE_OPERATIONS: SensitiveOperation[] = [
+  { type: 'password_change', requiresRecentAuth: true },
+  { type: 'delete_account', requiresRecentAuth: true },
+];
+
+async function requireRecentAuth(env: Env, sessionId: string, maxAge: number = 5 * 60 * 1000): Promise<boolean> {
+  const session = await validateSession(env, sessionId);
+  
+  if (!session) return false;
+  
+  // 检查最后认证时间
+  const lastAuth = session.lastAuthAt || session.createdAt;
+  return (Date.now() - lastAuth) < maxAge;
+}
+```
+
+## 审计日志
+
+### 认证事件记录
+
+```typescript
+async function logAuthEvent(
+  env: Env,
+  event: 'login' | 'logout' | 'password_change' | 'failed_login',
+  userId: number | null,
+  metadata: Record<string, unknown> = {}
+): Promise<void> {
+  const logEntry = {
+    event,
+    userId,
+    ip: getClientIP(),
+    userAgent: getClientUA(),
+    timestamp: new Date().toISOString(),
+    ...metadata,
+  };
+  
+  // 异步记录，不阻塞主流程
+  env.AUDIT_KV.put(`auth:${Date.now()}:${crypto.randomUUID()}`, JSON.stringify(logEntry), {
+    expirationTtl: 90 * 24 * 60 * 60, // 保留90天
+  });
+}
+```
+
+## 安全检查清单
+
+- [ ] 所有会话存储在 Cloudflare KV
+- [ ] 使用 HttpOnly + Secure + SameSite Cookie
+- [ ] 密码使用 bcrypt 哈希存储
+- [ ] 实施权限检查
+- [ ] 记录认证审计日志
+- [ ] 高风险操作需要二次验证
+- [ ] 定期清理过期会话
+- [ ] 防止暴力破解（速率限制）

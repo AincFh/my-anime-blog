@@ -13,7 +13,9 @@ export async function loader({ request, context }: { request: Request; context: 
         try {
             const prefs = JSON.parse(user.preferences);
             backgroundImage = prefs.equipped_theme || null;
-        } catch (e) { }
+        } catch (e) {
+            console.warn('[GameLayout] 解析背景偏好失败:', e);
+        }
     }
 
     return { backgroundImage };

@@ -9,7 +9,8 @@ import {
   Link,
   useRouteLoaderData,
 } from "react-router";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { AlertTriangle } from "lucide-react";
+import { GlassCard } from "./components/layout/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { getSessionToken, verifySession } from "~/services/auth.server";
@@ -22,6 +23,8 @@ import { ThemeProviderWrapper } from "./components/ThemeProviderWrapper";
 import { AppError } from "~/errors";
 import { ToastContainer } from "./components/ui/Toast";
 import { ModalContainer } from "./components/ui/Modal";
+import { FluidTrailCanvas } from "./components/ui/animations/FluidTrail";
+import { pageVariants } from "./components/ui/animations/PageTransition";
 
 // ==================== 懒加载组件定义 ====================
 // 设备分流由 App 组件的 isMobile state 在 JSX 渲染层控制
@@ -33,13 +36,13 @@ const MusicPlayer = lazy(() => import("~/components/ui/media/MusicPlayer").then(
 const Live2D = lazy(() => import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
 const OmniCommand = lazy(() => import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
 const AchievementSystem = lazy(() => import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
-const TheatricalMode = lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
+const TheatricalMode = null; // lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
 const AmbientSound = lazy(() => import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
 const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
 const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
 const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
 const IdleTimeEasterEgg = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
-const KonamiCodeEasterEggV2 = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.KonamiCodeEasterEgg })));
+// const AIChatBot = lazy(() => import("~/components/ai/AIChatBot").then(m => ({ default: m.AIChatBot })));
 
 // 移动端专属
 const MusicPlayerMobile = lazy(() => import("~/components/ui/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
@@ -104,7 +107,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData("root") as any;
 
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -155,7 +158,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   let userPrefs = null;
   let musicPlaylistId = "13641046209"; // Fallback
-  
+
   try {
     const settingsResult = await env.anime_db.prepare("SELECT config_json FROM system_settings WHERE id = 1").first();
     if (settingsResult && (settingsResult as any).config_json) {
@@ -174,8 +177,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       const sessionResult = await verifySession(token, env.anime_db);
       if (sessionResult.valid && sessionResult.user && sessionResult.user.preferences) {
         try {
-          userPrefs = typeof sessionResult.user.preferences === 'string' 
-            ? JSON.parse(sessionResult.user.preferences) 
+          userPrefs = typeof sessionResult.user.preferences === 'string'
+            ? JSON.parse(sessionResult.user.preferences)
             : sessionResult.user.preferences;
         } catch (e) {
           console.error("Failed to parse user preferences in root loader", e);
@@ -211,7 +214,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
     <ThemeProviderWrapper specifiedTheme={theme} themeAction="/action/set-theme">
       {/* ⚠️ 结界铸造：仅在公域生效的主题色核欺骗变轨层 */}
       {userPrefs?.personalization?.theme_color && !isAdmin && (
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           .public-layout-wrapper {
              --color-blue-500: ${userColor};
              --color-blue-400: ${userColor}E6;
@@ -221,9 +225,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
           }
         `}} />
       )}
-      
+
       <ToastContainer />
       <ModalContainer />
+
+      {/* 🍎 Canvas 指尖流体残影层 - 仅桌面端 */}
+      {!isAdmin && !isMobile && <FluidTrailCanvas enabled={true} />}
 
       {/* ==================== 桌面端专属组件 ==================== */}
       {!isAdmin && !isMobile && (
@@ -240,40 +247,51 @@ export default function App({ loaderData }: Route.ComponentProps) {
         </Suspense>
       )}
 
-      {/* ==================== 页面布局 ==================== */}
-      {isAdmin ? (
-        <AdminLayout>
-          <Outlet />
-        </AdminLayout>
-      ) : isAuth ? (
-        // 独立纯粹渲染：避免 Auth 页面加载 PublicLayout（防 Padding 和主题色嵌套污染）
-        <Outlet />
-      ) : (
-        <div className="public-layout-wrapper">
-          <PublicLayout>
+      {/* ==================== 页面布局（带路由过渡） ==================== */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location.pathname}
+          initial="initial"
+          animate="enter"
+          exit="exit"
+          variants={pageVariants}
+          className="min-h-screen"
+        >
+          {isAdmin ? (
+            <AdminLayout>
+              <Outlet />
+            </AdminLayout>
+          ) : isAuth ? (
+            // 独立纯粹渲染：避免 Auth 页面加载 PublicLayout（防 Padding 和主题色嵌套污染）
             <Outlet />
-          </PublicLayout>
-        </div>
-      )}
+          ) : (
+            <div className="public-layout-wrapper">
+              <PublicLayout>
+                <Outlet />
+              </PublicLayout>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* ==================== 桌面端延迟加载 — 增强体验组件 ==================== */}
       {!isAdmin && !isMobile && (
         <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
-            {/* 看板娘组件因加载链深层断层引发主理人反感，已被下令彻底全删退场 */}
             <OmniCommand />
+            {/* <AIChatBot /> */}
             <AchievementSystem />
+            <Live2D />
           </DelayedSuspense>
 
           <DelayedSuspense delayMs={3000}>
-            <TheatricalMode />
+            {/* <TheatricalMode /> */}
             {/* <AmbientSound scene="default" /> 环境白噪音旋转图标依照主理人指令彻底铲除 */}
             <KonamiCode />
             <TitleChanger />
             <CopyAttribution />
             <HiddenPixelButton />
             <IdleTimeEasterEgg />
-            <KonamiCodeEasterEggV2 />
           </DelayedSuspense>
         </Suspense>
       )}
@@ -326,8 +344,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <div className="relative z-10 w-full max-w-3xl">
         <GlassCard className="p-8 md:p-12 border-red-500/20 bg-red-500/5 dark:bg-red-900/10 backdrop-blur-xl">
           <div className="flex flex-col md:flex-row items-start gap-8">
-            <div className="hidden md:block text-6xl">
-              🚨
+            <div className="hidden md:block">
+              <AlertTriangle className="w-12 h-12 text-red-500" />
             </div>
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-red-400 mb-4 border-b border-red-500/20 pb-4">

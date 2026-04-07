@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 interface OnboardingTooltipProps {
@@ -94,18 +93,18 @@ export function OnboardingTooltip({
     const styleData = getStyle();
 
     return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                style={{
-                    position: "fixed",
-                    zIndex: 60,
-                    ...styleData.container.offset
-                }}
-                className="max-w-xs w-64"
-            >
+        <div
+            style={{
+                position: "fixed",
+                zIndex: 60,
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? "translateY(0) scale(1)" : "translateY(10px) scale(0.9)",
+                transition: "opacity 200ms ease-out, transform 200ms ease-out",
+                pointerEvents: isVisible ? "auto" : "none",
+                ...styleData.container.offset
+            }}
+            className="max-w-xs w-64"
+        >
                 <div className="bg-primary-500 text-white p-4 rounded-2xl shadow-xl relative">
                     <button
                         onClick={handleDismiss}
@@ -135,7 +134,6 @@ export function OnboardingTooltip({
                         }}
                     />
                 </div>
-            </motion.div>
-        </AnimatePresence>
+            </div>
     );
 }

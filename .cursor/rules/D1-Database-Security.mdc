@@ -1,0 +1,156 @@
+---
+alwaysApply: true
+globs: "**/*.ts"
+description: D1数据库安全规范 - SQL注入防护、查询优化、事务安全
+---
+
+# D1 数据库安全规范
+
+## SQL 注入防护（核心规则）
+
+### 必须使用参数化查询
+
+```typescript
+// ❌ 危险 - 禁止字符串拼接构建SQL
+const query = `SELECT * FROM users WHERE name = '${userInput}'`;
+
+// ✅ 安全 - 使用参数绑定
+const stmt = env.DB.prepare('SELECT * FROM users WHERE name = ?').bind(userInput);
+const result = await stmt.first();
+```
+
+### 参数绑定规则
+
+1. **始终使用 Prepared Statements**
+   - 所有 SQL 查询必须使用 `.prepare()` 方法
+   - 使用 `.bind()` 绑定参数
+
+2. **D1 支持的参数格式**
+   - 匿名参数：`?`（按顺序填充）
+   - 有序参数：`?1`、`?2`、`?3`（显式指定位置）
+
+3. **禁止的写法**
+   - 禁止使用模板字符串拼接用户输入
+   - 禁止使用字符串拼接构建 WHERE 子句
+   - 禁止在 SQL 中直接插入变量
+
+```typescript
+// ❌ 禁止
+const users = await env.DB.exec(`SELECT * FROM articles WHERE tag = '${tag}'`);
+
+// ✅ 正确
+const stmt = env.DB.prepare('SELECT * FROM articles WHERE tag = ?').bind(tag);
+const users = await stmt.all();
+```
+
+## 数据验证
+
+### 输入类型检查
+
+```typescript
+// 使用 zod 验证数据类型
+import { z } from 'zod';
+
+const ArticleSchema = z.object({
+  id: z.number().int().positive(),
+  slug: z.string().min(1).max(200),
+  title: z.string().min(1).max(500),
+});
+
+function validateArticle(data: unknown) {
+  return ArticleSchema.parse(data);
+}
+```
+
+### 数值类型验证
+
+```typescript
+// ❌ 危险 - 假设输入是数字
+const userId = parseInt(request.headers.get('X-User-Id'));
+
+// ✅ 安全 - 验证后再使用
+const userIdHeader = request.headers.get('X-User-Id');
+if (!userIdHeader || !/^\d+$/.test(userIdHeader)) {
+  throw new BadRequestError('无效的用户ID');
+}
+const userId = parseInt(userIdHeader, 10);
+```
+
+## 查询权限控制
+
+### 最小权限原则
+
+1. **按功能分离查询**
+   - 读操作使用只读查询
+   - 写操作使用带权限的查询
+
+2. **验证操作权限**
+   ```typescript
+   async function updateArticle(env: Env, articleId: number, data: ArticleData, userId: number) {
+     // 验证用户是否拥有编辑权限
+     const canEdit = await env.DB
+       .prepare('SELECT 1 FROM article_editors WHERE article_id = ? AND user_id = ?')
+       .bind(articleId, userId)
+       .first();
+     
+     if (!canEdit) {
+       throw new ForbiddenError('无权限编辑此文章');
+     }
+     
+     // 执行更新
+     await env.DB
+       .prepare('UPDATE articles SET title = ?, content = ? WHERE id = ?')
+       .bind(data.title, data.content, articleId)
+       .run();
+   }
+   ```
+
+## 事务安全
+
+### 批量操作的事务处理
+
+```typescript
+async function batchCreateArticles(env: Env, articles: ArticleData[]) {
+  // D1 不支持显式事务，但可以通过批量操作确保原子性
+  const statements = articles.map(article => 
+    env.DB.prepare('INSERT INTO articles (title, slug) VALUES (?, ?)')
+      .bind(article.title, article.slug)
+  );
+  
+  // 使用 batch 确保全部成功或全部失败
+  await env.DB.batch(statements);
+}
+```
+
+## 错误处理
+
+### 安全错误消息
+
+```typescript
+// ❌ 危险 - 暴露数据库结构
+catch (e) {
+  return Response.json({ 
+    error: `Database error: ${e.message}\nSQL: ${e.query}` 
+  });
+}
+
+// ✅ 安全 - 通用错误消息
+catch (e) {
+  console.error('Database error:', e);
+  return Response.json({ 
+    error: '数据库操作失败，请稍后重试' 
+  }, { status: 500 });
+}
+```
+
+### 日志记录
+
+```typescript
+// 记录错误但不暴露敏感信息
+try {
+  await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
+} catch (e) {
+  // 只记录错误类型和上下文，不记录SQL参数
+  logger.error('数据库查询失败', { operation: 'findUserByEmail', errorType: typeof e });
+}
+```

@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs } from "react-router";
-import { getSessionId } from "~/utils/auth";
 
 /**
  * 修改后台密码API

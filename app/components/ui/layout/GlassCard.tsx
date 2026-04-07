@@ -1,6 +1,7 @@
 import { type HTMLMotionProps, motion } from "framer-motion";
 import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
+import type React from "react";
 
 // Utility function if not already present
 function cn(...inputs: (string | undefined | null | false)[]) {

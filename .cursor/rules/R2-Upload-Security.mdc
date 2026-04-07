@@ -1,0 +1,254 @@
+---
+alwaysApply: true
+globs: "**/*.ts"
+description: R2对象存储安全规范 - 文件上传验证、访问控制、数据保护
+---
+
+# R2 对象存储安全规范
+
+## 文件上传安全验证
+
+### 必须验证的文件属性
+
+1. **文件类型验证**
+```typescript
+// 允许的文件类型白名单
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'audio/mpeg',
+  'audio/wav',
+  'video/mp4',
+  'video/webm',
+  'application/pdf',
+]);
+
+function validateMimeType(contentType: string | null): boolean {
+  if (!contentType) return false;
+  return ALLOWED_MIME_TYPES.has(contentType.toLowerCase());
+}
+```
+
+2. **文件大小限制**
+```typescript
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+function validateFileSize(contentLength: number | null, maxSize: number): boolean {
+  if (!contentLength) return false;
+  return contentLength <= maxSize;
+}
+```
+
+3. **文件扩展名验证**
+```typescript
+const ALLOWED_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg',
+  '.mp3', '.wav', '.ogg',
+  '.mp4', '.webm',
+  '.pdf',
+]);
+
+function validateExtension(filename: string): boolean {
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  return ALLOWED_EXTENSIONS.has(ext);
+}
+```
+
+## 上传处理流程
+
+### 完整验证示例
+
+```typescript
+interface UploadValidationResult {
+  valid: boolean;
+  error?: string;
+  sanitizedFilename?: string;
+}
+
+async function validateUpload(
+  request: Request,
+  env: Env
+): Promise<UploadValidationResult> {
+  const contentType = request.headers.get('Content-Type');
+  const contentLength = request.headers.get('Content-Length');
+  
+  // 1. 检查Content-Type
+  if (!contentType || !contentType.includes('multipart/form-data')) {
+    return { valid: false, error: '无效的请求类型' };
+  }
+  
+  // 2. 检查文件大小
+  const size = contentLength ? parseInt(contentLength, 10) : 0;
+  if (!validateFileSize(size, MAX_FILE_SIZE)) {
+    return { valid: false, error: '文件大小超过限制' };
+  }
+  
+  // 3. 解析表单数据
+  const formData = await request.formData();
+  const file = formData.get('file');
+  
+  if (!(file instanceof File)) {
+    return { valid: false, error: '未找到上传文件' };
+  }
+  
+  // 4. 验证MIME类型
+  if (!validateMimeType(file.type)) {
+    return { valid: false, error: '不支持的文件类型' };
+  }
+  
+  // 5. 验证扩展名
+  if (!validateExtension(file.name)) {
+    return { valid: false, error: '文件扩展名不匹配' };
+  }
+  
+  // 6. 生成安全的文件名
+  const sanitizedFilename = sanitizeFilename(file.name);
+  
+  return { valid: true, sanitizedFilename };
+}
+
+function sanitizeFilename(filename: string): string {
+  // 移除路径遍历攻击的潜在字符
+  return filename
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .substring(0, 255);
+}
+```
+
+## 访问控制
+
+### R2 自定义域安全
+
+1. **配置访问策略**
+```typescript
+// 私有文件：需要签名URL
+async function getSignedUploadUrl(env: Env, filename: string): Promise<string> {
+  const key = `uploads/${Date.now()}-${filename}`;
+  
+  return await env.ASSETS.createMultipartUpload(key, {
+    // 设置访问控制
+    httpMetadata: {
+      cacheControl: 'private',
+      contentType: 'application/octet-stream',
+    },
+  });
+}
+
+// 公开文件：使用标准URL
+async function getPublicUrl(env: Env, filename: string): string {
+  return `https://${env.R2_BUCKET.publicUrl()}/${filename}`;
+}
+```
+
+2. **防盗链配置**
+```typescript
+// 在 wrangler.jsonc 中配置
+/*
+{
+  "r2_buckets": [
+    {
+      "binding": "ASSETS",
+      "bucket_name": "anime-assets",
+      "jurisdiction": "us-east-1"
+    }
+  ]
+}
+*/
+```
+
+### 签名URL机制
+
+```typescript
+interface SignedUrlParams {
+  key: string;
+  expiresIn: number; // 秒
+}
+
+async function generateSignedUrl(env: Env, params: SignedUrlParams): Promise<string> {
+  const url = new URL(`${env.R2_BUCKET.publicUrl()}/${params.key}`);
+  
+  const expirationTime = Math.floor(Date.now() / 1000) + params.expiresIn;
+  const signature = await generateSignature(params.key, expirationTime);
+  
+  url.searchParams.set('expires', expirationTime.toString());
+  url.searchParams.set('signature', signature);
+  
+  return url.toString();
+}
+
+async function generateSignature(key: string, expires: number): Promise<string> {
+  const data = `${key}:${expires}`;
+  const keyBuffer = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(env.SECRET_KEY),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', keyBuffer, new TextEncoder().encode(data));
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+```
+
+## 数据保护
+
+### 敏感文件处理
+
+```typescript
+// 标记敏感文件
+async function uploadSensitiveFile(env: Env, file: File, userId: number): Promise<string> {
+  const key = `sensitive/${userId}/${Date.now()}-${file.name}`;
+  
+  await env.R2_BUCKET.put(key, file.stream(), {
+    httpMetadata: {
+      cacheControl: 'private, no-store',
+      contentType: file.type,
+    },
+    // 自定义元数据
+    customMetadata: {
+      uploadedBy: userId.toString(),
+      uploadTime: new Date().toISOString(),
+    },
+  });
+  
+  return key;
+}
+```
+
+### 文件删除安全
+
+```typescript
+async function deleteFile(env: Env, key: string, userId: number): Promise<boolean> {
+  // 验证所有权
+  const object = await env.R2_BUCKET.head(key);
+  
+  if (!object) {
+    return false;
+  }
+  
+  const uploadedBy = object.customMetadata?.uploadedBy;
+  
+  if (uploadedBy !== userId.toString()) {
+    throw new ForbiddenError('无权删除此文件');
+  }
+  
+  await env.R2_BUCKET.delete(key);
+  return true;
+}
+```
+
+## 上传安全检查清单
+
+- [ ] 验证 Content-Type 头
+- [ ] 验证文件大小
+- [ ] 验证 MIME 类型
+- [ ] 验证文件扩展名
+- [ ] 清理文件名（防路径遍历）
+- [ ] 检查文件内容魔数（可选但推荐）
+- [ ] 设置适当的 Cache-Control
+- [ ] 记录上传审计日志

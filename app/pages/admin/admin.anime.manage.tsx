@@ -5,10 +5,11 @@ import { getSessionId } from "~/utils/auth";
 import { useState, useEffect, useCallback } from "react";
 import { RadarChart } from "~/components/ui/system/RadarChart";
 import { QuickSyncButton } from "~/components/admin/QuickSyncButton";
-import { Plus, Search, Edit2, Trash2, X, Link as LinkIcon, Star, Filter, Heart, PlayCircle, Clock, Loader2, Calendar, Film } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, X, Link as LinkIcon, Star, Filter, Heart, PlayCircle, Clock, Loader2, Calendar, Film, Settings, Building } from "lucide-react";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { toast } from "~/components/ui/Toast";
 import { confirmModal } from "~/components/ui/Modal";
+import { IconEmoji } from "~/components/ui/IconEmoji";
 
 // Bangumi 搜索结果类型
 interface BangumiResult {
@@ -302,7 +303,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                     <div className="flex items-center gap-4">
                         <input
                             type="text"
-                            placeholder="🔍 搜索番剧..."
+                            placeholder={<><IconEmoji emoji="🔍" size={16} /> 搜索番剧...</>}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white font-bold placeholder-gray-400 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
@@ -430,23 +431,27 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                             )}
                                             <div className="flex flex-wrap gap-2 mt-2 text-xs">
                                                 {formData.air_date && (
-                                                    <span className="px-2 py-1 bg-[#0f111a] rounded-full text-white/60">
-                                                        📅 {formData.air_date}
+                                                    <span className="px-2 py-1 bg-[#0f111a] rounded-full text-white/60 flex items-center gap-1">
+                                                        <Calendar size={14} />
+                                                        {formData.air_date}
                                                     </span>
                                                 )}
                                                 {formData.total_episodes && (
-                                                    <span className="px-2 py-1 bg-[#0f111a] rounded-full text-white/60">
-                                                        🎬 {formData.total_episodes} 集
+                                                    <span className="px-2 py-1 bg-[#0f111a] rounded-full text-white/60 flex items-center gap-1">
+                                                        <Film size={14} />
+                                                        {formData.total_episodes} 集
                                                     </span>
                                                 )}
                                                 {formData.bangumi_score && (
-                                                    <span className="px-2 py-1 bg-yellow-100 rounded-full text-yellow-700">
-                                                        ★ {formData.bangumi_score}
+                                                    <span className="px-2 py-1 bg-yellow-100 rounded-full text-yellow-700 flex items-center gap-1">
+                                                        <Star size={14} className="text-yellow-500" />
+                                                        {formData.bangumi_score}
                                                     </span>
                                                 )}
                                                 {formData.studio && (
-                                                    <span className="px-2 py-1 bg-blue-100 rounded-full text-blue-700">
-                                                        🏢 {formData.studio}
+                                                    <span className="px-2 py-1 bg-blue-100 rounded-full text-blue-700 flex items-center gap-1">
+                                                        <Building size={14} className="text-blue-500" />
+                                                        {formData.studio}
                                                     </span>
                                                 )}
                                             </div>
@@ -595,7 +600,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-white/30">
-                                                    🎬
+                                                    <Film size={24} />
                                                 </div>
                                             )}
                                             {/* Bangumi 评分 */}
@@ -674,7 +679,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                         >
-                                            ✕
+                                            <X size={16} />
                                         </motion.button>
                                     </div>
 
@@ -700,13 +705,15 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                         {/* Bangumi 信息 */}
                                         <div className="flex flex-wrap gap-2 text-xs">
                                             {selectedAnime.air_date && (
-                                                <span className="px-2 py-1 bg-white/10 rounded-full text-white/60">
-                                                    📅 {selectedAnime.air_date}
+                                                <span className="px-2 py-1 bg-white/10 rounded-full text-white/60 flex items-center gap-1">
+                                                    <Calendar size={14} />
+                                                    {selectedAnime.air_date}
                                                 </span>
                                             )}
                                             {selectedAnime.total_episodes && (
-                                                <span className="px-2 py-1 bg-white/10 rounded-full text-white/60">
-                                                    🎬 {selectedAnime.total_episodes} 集
+                                                <span className="px-2 py-1 bg-white/10 rounded-full text-white/60 flex items-center gap-1">
+                                                    <Film size={14} />
+                                                    {selectedAnime.total_episodes} 集
                                                 </span>
                                             )}
                                             {selectedAnime.bangumi_score && (
@@ -715,8 +722,9 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                                                 </span>
                                             )}
                                             {selectedAnime.studio && (
-                                                <span className="px-2 py-1 bg-blue-500/20 rounded-full text-blue-400 border border-blue-500/30">
-                                                    🏢 {selectedAnime.studio}
+                                                <span className="px-2 py-1 bg-blue-500/20 rounded-full text-blue-400 border border-blue-500/30 flex items-center gap-1">
+                                                    <Building size={14} className="text-blue-300" />
+                                                    {selectedAnime.studio}
                                                 </span>
                                             )}
                                         </div>

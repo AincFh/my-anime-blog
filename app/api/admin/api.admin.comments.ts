@@ -1,6 +1,5 @@
 import type { Route } from "./+types/api.admin.comments";
 import { jsonWithSecurity } from "~/utils/security";
-import { getSessionId } from "~/utils/auth";
 
 /**
  * 管理员评论管理 API

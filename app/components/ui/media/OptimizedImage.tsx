@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "~/utils/cn"; // assuming utils/cn exists, standard in this project likely
+import { cn } from "~/utils/cn";
 
 interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "onDrag" | "fetchPriority" | "crossOrigin"> {
     src: string;
@@ -8,6 +8,10 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
     className?: string;
     aspectRatio?: "video" | "square" | "portrait" | "auto";
     fallbackSrc?: string;
+    /** 启用懒加载，默认 true */
+    lazy?: boolean;
+    /** 启用 LQIP 模糊占位符，默认 false */
+    placeholderBlur?: string;
 }
 
 export function OptimizedImage({
@@ -15,7 +19,9 @@ export function OptimizedImage({
     alt,
     className,
     aspectRatio = "auto",
-    fallbackSrc = "/placeholder.jpg", // Needs a real placeholder path
+    fallbackSrc = "/placeholder.jpg",
+    lazy = true,
+    placeholderBlur,
     ...props
 }: OptimizedImageProps) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -31,6 +37,10 @@ export function OptimizedImage({
     };
 
     useEffect(() => {
+        // Reset state when src changes
+        setIsLoaded(false);
+        setHasError(false);
+
         if (imgRef.current?.complete) {
             if (imgRef.current.naturalWidth === 0) {
                 setHasError(true);
@@ -38,7 +48,7 @@ export function OptimizedImage({
                 setIsLoaded(true);
             }
         }
-    }, [src, fallbackSrc]);
+    }, [src]);
 
     const finalSrc = hasError ? fallbackSrc : src;
 
@@ -54,12 +64,25 @@ export function OptimizedImage({
                         aspectRatio === "square" ? "1/1" : "3/4"
             }}
         >
+            {/* Blur placeholder */}
+            {placeholderBlur && !isLoaded && (
+                <div
+                    className="absolute inset-0 z-10 bg-cover bg-center"
+                    style={{
+                        backgroundImage: `url(${placeholderBlur})`,
+                        filter: "blur(20px)",
+                        transform: "scale(1.1)"
+                    }}
+                />
+            )}
+
+            {/* Loading skeleton */}
             <AnimatePresence>
                 {!isLoaded && !hasError && (
                     <motion.div
                         initial={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800"
+                        className="absolute inset-0 z-20 flex items-center justify-center bg-slate-100 dark:bg-slate-800"
                     >
                         <div className="w-8 h-8 rounded-full border-2 border-primary-start/30 border-t-primary-start animate-spin" />
                     </motion.div>
@@ -70,6 +93,7 @@ export function OptimizedImage({
                 ref={imgRef}
                 src={finalSrc}
                 alt={alt}
+                loading={lazy ? "lazy" : "eager"}
                 decoding="async"
                 className={cn(
                     "w-full h-full object-cover object-center transition-opacity duration-500",
@@ -77,7 +101,7 @@ export function OptimizedImage({
                 )}
                 onLoad={handleLoad}
                 onError={handleError}
-                {...(props as any)}
+                {...props}
             />
         </div>
     );

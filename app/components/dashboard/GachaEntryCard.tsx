@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Gem } from "lucide-react";
 
 interface GachaEntryCardProps {
     onOpen: () => void;
@@ -52,7 +52,7 @@ export function GachaEntryCard({ onOpen }: GachaEntryCardProps) {
 
             <div className="relative z-10 mt-4">
                 <span className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-white border border-white/10 group-hover:bg-white/30 transition-colors">
-                    <span>💎</span>
+                    <Gem className="w-4 h-4" />
                     <span>100 星尘 / 次</span>
                 </span>
             </div>

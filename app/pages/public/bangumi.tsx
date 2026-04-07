@@ -1,28 +1,45 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "../../components/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { useState, useMemo } from "react";
-import { Filter, SortDesc, Calendar, Star, X } from "lucide-react";
+import { Filter, SortDesc, Calendar, Star, X, Play, Tv } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import type { Route } from "./+types/bangumi";
 
-/**
- * 番剧墙（Bangumi模式）
- * 功能：
- * 1. 海报流展示
- * 2. 支持评分（⭐⭐⭐⭐⭐）
- * 3. 短评显示
- * 4. 状态标签（在看/看过/想看/弃番）
- */
+/** 番剧数据结构 */
+export interface Anime {
+    id: number;
+    title: string;
+    cover_url: string | null;
+    status: "watching" | "completed" | "dropped" | "plan";
+    progress: string | null;
+    rating: number | null;
+    review: string | null;
+    created_at: number;
+}
+
+/** 番剧卡片点击目标 */
+export interface AnimeCardItemProps {
+    anime: Anime;
+    index: number;
+    config: {
+        label: string;
+        color: string;
+        bgColor: string;
+        borderColor: string;
+    };
+    onClick: () => void;
+}
+
 export async function loader({ context }: Route.LoaderArgs) {
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db, CACHE_KV } = context.cloudflare.env;
 
   try {
     const animesResult = await anime_db
       .prepare(
         `SELECT id, title, cover_url, status, progress, rating, review, created_at
          FROM animes
-         ORDER BY 
+         ORDER BY
            CASE status
              WHEN 'watching' THEN 1
              WHEN 'completed' THEN 2
@@ -32,24 +49,24 @@ export async function loader({ context }: Route.LoaderArgs) {
            rating DESC,
            created_at DESC`
       )
-      .all();
+      .all<Anime>();
 
     let animes = animesResult.results || [];
     return { animes };
   } catch (error) {
     console.error("Failed to fetch animes:", error);
-    return { animes: [] };
+    return { animes: [] as Anime[] };
   }
 }
 
-const statusConfig = {
+const statusConfig: Record<Anime["status"], { label: string; color: string; bgColor: string; borderColor: string }> = {
   watching: { label: "在看", color: "text-blue-400", bgColor: "bg-blue-500/20", borderColor: "border-blue-400/30" },
   completed: { label: "看过", color: "text-green-400", bgColor: "bg-green-500/20", borderColor: "border-green-400/30" },
   dropped: { label: "弃番", color: "text-gray-400", bgColor: "bg-gray-500/20", borderColor: "border-gray-400/30" },
   plan: { label: "想看", color: "text-purple-400", bgColor: "bg-purple-500/20", borderColor: "border-purple-400/30" },
 };
 
-// 渲染星级评分
+// 渲染星级评分（提高暗色模式对比度）
 function StarRating({ rating }: { rating: number }) {
   const fullStars = Math.floor(rating / 2);
   const hasHalfStar = rating % 2 === 1;
@@ -58,19 +75,19 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: fullStars }).map((_, i) => (
-        <span key={i} className="text-yellow-400 text-sm">★</span>
+        <span key={i} className="text-yellow-400 text-sm drop-shadow-[0_0_3px_rgba(250,204,21,0.5)]">★</span>
       ))}
-      {hasHalfStar && <span className="text-yellow-400 text-sm">☆</span>}
+      {hasHalfStar && <span className="text-yellow-400 text-sm drop-shadow-[0_0_3px_rgba(250,204,21,0.5)]">★</span>}
       {Array.from({ length: emptyStars }).map((_, i) => (
-        <span key={i} className="text-gray-400 text-sm">☆</span>
+        <span key={i} className="text-slate-600 dark:text-slate-500 text-sm">☆</span>
       ))}
-      <span className="ml-2 text-xs text-slate-400">{rating}/10</span>
+      <span className="ml-2 text-xs text-slate-500 dark:text-slate-400 font-medium">{rating}/10</span>
     </div>
   );
 }
 
 // 提取的单个番剧卡片组件
-function AnimeCardItem({ anime, index, config, onClick }: { anime: any, index: number, config: any, onClick: () => void }) {
+function AnimeCardItem({ anime, index, config, onClick }: AnimeCardItemProps) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -92,8 +109,8 @@ function AnimeCardItem({ anime, index, config, onClick }: { anime: any, index: n
             className="w-full h-full object-cover object-[center_top] transform group-hover:scale-[1.03] transition-transform duration-700 ease-out"
           />
         ) : (
-          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-4xl opacity-50">
-            🎬
+          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+            <Tv className="w-12 h-12 text-slate-400 opacity-30" />
           </div>
         )}
 
@@ -145,7 +162,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
   const { animes } = loaderData || { animes: [] };
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"default" | "rating" | "date">("default");
-  const [selectedAnime, setSelectedAnime] = useState<any>(null);
+  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
 
   // Process data based on filter and sort
   const processedAnimes = useMemo(() => {
@@ -153,14 +170,14 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
     // 1. Filter
     if (filterStatus !== "all") {
-      result = result.filter((a: any) => a.status === filterStatus);
+      result = result.filter((a) => a.status === filterStatus);
     }
 
     // 2. Sort
     if (sortBy === "rating") {
-      result.sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
+      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === "date") {
-      result.sort((a: any, b: any) => b.created_at - a.created_at);
+      result.sort((a, b) => b.created_at - a.created_at);
     }
     // 'default' keeps DB order (grouped by status)
 
@@ -169,9 +186,9 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
 
   // Group for default view
   const groupedAnimes = useMemo(() => {
-    if (sortBy !== "default") return {}; // No grouping when sorting
+    if (sortBy !== "default") return {} as Record<string, Anime[]>; // No grouping when sorting
 
-    return processedAnimes.reduce((acc: any, anime: any) => {
+    return processedAnimes.reduce((acc: Record<string, Anime[]>, anime: Anime) => {
       const status = anime.status || "plan";
       if (!acc[status]) {
         acc[status] = [];
@@ -295,13 +312,17 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
       </div>
 
       {animes.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-32 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center py-32 text-center"
+        >
           <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-            <span className="text-4xl opacity-50">📺</span>
+            <Play className="w-10 h-10 text-slate-300 dark:text-slate-600" />
           </div>
           <h3 className="text-2xl font-bold text-slate-700 dark:text-white mb-2">还未收录任何番剧</h3>
           <p className="text-slate-500 max-w-sm">去后台添加你的第一部番剧吧！</p>
-        </div>
+        </motion.div>
       )}
 
       {/* 沉浸式番剧详情视窗 */}
@@ -394,3 +415,24 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
   );
 }
 
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  let message = "番剧页面加载失败";
+  let details = "无法显示番剧列表，请稍后重试";
+  let stack: string | undefined;
+  if (error instanceof Error) {
+    details = error.message;
+    if (import.meta.env.DEV) stack = error.stack;
+  }
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-red-400 mb-4">{message}</h1>
+        <p className="text-slate-600 dark:text-slate-300 mb-6">{details}</p>
+        {stack && import.meta.env.DEV && (
+          <pre className="text-xs text-left bg-slate-900 text-red-300 p-4 rounded-lg overflow-x-auto max-w-2xl">{stack}</pre>
+        )}
+        <a href="/bangumi" className="mt-4 inline-block px-6 py-2 bg-red-500 text-white rounded-lg">刷新</a>
+      </div>
+    </div>
+  );
+}

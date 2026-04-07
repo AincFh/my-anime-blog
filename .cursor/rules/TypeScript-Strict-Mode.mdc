@@ -1,0 +1,325 @@
+---
+alwaysApply: true
+globs: "**/*.{ts,tsx}"
+description: TypeScript严格类型规范 - 禁止any类型、接口定义、泛型使用最佳实践
+---
+
+# TypeScript 严格类型规范
+
+## 核心原则
+
+### 1. 禁止使用 any 类型
+
+```typescript
+// ❌ 禁止 - 任何情况下都不允许使用 any
+function processData(data: any) {
+  return data.value; // 危险！
+}
+
+// ✅ 正确 - 使用 unknown 并进行类型收窄
+function processData(data: unknown) {
+  if (typeof data === 'object' && data !== null && 'value' in data) {
+    return (data as { value: unknown }).value;
+  }
+  throw new TypeError('无效的数据格式');
+}
+
+// ✅ 正确 - 使用具体的接口类型
+interface Article {
+  id: number;
+  title: string;
+  content: string;
+  createdAt: Date;
+}
+
+function processArticle(article: Article): Article {
+  return { ...article, title: article.title.trim() };
+}
+```
+
+### 2. 严格空值检查
+
+```typescript
+// ❌ 禁止 - 不进行空值检查
+function getUserName(user: User | null) {
+  return user.name; // 可能崩溃
+}
+
+// ✅ 正确 - 使用可选链和空值合并
+function getUserName(user: User | null): string {
+  return user?.name ?? '匿名用户';
+}
+
+// ✅ 正确 - 使用守卫检查
+function getUserName(user: User | null): string {
+  if (!user) {
+    return '匿名用户';
+  }
+  return user.name;
+}
+```
+
+## 接口和类型定义
+
+### 1. 优先使用接口定义对象结构
+
+```typescript
+// ✅ 推荐 - 使用 interface
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;           // 可选属性
+  readonly createdAt: Date;  // 只读属性
+}
+
+// ❌ 避免 - 使用 type 定义简单对象
+type User = {
+  id: number;
+  name: string;
+};
+```
+
+### 2. 使用 type 定义联合类型和别名
+
+```typescript
+// ✅ 推荐 - 使用 type 定义联合类型
+type ArticleStatus = 'draft' | 'published' | 'archived';
+type UserRole = 'admin' | 'editor' | 'viewer';
+
+// ✅ 推荐 - 使用 type 定义复杂类型
+type ArticleWithAuthor = Article & { author: User };
+type ArticleList = ReadonlyArray<Article>;
+```
+
+### 3. 禁止使用枚举（Enum）
+
+```typescript
+// ❌ 禁止 - 使用枚举
+enum ArticleStatus {
+  Draft = 'draft',
+  Published = 'published',
+  Archived = 'archived',
+}
+
+// ✅ 推荐 - 使用 const 对象
+const ArticleStatus = {
+  Draft: 'draft',
+  Published: 'published',
+  Archived: 'archived',
+} as const;
+
+type ArticleStatus = typeof ArticleStatus[keyof typeof ArticleStatus];
+```
+
+## 类型守卫和收窄
+
+### 1. 自定义类型守卫
+
+```typescript
+interface Cat {
+  meow(): void;
+  type: 'cat';
+}
+
+interface Dog {
+  bark(): void;
+  type: 'dog';
+}
+
+type Pet = Cat | Dog;
+
+// ✅ 类型守卫函数
+function isCat(pet: Pet): pet is Cat {
+  return pet.type === 'cat';
+}
+
+function makeSound(pet: Pet) {
+  if (isCat(pet)) {
+    pet.meow(); // TypeScript 知道这是 Cat
+  } else {
+    pet.bark(); // TypeScript 知道这是 Dog
+  }
+}
+```
+
+### 2. 使用 satisfies 验证
+
+```typescript
+// ✅ 使用 satisfies 进行验证
+const config = {
+  apiUrl: 'https://api.example.com',
+  timeout: 5000,
+  retries: 3,
+} satisfies Config;
+
+// config 仍然保持精确的类型推断
+type Config = typeof config; // { apiUrl: string; timeout: number; retries: number }
+```
+
+## 泛型约束
+
+### 1. 使用泛型而非过度重载
+
+```typescript
+// ❌ 避免 - 过多重载
+function process(value: string): string;
+function process(value: number): number;
+function process(value: boolean): boolean;
+
+// ✅ 推荐 - 使用泛型
+function process<T>(value: T): T {
+  return value;
+}
+```
+
+### 2. 泛型约束
+
+```typescript
+// ✅ 有约束的泛型
+interface HasId {
+  id: number;
+}
+
+function findById<T extends HasId>(items: T[], id: number): T | undefined {
+  return items.find(item => item.id === id);
+}
+
+// ✅ 多重约束
+function merge<T extends object, U extends object>(target: T, source: U): T & U {
+  return { ...target, ...source };
+}
+```
+
+## React 组件类型
+
+### 1. Props 接口定义
+
+```typescript
+// ✅ 推荐 - 使用 interface 定义 props
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+
+// ✅ 使用 React.ComponentPropsWithoutRef 扩展原生元素
+interface CustomInputProps extends React.ComponentPropsWithoutRef<'input'> {
+  label: string;
+  error?: string;
+}
+```
+
+### 2. 事件处理类型
+
+```typescript
+// ✅ 正确的事件处理类型
+function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+  event.currentTarget; // HTMLButtonElement
+}
+
+function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  event.target.value; // string
+}
+
+function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+}
+```
+
+### 3. Loader 和 Action 类型
+
+```typescript
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { data } from 'react-router';
+import { z } from 'zod';
+
+const CreateArticleSchema = z.object({
+  title: z.string().min(1).max(200),
+  content: z.string().min(1),
+});
+
+export async function action({ request, env }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const result = CreateArticleSchema.safeParse(Object.fromEntries(formData));
+  
+  if (!result.success) {
+    return data(
+      { success: false, errors: result.error.flatten() },
+      { status: 400 }
+    );
+  }
+  
+  // 处理逻辑...
+  return data({ success: true });
+}
+```
+
+## 类型文件组织
+
+### 目录结构
+
+```
+app/
+├── types/
+│   ├── index.ts           # 导出所有类型
+│   ├── env.ts             # 环境变量类型
+│   ├── article.ts         # 文章相关类型
+│   ├── user.ts            # 用户相关类型
+│   └── api.ts             # API 相关类型
+```
+
+### 类型导出规范
+
+```typescript
+// app/types/article.ts
+
+// 导出所有相关类型
+export interface Article {
+  id: number;
+  slug: string;
+  title: string;
+  content: string;
+  excerpt?: string;
+  coverImage?: string;
+  status: ArticleStatus;
+  authorId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ArticleStatus = 'draft' | 'published' | 'archived';
+
+// 导出版本类型
+export interface ArticleWithAuthor extends Article {
+  author: User;
+}
+```
+
+## 类型检查配置
+
+### tsconfig.json 必须配置
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```

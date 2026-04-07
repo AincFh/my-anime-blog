@@ -1,0 +1,293 @@
+---
+alwaysApply: true
+description: 项目目录结构规范 - 组件分层、路由组织、服务层分离最佳实践
+---
+
+# 项目目录结构规范
+
+## 顶层目录结构
+
+```
+my-anime-blog/
+├── app/                      # 应用源代码
+│   ├── api/                  # API 端点（后端）
+│   ├── components/           # React 组件
+│   ├── hooks/                # 自定义 React Hooks
+│   ├── pages/                # 页面组件（路由）
+│   ├── services/             # 业务逻辑层
+│   ├── repositories/         # 数据访问层
+│   ├── types/                # TypeScript 类型定义
+│   ├── utils/                # 工具函数
+│   ├── contexts/             # React Context
+│   ├── styles/               # 样式文件
+│   ├── public/               # 公共组件
+│   ├── app.css               # 全局样式
+│   ├── root.tsx              # 根组件
+│   └── routes.ts             # 路由配置
+├── database/                 # 数据库相关
+│   ├── schema.sql            # 核心数据表
+│   ├── schema_*.sql          # 功能模块数据表
+│   └── migration_*.sql       # 迁移文件
+├── public/                   # 静态资源
+├── workers/                  # Cloudflare Worker 入口
+├── .cursor/                  # Cursor 配置
+│   ├── rules/                # AI 规则
+│   ├── skills/               # AI 技能
+│   ├── agents/               # 子智能体
+│   └── commands/             # 自定义命令
+├── wrangler.jsonc            # Cloudflare 配置
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
+```
+
+## 组件目录结构（原子设计）
+
+### 分层规范
+
+```
+app/components/
+├── ui/                        # 原子组件（最小单元）
+│   ├── Button.tsx
+│   ├── Input.tsx
+│   ├── Card.tsx
+│   ├── Badge.tsx
+│   ├── Modal.tsx
+│   └── Skeleton.tsx
+├── common/                    # 通用组件
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   ├── Sidebar.tsx
+│   └── Breadcrumb.tsx
+├── layout/                    # 布局组件
+│   ├── PublicLayout.tsx
+│   ├── DashboardLayout.tsx
+│   └── AdminLayout.tsx
+├── forms/                     # 表单组件
+│   ├── LoginForm.tsx
+│   ├── ArticleForm.tsx
+│   └── SearchForm.tsx
+├── media/                     # 媒体组件
+│   ├── ImageGallery.tsx
+│   ├── VideoPlayer.tsx
+│   └── MusicPlayer.tsx
+├── gamification/             # 游戏化组件
+│   ├── GachaMachine.tsx
+│   ├── AchievementBadge.tsx
+│   └── LevelProgress.tsx
+├── dashboard/                # 仪表盘组件
+│   ├── StatsCard.tsx
+│   └── ActivityFeed.tsx
+└── special/                   # 特殊效果组件
+    ├── ParticleEffect.tsx
+    └── GlassMorphism.tsx
+```
+
+### 组件命名规范
+
+```typescript
+// 组件文件：PascalCase.tsx
+// 组件名称：PascalCase
+export function ArticleCard() { }
+export function UserAvatar() { }
+
+// 组件props：PascalCase
+interface ArticleCardProps {
+  title: string;
+  excerpt?: string;
+  coverImage?: string;
+  author: User;
+}
+```
+
+## 服务层结构
+
+### 目录组织
+
+```
+app/services/
+├── auth.server.ts             # 认证服务
+├── db.server.ts               # 数据库连接
+├── membership/                # 会员服务模块
+│   ├── index.ts
+│   ├── subscription.server.ts
+│   ├── mission.server.ts
+│   └── star-dust.server.ts    # 虚拟货币
+├── user/                      # 用户服务模块
+│   ├── index.ts
+│   ├── profile.server.ts
+│   └── preferences.server.ts
+├── article/                   # 文章服务模块
+│   ├── index.ts
+│   ├── create.server.ts
+│   ├── read.server.ts
+│   └── update.server.ts
+├── cloudflare/                # Cloudflare 服务
+│   ├── cache.server.ts
+│   ├── r2.server.ts
+│   └── kv.server.ts
+└── security/                  # 安全服务
+    ├── audit.server.ts
+    └── rate-limit.server.ts
+```
+
+### 服务层职责
+
+```typescript
+// ✅ 正确 - 服务层只处理业务逻辑
+// app/services/article/create.server.ts
+import { validateArticleData } from '~/utils/validation';
+import { articleRepository } from '~/repositories/article.repository';
+
+export async function createArticle(data: ArticleInput, env: Env) {
+  // 1. 业务验证
+  const validated = validateArticleData(data);
+  
+  // 2. 权限检查
+  const session = await getSession(env);
+  if (!session) {
+    throw new UnauthorizedError('请先登录');
+  }
+  
+  // 3. 调用数据访问层
+  const article = await articleRepository.create(env.DB, validated);
+  
+  // 4. 触发副作用（通知、缓存等）
+  await invalidateArticleCache(env, article.slug);
+  
+  return article;
+}
+
+// ❌ 错误 - 服务层直接操作数据库
+export async function createArticle(data: ArticleInput, env: Env) {
+  await env.DB
+    .prepare('INSERT INTO articles (title) VALUES (?)')
+    .bind(data.title)
+    .run(); // 不要这样做！
+}
+```
+
+## 数据访问层（Repository）
+
+### 目录组织
+
+```
+app/repositories/
+├── index.ts                   # 统一导出
+├── base.repository.ts         # 基础仓储类
+├── article.repository.ts      # 文章仓储
+├── user.repository.ts         # 用户仓储
+└── category.repository.ts     # 分类仓储
+```
+
+### Repository 实现规范
+
+```typescript
+// app/repositories/article.repository.ts
+import type { D1Database } from '@cloudflare/workers-types';
+
+export interface ArticleRow {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  author_id: number;
+  created_at: string;
+}
+
+export const articleRepository = {
+  async findById(db: D1Database, id: number): Promise<Article | null> {
+    const stmt = db.prepare('SELECT * FROM articles WHERE id = ?').bind(id);
+    const result = await stmt.first<ArticleRow>();
+    return result ? mapToArticle(result) : null;
+  },
+  
+  async findBySlug(db: D1Database, slug: string): Promise<Article | null> {
+    const stmt = db.prepare('SELECT * FROM articles WHERE slug = ?').bind(slug);
+    const result = await stmt.first<ArticleRow>();
+    return result ? mapToArticle(result) : null;
+  },
+  
+  async create(db: D1Database, data: CreateArticleInput): Promise<Article> {
+    const stmt = db.prepare(`
+      INSERT INTO articles (title, slug, content, author_id)
+      VALUES (?, ?, ?, ?)
+    `).bind(data.title, data.slug, data.content, data.authorId);
+    
+    const result = await stmt.run();
+    
+    return {
+      id: result.meta.last_row_id,
+      ...data,
+      createdAt: new Date().toISOString(),
+    };
+  },
+};
+```
+
+## 工具函数目录
+
+```
+app/utils/
+├── format.ts                  # 格式化工具
+├── validation.ts              # 验证工具
+├── date.ts                    # 日期处理
+├── string.ts                  # 字符串处理
+├── array.ts                   # 数组处理
+├── api-response.ts            # API 响应格式
+├── logger.ts                  # 日志工具
+├── i18n.tsx                   # 国际化
+└── constants.ts               # 常量定义
+```
+
+## 类型定义目录
+
+```
+app/types/
+├── index.ts                   # 统一导出
+├── env.ts                     # 环境变量类型
+├── article.ts                 # 文章相关类型
+├── user.ts                    # 用户相关类型
+├── api.ts                     # API 响应类型
+├── component.ts               # 组件 Props 类型
+└── db.ts                      # 数据库相关类型
+```
+
+## 页面组件目录
+
+```
+app/pages/
+├── public/                    # 公开页面
+│   ├── home.tsx
+│   ├── articles.tsx
+│   ├── articles.$slug.tsx
+│   ├── bangumi.tsx
+│   ├── archive.tsx
+│   └── gallery.tsx
+├── user/                      # 用户页面
+│   ├── user.dashboard.tsx
+│   ├── user.profile.tsx
+│   ├── user.settings.tsx
+│   ├── shop.tsx
+│   ├── wallet.tsx
+│   └── _game.tsx
+└── admin/                     # 管理页面
+    ├── admin.anime.manage.tsx
+    ├── admin.users.tsx
+    ├── admin.tags.tsx
+    ├── admin.cleanup.tsx
+    └── admin.login.tsx
+```
+
+## 文件命名规范总结
+
+| 类型 | 命名规范 | 示例 |
+|------|----------|------|
+| React 组件 | PascalCase.tsx | `ArticleCard.tsx` |
+| 工具函数 | kebab-case.ts | `api-response.ts` |
+| 服务层 | kebab-case.server.ts | `auth.server.ts` |
+| 仓储层 | kebab-case.repository.ts | `article.repository.ts` |
+| 类型定义 | kebab-case.ts | `article.ts` |
+| 测试文件 | *.test.ts | `article.test.ts` |
+| 常量 | UPPER_SNAKE_CASE.ts | `constants.ts` |

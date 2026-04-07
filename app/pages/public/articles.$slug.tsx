@@ -98,14 +98,61 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 }
 
 export function meta({ data }: Route.MetaArgs) {
-    const article = data?.article;
+    const article = data?.article as Article | undefined;
     if (!article) return [{ title: "文章未找到 - A.T. Field" }];
+
+    const siteUrl = "https://anime.dog";
+    const articleUrl = `${siteUrl}/articles/${article.slug}`;
+    const description = article.summary || article.content?.slice(0, 160) || article.title;
+    const ogImage = article.cover_image || `${siteUrl}/api/og/${article.slug}`;
+    const publishedTime = article.created_at ? new Date(article.created_at * 1000).toISOString() : undefined;
+    const modifiedTime = article.updated_at ? new Date(article.updated_at * 1000).toISOString() : undefined;
+
+    // 安全解析 tags
+    const parseTagsForMeta = (tagsJson: string | string[] | null | undefined): string => {
+        if (!tagsJson) return "";
+        if (Array.isArray(tagsJson)) return tagsJson.join(", ");
+        try { return JSON.parse(tagsJson).join(", "); } catch { 
+            if (typeof tagsJson === 'string') return tagsJson;
+            return "";
+        }
+    };
+    const keywords = parseTagsForMeta(article.tags as string | string[] | null);
+
     return [
-        { title: `${article.title} - A.T. Field` },
-        { name: "description", content: article.content?.slice(0, 160) || article.title },
+        // 基础 Meta
+        { title: `${article.title} - A.T. Field 星影小站` },
+        { name: "description", content: description },
+        { name: "keywords", content: keywords },
+        { name: "author", content: "星影小站" },
+        { name: "robots", content: "index, follow" },
+
+        // Open Graph
         { property: "og:title", content: article.title },
+        { property: "og:description", content: description },
         { property: "og:type", content: "article" },
-        { property: "og:image", content: article.cover_image || '' },
+        { property: "og:url", content: articleUrl },
+        { property: "og:image", content: ogImage },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { property: "og:site_name", content: "A.T. Field 星影小站" },
+        { property: "og:locale", content: "zh_CN" },
+
+        // Article 特定属性
+        { property: "article:published_time", content: publishedTime },
+        { property: "article:modified_time", content: modifiedTime },
+        { property: "article:author", content: "星影小站" },
+        { property: "article:section", content: article.category },
+
+        // Twitter Card
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: article.title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: ogImage },
+        { name: "twitter:site", content: "@A_T_Field" },
+
+        // 额外 SEO
+        { tagName: "link", rel: "canonical", href: articleUrl },
     ];
 }
 
@@ -139,12 +186,17 @@ export default function ArticleDetailPage() {
 
     const estimateReadTime = (content: string) => Math.ceil(content.length / 500);
 
-    const parseTags = (tagsJson: string | null): string[] => {
+    const parseTags = (tagsJson: string | string[] | null | undefined): string[] => {
         if (!tagsJson) return [];
-        try { return JSON.parse(tagsJson); } catch { return []; }
+        if (Array.isArray(tagsJson)) return tagsJson;
+        try { return JSON.parse(tagsJson as string); } catch { 
+            // 如果不是 JSON 格式，可能是逗号分隔的字符串
+            if (typeof tagsJson === 'string') return tagsJson.split(',').map(t => t.trim()).filter(Boolean);
+            return [];
+        }
     };
 
-    const tags = parseTags(article.tags);
+    const tags = parseTags(article.tags as string | string[] | null);
     const processedContent = (article.content || "").replace(/\\n/g, '\n');
 
     const extractHeadings = (text: string) => {
@@ -250,15 +302,16 @@ export default function ArticleDetailPage() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1 }}
-                    className="relative w-full aspect-[21/9] md:aspect-[3/1] overflow-hidden"
+                    className="relative w-full h-[40vh] md:h-[50vh] overflow-hidden"
                 >
                     <OptimizedImage src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] dark:from-[var(--bg-primary)] via-transparent to-transparent" />
+                    {/* 全覆盖渐变遮罩 - 确保完全覆盖 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/60 to-transparent" />
                 </motion.div>
             )}
 
-            {/* 文章主体 */}
-            <article className="max-w-[800px] mx-auto px-6 md:px-8 lg:px-0 -mt-20 relative z-10">
+            {/* 文章主体 - 移除负边距，使用正常布局 */}
+            <article className="max-w-[900px] mx-auto px-6 md:px-8 lg:px-0 pb-20">
 
                 {/* 元信息 */}
                 <motion.header

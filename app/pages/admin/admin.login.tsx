@@ -2,7 +2,8 @@ import { Form, redirect, useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/admin.login";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Lock, User, Shield } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Shield, AlertTriangle } from "lucide-react";
+import { IconEmoji } from "~/components/ui/IconEmoji";
 
 /**
  * 管理员登录页面
@@ -289,7 +290,7 @@ export default function AdminLogin() {
                   exit={{ opacity: 0, height: 0 }}
                   className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2"
                 >
-                  <span>⚠️</span>
+                  <IconEmoji emoji="⚠️" size={16} className="text-amber-400" />
                   {actionData.error}
                 </motion.div>
               )}

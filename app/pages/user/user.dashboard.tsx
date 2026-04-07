@@ -240,3 +240,31 @@ export default function UserDashboard() {
     </GamificationProvider>
   );
 }
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  let message = "仪表盘加载失败";
+  let details = "无法显示仪表盘内容，请稍后重试";
+  let stack: string | undefined;
+
+  if (error instanceof Error) {
+    details = error.message;
+    if (import.meta.env.DEV) {
+      stack = error.stack;
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-red-400 mb-4">{message}</h1>
+        <p className="text-slate-600 dark:text-slate-300 mb-6">{details}</p>
+        {stack && import.meta.env.DEV && (
+          <pre className="text-xs text-left bg-slate-900 text-red-300 p-4 rounded-lg overflow-x-auto max-w-2xl">{stack}</pre>
+        )}
+        <a href="/user/dashboard" className="mt-4 inline-block px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+          刷新仪表盘
+        </a>
+      </div>
+    </div>
+  );
+}

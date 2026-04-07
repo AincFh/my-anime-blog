@@ -83,6 +83,7 @@ export default [
   route("api/user/me", "api/user/api.user.me.ts"),
   route("api/user/purchases", "api/user/api.user.purchases.ts"),
   route("api/daily-signin", "api/user/api.daily-signin.ts"),
+  route("api/user/gacha", "api/user/api.gacha.ts"),
 
   // 监控与治理
   route("api/system/health", "api/system/api.system.health.tsx"),
@@ -108,8 +109,9 @@ export default [
   route("api/bangumi/detail", "api/bangumi/api.bangumi.detail.ts"),
   route("api/animes", "api/misc/api.animes.ts"),
 
-  // Notion 调试 (临时)
+  // Notion 相关
   route("api/notion/debug", "api/api.notion.debug.ts"),
+  route("api/notion/sync", "api/notion/api.notion.sync.ts"),
 
   // 杂项
   route("action/set-theme", "api/misc/action.set-theme.ts"),

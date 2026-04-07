@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "framer-motion";
-// PublicLayout is already provided by root.tsx
 import { ResponsiveContainer } from "~/components/ui/ResponsiveComponents";
 import { ForgotPasswordForm } from "~/components/forms/ForgotPasswordForm";
+import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 export default function ForgotPassword() {
     const navigate = useNavigate();
@@ -57,37 +57,57 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
-            <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-slate-50 to-transparent dark:from-[#0A0A0A] dark:to-transparent pointer-events-none" />
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-black transition-colors duration-500">
+            {/* 二次元壁纸背景 */}
+            <div className="absolute inset-0 z-0">
+                <OptimizedImage
+                    src="https://api.paugram.com/wallpaper/?seed=forgot_password"
+                    alt="Background"
+                    className="w-full h-full object-cover scale-105"
+                />
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-[6px] transition-all duration-700" />
+            </div>
 
-            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[420px] mx-auto px-6">
+            {/* 顶部导航栏 */}
+            <div className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
+                <Link
+                    to="/login"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-all duration-300"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="text-sm font-medium">返回登录</span>
+                </Link>
+            </div>
+
+            <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[440px] mx-auto px-4 sm:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-black/40"
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
+                        <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight drop-shadow-md">
                             重置密码
                         </h1>
-                        <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
+                        <p className="text-[15px] font-medium text-white/60">
                             验证您的邮箱以设置新密码
                         </p>
                     </div>
 
-                    <div className="bg-white/50 dark:bg-[#1C1C1E]/30 p-1 rounded-[32px]">
-                        <ForgotPasswordForm
-                            onReset={handleReset}
-                            onSendCode={handleSendCode}
-                            isLoading={isLoading}
-                            error={error}
-                        />
-                    </div>
+                    <ForgotPasswordForm
+                        onReset={handleReset}
+                        onSendCode={handleSendCode}
+                        isLoading={isLoading}
+                        error={error}
+                    />
 
                     <div className="mt-10 text-center">
-                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                        <p className="text-[14px] font-medium text-white/50">
                             突然想起来了？
-                            <Link to="/login" className="ml-2 text-slate-900 dark:text-white font-bold hover:underline">
+                            <Link to="/login" className="ml-2 text-white/80 font-bold hover:text-white transition-colors">
                                 返回登录
                             </Link>
                         </p>

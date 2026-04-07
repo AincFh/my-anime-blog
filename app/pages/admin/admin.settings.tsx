@@ -712,19 +712,33 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                         />
                         <div>
                           <label className="block text-sm font-medium text-white/70 mb-2">播放列表 ID</label>
-                          <input
-                            type="text"
-                            value={settings.features.music.playlist_id}
-                            onChange={(e) => setSettings({
-                              ...settings,
-                              features: {
-                                ...settings.features,
-                                music: { ...settings.features.music, playlist_id: e.target.value }
-                              }
-                            })}
-                            placeholder="网易云/Spotify 歌单 ID"
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 transition-all"
-                          />
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={settings.features.music.playlist_id}
+                              onChange={(e) => setSettings({
+                                ...settings,
+                                features: {
+                                  ...settings.features,
+                                  music: { ...settings.features.music, playlist_id: e.target.value }
+                                }
+                              })}
+                              placeholder="网易云/Spotify 歌单 ID"
+                              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 transition-all"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cacheKey = `netease_playlist_${settings.features.music.playlist_id}`;
+                                localStorage.removeItem(cacheKey);
+                                setSettings(prev => ({ ...prev }));
+                              }}
+                              className="shrink-0 px-4 py-3 bg-violet-500/20 hover:bg-violet-500/40 border border-violet-500/30 text-violet-300 rounded-xl text-sm font-medium transition-all active:scale-95"
+                              title="清除本地缓存，下次刷新自动拉取最新歌单"
+                            >
+                              刷新歌单
+                            </button>
+                          </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-white/70 mb-2">

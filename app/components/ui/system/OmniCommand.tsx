@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { musicPlayerToggle } from "~/hooks/useMusicPlayer";
+import { Moon, Music, Lock, Sparkles, Coffee, Search } from "lucide-react";
 
 /**
  * 全局指令终端 (Omni-Command)
@@ -11,7 +12,7 @@ interface Command {
   id: string;
   label: string;
   description: string;
-  icon: string;
+  icon: React.ReactNode;
   action: () => void;
   category: "search" | "system" | "easter";
 }
@@ -29,7 +30,7 @@ export function OmniCommand() {
       id: "dark",
       label: "切换深色模式",
       description: "/dark - 强制切换深色模式",
-      icon: "🌙",
+      icon: <Moon className="w-6 h-6" />,
       category: "system",
       action: () => {
         document.documentElement.classList.toggle("dark");
@@ -40,7 +41,7 @@ export function OmniCommand() {
       id: "music",
       label: "音乐播放器",
       description: "/music - 唤起/隐藏音乐播放器",
-      icon: "🎵",
+      icon: <Music className="w-6 h-6" />,
       category: "system",
       action: () => {
         musicPlayerToggle();
@@ -48,10 +49,21 @@ export function OmniCommand() {
       },
     },
     {
+      id: "ai",
+      label: "AI 助手",
+      description: "/ai - 与 AI 助手对话",
+      icon: <Sparkles className="w-6 h-6" />,
+      category: "system",
+      action: () => {
+        navigate("/ai");
+        setIsOpen(false);
+      },
+    },
+    {
       id: "login",
       label: "登录",
       description: "/login - 直接跳出登录框",
-      icon: "🔐",
+      icon: <Lock className="w-6 h-6" />,
       category: "system",
       action: () => {
         navigate("/admin/login");
@@ -66,7 +78,7 @@ export function OmniCommand() {
       id: "isekai",
       label: "异世界传送",
       description: "/isekai - 屏幕故障效果，跳转到异世界风景图",
-      icon: "🌀",
+      icon: <Sparkles className="w-6 h-6" />,
       category: "easter",
       action: () => {
         // 故障效果
@@ -88,13 +100,13 @@ export function OmniCommand() {
       id: "coffee",
       label: "倒咖啡",
       description: "/coffee - 给站长倒一杯卡布奇诺",
-      icon: "☕",
+      icon: <Coffee className="w-6 h-6" />,
       category: "easter",
       action: () => {
         // 显示Toast
         const toast = document.createElement("div");
-        toast.className = "fixed top-20 right-8 z-50 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-xl border border-white/20";
-        toast.textContent = "给站长倒了一杯卡布奇诺 ☕";
+        toast.className = "fixed top-20 right-8 z-50 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-xl border border-white/20 flex items-center gap-2";
+        toast.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg><span>给站长倒了一杯卡布奇诺</span>';
         document.body.appendChild(toast);
 
         setTimeout(() => {
@@ -111,7 +123,7 @@ export function OmniCommand() {
       id: "search",
       label: "搜索文章",
       description: `搜索 "${query}"`,
-      icon: "🔍",
+      icon: <Search className="w-6 h-6" />,
       category: "search",
       action: () => {
         navigate(`/articles?q=${encodeURIComponent(query)}`);
@@ -241,7 +253,7 @@ export function OmniCommand() {
                       whileHover={{ x: 4 }}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{command.icon}</span>
+                        <span className="text-white">{command.icon}</span>
                         <div className="flex-1">
                           <div className="text-white font-medium">{command.label}</div>
                           <div className="text-white/60 text-sm">{command.description}</div>

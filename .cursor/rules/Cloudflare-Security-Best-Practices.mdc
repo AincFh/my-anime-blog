@@ -1,0 +1,79 @@
+---
+alwaysApply: true
+globs: "**/*.ts"
+description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、配置安全
+---
+
+# Cloudflare Workers 安全最佳实践
+
+## 运行时环境安全
+
+1. **保持兼容性日期最新**
+   - 在 `wrangler.jsonc` 中设置 `compatibility_date` 为当前日期
+   - 新项目必须使用最新兼容日期以获取最新安全修复
+
+2. **禁止使用不安全的功能**
+   - 禁止使用 `eval()` 或动态代码执行
+   - 禁止使用 `new Function()` 创建函数
+   - 禁止使用 `Set` 或 `Map` 的不安全迭代器
+
+3. **限制CPU时间**
+   - 设置合理的 `cpu_time` 限制防止资源耗尽攻击
+   - 避免在Worker中执行复杂计算
+
+## 依赖安全管理
+
+1. **定期更新依赖**
+   - 使用 `npm audit` 定期检查已知漏洞
+   - 优先使用已签名包的稳定版本
+
+2. **最小化依赖**
+   - 仅引入必要的依赖，减少攻击面
+   - 验证每个依赖的权限要求
+
+3. **版本锁定**
+   - 在 `package.json` 中使用精确版本号
+   - 使用 `npm shrinkwrap` 锁定依赖树
+
+## 环境变量和密钥
+
+1. **使用 Cloudflare Secrets**
+   - 所有敏感信息使用 `wrangler secret put` 存储
+   - 禁止将密钥硬编码或提交到版本控制
+
+2. **本地开发环境**
+   - 使用 `.dev.vars` 文件存储本地密钥
+   - 确保 `.dev.vars` 已加入 `.gitignore`
+
+3. **环境隔离**
+   - 生产环境和开发环境使用不同的密钥
+   - 测试环境不应包含生产数据
+
+## 输入验证
+
+1. **请求体验证**
+   - 所有HTTP请求参数必须经过验证
+   - 使用 zod 验证 schema
+
+2. **类型安全**
+   - 使用 TypeScript 严格模式
+   - 禁止使用 `any` 类型处理外部输入
+
+3. **Content-Type 检查**
+   - 验证请求的 `Content-Type` 头
+   - 拒绝可疑的 MIME 类型
+
+## 输出安全
+
+1. **CORS 配置**
+   - 只允许必要的域名跨域访问
+   - 使用具体的域名而非通配符
+
+2. **安全头**
+   - 设置 `Content-Security-Policy`
+   - 添加 `X-Content-Type-Options: nosniff`
+   - 添加 `X-Frame-Options: DENY`
+
+3. **响应格式**
+   - 返回标准 JSON 格式
+   - 禁止在错误响应中暴露内部实现细节

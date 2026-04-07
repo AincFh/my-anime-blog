@@ -1,5 +1,60 @@
 import { motion } from "framer-motion";
 import clsx from "clsx";
+import type { LucideIcon } from "lucide-react";
+import { 
+  Moon, Coffee, Zap, MessageSquare, Eye, Star, Sparkles, 
+  Gift, Book, Cat, MousePointer2, Sun, Music, Lock, Key,
+  Shield, Heart, Camera, Film, Tv, Play, Settings, Check,
+  Clock, Package, Trophy, Crown, Coins, Gem, Palette, Rocket,
+  BarChart3, MapPin, ShoppingCart, UtensilsCrossed, Pen, BookOpen,
+  Rainbow, Image as ImageIcon, FileText, Wrench, Backpack, Gift as GiftIcon
+} from "lucide-react";
+
+// 图标名称到组件的映射
+const iconMap: Record<string, LucideIcon> = {
+  moon: Moon,
+  sun: Sun,
+  coffee: Coffee,
+  zap: Zap,
+  message: MessageSquare,
+  eye: Eye,
+  star: Star,
+  sparkles: Sparkles,
+  gift: GiftIcon,
+  book: Book,
+  cat: Cat,
+  mouse: MousePointer2,
+  music: Music,
+  lock: Lock,
+  key: Key,
+  shield: Shield,
+  heart: Heart,
+  camera: Camera,
+  film: Film,
+  tv: Tv,
+  play: Play,
+  settings: Settings,
+  check: Check,
+  clock: Clock,
+  package: Package,
+  trophy: Trophy,
+  crown: Crown,
+  coins: Coins,
+  gem: Gem,
+  palette: Palette,
+  rocket: Rocket,
+  chart: BarChart3,
+  map: MapPin,
+  cart: ShoppingCart,
+  utensils: UtensilsCrossed,
+  pen: Pen,
+  bookopen: BookOpen,
+  rainbow: Rainbow,
+  image: ImageIcon,
+  file: FileText,
+  wrench: Wrench,
+  backpack: Backpack,
+};
 
 interface HexagonBadgeProps {
     icon: string;
@@ -8,6 +63,7 @@ interface HexagonBadgeProps {
     isUnlocked: boolean;
     size?: "sm" | "md" | "lg";
     onClick?: () => void;
+    iconComponent?: LucideIcon;
 }
 
 export function HexagonBadge({
@@ -16,14 +72,24 @@ export function HexagonBadge({
     description,
     isUnlocked,
     size = "md",
-    onClick
+    onClick,
+    iconComponent
 }: HexagonBadgeProps) {
 
     const sizeClasses = {
-        sm: "w-24 h-24 text-2xl",
-        md: "w-32 h-32 text-4xl",
-        lg: "w-40 h-40 text-5xl",
+        sm: "w-24 h-24",
+        md: "w-32 h-32",
+        lg: "w-40 h-40",
     };
+
+    const iconSizes = {
+        sm: 24,
+        md: 36,
+        lg: 48,
+    };
+
+    // 优先使用传入的 iconComponent，否则根据 icon 名称查找
+    const IconComponent = iconComponent || iconMap[icon] || Star;
 
     return (
         <motion.div
@@ -52,14 +118,14 @@ export function HexagonBadge({
                         : "bg-black/40"
                 )}>
                     {/* Icon */}
-                    <span className={clsx(
-                        "filter transition-all duration-500",
+                    <div className={clsx(
+                        "transition-all duration-500",
                         isUnlocked
-                            ? "grayscale-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                            : "grayscale opacity-30 blur-[1px]"
+                            ? "text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                            : "text-slate-400 opacity-30"
                     )}>
-                        {icon}
-                    </span>
+                        <IconComponent size={iconSizes[size]} />
+                    </div>
                 </div>
             </div>
 

@@ -9,6 +9,7 @@ import { cn } from "~/utils/cn";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import type { Route } from "./+types/user.achievements";
+import { Moon, Coffee, Zap, MessageSquare, Eye, Cat, MousePointer2 } from "lucide-react";
 
 // Mock Achievement Data (Should be shared with AchievementSystem.tsx ideally)
 const ALL_ACHIEVEMENTS = [
@@ -16,49 +17,56 @@ const ALL_ACHIEVEMENTS = [
         id: "night_owl",
         name: "夜之守望者",
         description: "在凌晨 2:00 - 4:00 期间访问网站",
-        icon: "🌙",
+        icon: "moon",
+        iconComponent: Moon,
         category: "time",
     },
     {
         id: "early_bird",
         name: "早安少女/少年",
         description: "在早上 5:00 - 7:00 期间访问",
-        icon: "☕",
+        icon: "coffee",
+        iconComponent: Coffee,
         category: "time",
     },
     {
         id: "combo_master",
         name: "连击大师",
         description: "在单篇文章点赞连击超过 50 次",
-        icon: "⚡",
+        icon: "zap",
+        iconComponent: Zap,
         category: "interaction",
     },
     {
         id: "first_contact",
         name: "契约缔结者",
         description: "发表第一条评论",
-        icon: "🗣️",
+        icon: "message",
+        iconComponent: MessageSquare,
         category: "interaction",
     },
     {
         id: "observer",
         name: "观测者",
         description: "累计阅读文章超过 10 篇",
-        icon: "🔍",
+        icon: "eye",
+        iconComponent: Eye,
         category: "interaction",
     },
     {
         id: "schrodinger_cat",
         name: "薛定谔的猫",
         description: "连续刷新 404 页面 5 次",
-        icon: "🐱",
+        icon: "cat",
+        iconComponent: Cat,
         category: "hidden",
     },
     {
         id: "pixel_hunter",
         name: "像素猎人",
         description: "找到并点击 1x1 像素的隐藏按钮",
-        icon: "🖱️",
+        icon: "mouse",
+        iconComponent: MousePointer2,
         category: "hidden",
     },
 ];
@@ -190,9 +198,12 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
                                         !isUnlocked ? "grayscale brightness-50 opacity-40 hover:grayscale-0 hover:brightness-100 hover:opacity-100" : ""
                                     )}>
                                         <HexagonBadge
-                                            {...achievement}
+                                            icon={achievement.icon}
+                                            name={achievement.name}
+                                            description={achievement.description}
                                             isUnlocked={isUnlocked}
                                             size="lg"
+                                            iconComponent={achievement.iconComponent}
                                         />
                                     </div>
                                     

@@ -1,0 +1,288 @@
+---
+alwaysApply: true
+globs: "**/*.{ts,tsx}"
+description: React Router v7 开发规范 - Loader、Action、SSR、组件模式最佳实践
+---
+
+# React Router v7 开发规范
+
+## 数据获取规则
+
+### 1. Loader 函数（必须优先使用）
+
+```typescript
+// ✅ 正确 - 使用 Loader 获取数据
+import { data } from 'react-router';
+
+export async function loader({ request, params, env }: LoaderFunctionArgs) {
+  const slug = params.slug;
+  
+  const article = await env.DB
+    .prepare('SELECT * FROM articles WHERE slug = ?')
+    .bind(slug)
+    .first();
+  
+  if (!article) {
+    throw data('文章不存在', { status: 404 });
+  }
+  
+  return Response.json({ article });
+}
+
+// ❌ 禁止 - 在客户端使用 useEffect 获取数据
+function ArticlePage() {
+  const [article, setArticle] = useState(null);
+  
+  useEffect(() => {
+    fetch(`/api/article/${slug}`).then(res => res.json());
+  }, [slug]);
+  
+  // ...
+}
+```
+
+### 2. Action 函数（表单提交必须使用）
+
+```typescript
+export async function action({ request, env }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const title = formData.get('title') as string;
+  
+  // 验证数据
+  const result = createArticleSchema.safeParse({ title });
+  if (!result.success) {
+    return Response.json(
+      { success: false, errors: result.error.flatten() },
+      { status: 400 }
+    );
+  }
+  
+  // 执行业务逻辑
+  await env.DB
+    .prepare('INSERT INTO articles (title) VALUES (?)')
+    .bind(result.data.title)
+    .run();
+  
+  return Response.json({ success: true });
+}
+```
+
+### 3. useFetcher（适合非导航交互）
+
+```typescript
+import { useFetcher } from 'react-router';
+
+function LikeButton({ articleId }: { articleId: number }) {
+  const fetcher = useFetcher();
+  const isLiking = fetcher.state !== 'idle';
+  
+  return (
+    <fetcher.Form method="post" action={`/api/article/${articleId}/like`}>
+      <button type="submit" disabled={isLiking}>
+        {isLiking ? '点赞中...' : '点赞'}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
+
+## 组件架构
+
+### 1. 服务端组件优先
+
+```typescript
+// ✅ 默认使用服务端组件
+import type { LoaderFunctionArgs } from 'react-router';
+
+export async function loader({ env }: LoaderFunctionArgs) {
+  const articles = await getFeaturedArticles(env);
+  return { articles };
+}
+
+// 服务端组件 - 直接访问 loader 数据
+export default function HomePage({ loaderData }: Route.ComponentProps) {
+  const { articles } = loaderData;
+  
+  return (
+    <main>
+      {articles.map(article => (
+        <ArticleCard key={article.id} article={article} />
+      ))}
+    </main>
+  );
+}
+```
+
+### 2. 客户端组件（需要交互时添加）
+
+```typescript
+// ✅ 添加 'use client' 指令
+'use client';
+
+import { useState } from 'react';
+
+interface Props {
+  initialCount: number;
+}
+
+export function Counter({ initialCount }: Props) {
+  const [count, setCount] = useState(initialCount);
+  
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      点击次数: {count}
+    </button>
+  );
+}
+```
+
+### 3. 组件文件结构
+
+```
+app/
+├── components/
+│   ├── ui/                    # 基础UI组件
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   └── Card.tsx
+│   ├── features/              # 功能组件
+│   │   ├── ArticleCard.tsx
+│   │   └── UserProfile.tsx
+│   └── layouts/               # 布局组件
+│       └── MainLayout.tsx
+```
+
+## 错误处理
+
+### 1. ErrorBoundary 组件
+
+```typescript
+import { isRouteErrorResponse, useRouteError } from 'react-router';
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div className="error-page">
+        <h1>{error.status}</h1>
+        <p>{error.statusText}</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="error-page">
+      <h1>出错了</h1>
+      <p>{error instanceof Error ? error.message : '未知错误'}</p>
+    </div>
+  );
+}
+```
+
+### 2. 路由级别错误处理
+
+```typescript
+// app/routes/articles.$slug.tsx
+export function ErrorBoundary() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-red-500">404</h1>
+        <p className="text-gray-400 mt-2">文章不存在或已被删除</p>
+      </div>
+    </div>
+  );
+}
+```
+
+## 路由结构规范
+
+### 标准路由模式
+
+```typescript
+// 路由命名规范
+app/
+├── routes/
+│   ├── _index.tsx                    # 首页 /
+│   ├── articles._index.tsx           # 文章列表 /articles
+│   ├── articles.$slug.tsx            # 文章详情 /articles/:slug
+│   ├── articles.new.tsx             # 创建文章 /articles/new
+│   ├── articles.$slug.edit.tsx       # 编辑文章 /articles/:slug/edit
+│   ├── api.articles.tsx             # 文章 API
+│   ├── api.articles.$id.tsx         # 单篇文章 API
+│   └── _dashboard.tsx                # 仪表盘布局
+│       ├── _dashboard.index.tsx     # 仪表盘首页
+│       └── _dashboard.settings.tsx  # 仪表盘设置
+```
+
+## 加载状态
+
+### Suspense 边界
+
+```typescript
+import { Suspense } from 'react';
+import { Await, useLoaderData } from 'react-router';
+
+export async function loader({ env }: LoaderFunctionArgs) {
+  const articles = getArticles(env);
+  const popularTags = getPopularTags(env);
+  
+  return { articles, popularTags };
+}
+
+export default function ArticlesPage() {
+  const { articles, popularTags } = useLoaderData<typeof loader>();
+  
+  return (
+    <div className="grid grid-cols-3 gap-6">
+      <div className="col-span-2">
+        <Suspense fallback={<ArticleListSkeleton />}>
+          <Await resolve={articles}>
+            {(data) => <ArticleList articles={data} />}
+          </Await>
+        </Suspense>
+      </div>
+      <div className="col-span-1">
+        <Suspense fallback={<TagsSkeleton />}>
+          <Await resolve={popularTags}>
+            {(data) => <PopularTags tags={data} />}
+          </Await>
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+```
+
+## 类型安全
+
+### 使用 TypeScript 严格模式
+
+```typescript
+// 所有路由参数必须定义类型
+export async function loader({ params }: LoaderFunctionArgs) {
+  // 明确 params.slug 类型
+  const slug = params.slug as string;
+  
+  // 使用 zod 验证参数
+  const result = slugSchema.safeParse(slug);
+  if (!result.success) {
+    throw data('无效的文章slug', { status: 400 });
+  }
+}
+```
+
+## 性能优化
+
+1. **避免不必要的水合**
+   - 使用 `clientLoader` 减少客户端 JS
+   - 使用 `hydrate` 控制水合行为
+
+2. **预加载数据**
+   - 使用 `useNavigation` 显示预加载状态
+   - 使用 `usePrefetch` 预加载将来可能需要的路由
+
+3. **缓存策略**
+   - 使用 `Cache-Control` 头控制缓存
+   - 利用 React Router 的缓存机制

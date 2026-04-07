@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router";
+import { Newspaper, BookOpen, Library, Radio, Atom } from "lucide-react";
 
 /**
  * RSS订阅源 (The Feed)
@@ -18,9 +19,9 @@ export function RSSFeed() {
 
   const baseUrl = getBaseUrl();
   const readers = [
-    { name: "Feedly", url: `https://feedly.com/i/subscription/feed/${encodeURIComponent(baseUrl + rssUrl)}`, icon: "📰" },
-    { name: "Inoreader", url: `https://www.inoreader.com/?add_feed=${encodeURIComponent(baseUrl + rssUrl)}`, icon: "📖" },
-    { name: "The Old Reader", url: `https://theoldreader.com/feeds/subscribe?url=${encodeURIComponent(baseUrl + rssUrl)}`, icon: "📚" },
+    { name: "Feedly", url: `https://feedly.com/i/subscription/feed/${encodeURIComponent(baseUrl + rssUrl)}`, icon: <Newspaper className="w-4 h-4" /> },
+    { name: "Inoreader", url: `https://www.inoreader.com/?add_feed=${encodeURIComponent(baseUrl + rssUrl)}`, icon: <BookOpen className="w-4 h-4" /> },
+    { name: "The Old Reader", url: `https://theoldreader.com/feeds/subscribe?url=${encodeURIComponent(baseUrl + rssUrl)}`, icon: <Library className="w-4 h-4" /> },
   ];
 
   return (
@@ -30,7 +31,7 @@ export function RSSFeed() {
       animate={{ opacity: 1, scale: 1 }}
     >
       <h3 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
-        <span>📡</span>
+        <Radio className="w-5 h-5" />
         <span>建立神经连接 (Subscribe)</span>
       </h3>
 
@@ -41,14 +42,14 @@ export function RSSFeed() {
             href={rssUrl}
             className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors flex items-center gap-2"
           >
-            <span>📡</span>
+            <Radio className="w-4 h-4" />
             <span>RSS Feed</span>
           </a>
           <a
             href={atomUrl}
             className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors flex items-center gap-2"
           >
-            <span>⚛️</span>
+            <Atom className="w-4 h-4" />
             <span>Atom Feed</span>
           </a>
         </div>

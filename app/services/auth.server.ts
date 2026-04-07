@@ -229,13 +229,14 @@ export async function loginUser(
     }
   }
 
-  // 速率限制检查
+  // 速率限制检查（checkRateLimit 内部先递增再检查，所以每次失败调用都会消费一个配额）
   const failLimit = await checkRateLimit(kv, `${ip}:login_fail`, RATE_LIMITS.LOGIN_FAIL);
   if (!failLimit.allowed) {
+    // 达到速率限制，记录设备异常
     if (kv) {
       const deviceKey = `device_anomaly:${deviceFingerprint}`;
-      const currentCount = await kv.get(deviceKey) || '0';
-      await kv.put(deviceKey, (parseInt(currentCount) + 1).toString(), { expirationTtl: AUTH_CONFIG.deviceRecordExpiration });
+      const currentCount = await kv.get(deviceKey);
+      await kv.put(deviceKey, ((currentCount ? parseInt(currentCount) : 0) + 1).toString(), { expirationTtl: AUTH_CONFIG.deviceRecordExpiration });
     }
     return { success: false, error: '登录失败次数过多，请10分钟后再试' };
   }
@@ -244,6 +245,7 @@ export async function loginUser(
   let user = await userRepo.findByEmailWithPassword(email);
 
   if (!user) {
+    // 用户不存在时不额外计数（checkRateLimit 已经递增了本次请求配额）
     return { success: false, error: '邮箱或密码错误' };
   }
 
@@ -258,12 +260,7 @@ export async function loginUser(
   }
 
   if (!passwordValid) {
-    if (kv) {
-      const failKey = `ratelimit:login_fail:${ip}`;
-      const failCount = await kv.get(failKey);
-      const count = failCount ? parseInt(failCount, 10) + 1 : 1;
-      await kv.put(failKey, count.toString(), { expirationTtl: AUTH_CONFIG.loginFailLockout });
-    }
+    // 密码错误也不额外计数（checkRateLimit 已经递增了本次请求配额）
     return { success: false, error: '邮箱或密码错误' };
   }
 
