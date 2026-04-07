@@ -334,7 +334,7 @@ export function MusicPlayerFullscreen({
           <div className="relative h-[560px] w-[560px] max-w-full shrink-0 overflow-visible">
             <canvas
               ref={canvasRef}
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 opacity-70"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 opacity-[0.88]"
               aria-hidden
             />
 
@@ -368,67 +368,87 @@ export function MusicPlayerFullscreen({
             {/* 唱针：对齐网易云 PC 黑胶 — 支点在盘心正上方，曲线力臂落在上右外圈（SVG 与 560 舞台坐标一致） */}
             <svg
               viewBox="0 0 560 560"
-              className="pointer-events-none absolute inset-0 z-[21] h-full w-full overflow-visible drop-shadow-[0_10px_24px_rgba(0,0,0,0.5)]"
+              className="pointer-events-none absolute inset-0 z-[21] h-full w-full overflow-visible"
               aria-hidden
             >
               <defs>
-                <linearGradient id={`netease-arm-${svgIds}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fafafa" />
-                  <stop offset="40%" stopColor="#e4e4e7" />
-                  <stop offset="100%" stopColor="#a1a1aa" />
+                <linearGradient id={`netease-arm-${svgIds}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="35%" stopColor="#e4e4e7" />
+                  <stop offset="100%" stopColor="#71717a" />
                 </linearGradient>
                 <linearGradient id={`netease-base-${svgIds}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f4f4f5" />
-                  <stop offset="100%" stopColor="#9ca3af" />
+                  <stop offset="0%" stopColor="#fafafa" />
+                  <stop offset="55%" stopColor="#d4d4d8" />
+                  <stop offset="100%" stopColor="#71717a" />
                 </linearGradient>
+                <linearGradient id={`netease-head-${svgIds}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3f3f46" />
+                  <stop offset="45%" stopColor="#18181b" />
+                  <stop offset="100%" stopColor="#09090b" />
+                </linearGradient>
+                <filter id={`netease-drop-${svgIds}`} x="-80%" y="-80%" width="260%" height="260%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#000000" floodOpacity="0.55" />
+                </filter>
               </defs>
-              <g transform="translate(280, 64)">
+              <g transform="translate(280, 64)" filter={`url(#netease-drop-${svgIds})`}>
                 <rect
-                  x="-44"
-                  y="-52"
-                  width="88"
-                  height="36"
-                  rx="10"
+                  x="-48"
+                  y="-54"
+                  width="96"
+                  height="40"
+                  rx="11"
                   fill={`url(#netease-base-${svgIds})`}
-                  stroke="rgba(255,255,255,0.22)"
-                  strokeWidth="1"
+                  stroke="rgba(255,255,255,0.35)"
+                  strokeWidth="1.2"
                 />
-                <circle cx="0" cy="8" r="12" fill="#f4f4f5" stroke="#71717a" strokeWidth="1" />
+                <circle cx="0" cy="9" r="14" fill="#f4f4f5" stroke="#52525b" strokeWidth="1.2" />
+                <circle cx="-3" cy="6" r="4" fill="rgba(255,255,255,0.5)" />
                 <motion.g
-                  style={{ transformOrigin: "0px 8px" }}
+                  style={{ transformOrigin: "0px 9px" }}
                   animate={{
                     rotate:
                       stylusState === "playing" ? 15 : stylusState === "lifting" ? 5 : -11,
                   }}
                   transition={{ type: "spring", stiffness: 76, damping: 19, mass: 0.82 }}
                 >
-                  <path
-                    d="M 0 8 C 14 96, 78 118, 138 128 C 152 130, 162 128, 174 122"
-                    fill="none"
-                    stroke={`url(#netease-arm-${svgIds})`}
-                    strokeWidth="3.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <g transform="translate(174, 122) rotate(38)">
-                    <rect
-                      x="-10"
-                      y="-8"
-                      width="22"
-                      height="30"
-                      rx="3"
-                      fill="#18181b"
-                      stroke="rgba(255,255,255,0.14)"
-                      strokeWidth="1"
+                  {(
+                    [
+                      { stroke: "#27272a", width: 11, opacity: 0.55, dy: 0 },
+                      { stroke: `url(#netease-arm-${svgIds})`, width: 7, opacity: 1, dy: 0 },
+                      { stroke: "rgba(255,255,255,0.92)", width: 2.2, opacity: 0.85, dy: 0 },
+                    ] as const
+                  ).map((layer, idx) => (
+                    <path
+                      key={idx}
+                      d="M 0 9 C 16 98, 80 120, 140 130 C 154 132, 164 130, 176 124"
+                      fill="none"
+                      stroke={layer.stroke}
+                      strokeWidth={layer.width}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity={layer.opacity}
                     />
-                    <rect x="-6" y="-4" width="12" height="3" rx="1" fill="rgba(255,255,255,0.08)" />
+                  ))}
+                  <g transform="translate(176, 124) rotate(38)">
+                    <rect
+                      x="-13"
+                      y="-10"
+                      width="28"
+                      height="36"
+                      rx="4"
+                      fill={`url(#netease-head-${svgIds})`}
+                      stroke="rgba(255,255,255,0.2)"
+                      strokeWidth="1.2"
+                    />
+                    <rect x="-8" y="-5" width="16" height="4" rx="1" fill="rgba(255,255,255,0.12)" />
                     <line
                       x1="0"
-                      y1="16"
+                      y1="18"
                       x2="0"
-                      y2="24"
-                      stroke="rgba(255,255,255,0.35)"
-                      strokeWidth="1"
+                      y2="28"
+                      stroke="rgba(255,255,255,0.45)"
+                      strokeWidth="1.2"
                       strokeLinecap="round"
                     />
                   </g>
