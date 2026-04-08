@@ -9,7 +9,6 @@ export default defineConfig({
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },
-      injectNodeGlobals: true,
     }),
     tailwindcss(),
     reactRouter(),
