@@ -84,7 +84,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.1 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => setSelectedImage(image)}
-            className="group relative aspect-[4/5] rounded-[24px] md:rounded-[32px] overflow-hidden bg-slate-100 dark:bg-slate-800/50 shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-200/50 dark:border-white/5 cursor-pointer"
+            className="group relative aspect-[4/5] rounded-2xl md:rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/50 shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-200/50 dark:border-white/5 cursor-pointer"
           >
             {/* 图像层 */}
             <OptimizedImage
@@ -120,7 +120,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-32 text-center"
         >
-            <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-[32px] flex items-center justify-center mb-6 rotate-3">
+            <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 rotate-3">
                 <Camera className="w-10 h-10 text-slate-300 dark:text-slate-600" />
             </div>
             <h3 className="text-2xl font-bold text-slate-700 dark:text-white mb-2">相册空空如也</h3>

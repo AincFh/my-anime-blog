@@ -30,6 +30,9 @@ export default [
   route("disclaimer", "pages/legal/disclaimer.tsx"),
   route("legal/sponsor", "pages/legal/legal.sponsor.tsx"),
   route("legal/privacy", "pages/legal/legal.privacy.tsx"),
+  route("legal/ai", "pages/legal/legal.ai.tsx"),
+  route("legal/cookie", "pages/legal/legal.cookie.tsx"),
+  route("legal/minors", "pages/legal/legal.minors.tsx"),
 
   // 独立后台 (Admin Dashboard)
   route("panel/login", "pages/admin/admin.login.tsx"),

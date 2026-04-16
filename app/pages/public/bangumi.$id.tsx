@@ -3,27 +3,11 @@ import { motion } from "framer-motion";
 import { GlassCard } from "../../components/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import type { Route } from "./+types/bangumi.$id";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
+import { cn } from "~/utils/cn";
 
-// 复制一份数据用于查找 (在实际项目中应该从数据库或共享模块获取)
-const sampleAnimes = [
-    { id: 1, bangumi_id: 296517, title: "葬送的芙莉莲", cover_url: "https://api.paugram.com/wallpaper/", status: "watching", progress: "24/28", rating: 9.5, review: "平淡中见真章，这才是真正的神作。", created_at: 1704067200 },
-    { id: 2, bangumi_id: 253046, title: "进击的巨人 最终季", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 10, review: "献出心脏！跨越十年的史诗。", created_at: 1701388800 },
-    { id: 3, bangumi_id: 314463, title: "间谍过家家", cover_url: "https://api.paugram.com/wallpaper/", status: "watching", progress: "12/24", rating: 8.5, review: "哇库哇库！", created_at: 1696118400 },
-    { id: 4, bangumi_id: 236819, title: "鬼灭之刃", cover_url: "https://api.paugram.com/wallpaper/", status: "plan", progress: "0/26", rating: 0, review: "", created_at: 1680307200 },
-    { id: 5, bangumi_id: 265, title: "新世纪福音战士", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 10, review: "勇敢的少年啊，快去创造奇迹！", created_at: 1672531200 },
-    { id: 6, bangumi_id: 253041, title: "咒术回战", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.0, review: "领域展开！", created_at: 1698796800 },
-    { id: 7, bangumi_id: 386809, title: "我推的孩子", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.2, review: "偶像的谎言是爱。", created_at: 1681257600 },
-    { id: 8, bangumi_id: 321885, title: "电锯人", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 8.8, review: "好耶！", created_at: 1665446400 },
-    { id: 9, bangumi_id: 332591, title: "孤独摇滚", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.8, review: "社恐人的共鸣。", created_at: 1665187200 },
-    { id: 10, bangumi_id: 309486, title: "边缘行者", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 9.6, review: "赛博朋克的浪漫与悲剧。", created_at: 1663027200 },
-    { id: 11, bangumi_id: 364450, title: "莉科丽丝", cover_url: "https://api.paugram.com/wallpaper/", status: "dropped", progress: "8/13", rating: 6.5, review: "高开低走，可惜了。", created_at: 1656720000 },
-    { id: 12, bangumi_id: 296620, title: "国王排名", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 8.0, review: "波吉王子加油！", created_at: 1634256000 },
-    { id: 13, bangumi_id: 302636, title: "86 -不存在的战区-", cover_url: "https://api.paugram.com/wallpaper/", status: "plan", progress: "0/23", rating: 0, review: "", created_at: 1618099200 },
-    { id: 14, bangumi_id: 292275, title: "无职转生", cover_url: "https://api.paugram.com/wallpaper/", status: "watching", progress: "10/24", rating: 9.0, review: "异世界天花板。", created_at: 1610236800 },
-    { id: 15, bangumi_id: 4933, title: "命运石之门", cover_url: "https://api.paugram.com/wallpaper/", status: "completed", progress: "完结", rating: 10, review: "这一切都是命运石之门的选择。", created_at: 1301961600 },
-    { id: 16, bangumi_id: 1386, title: "CLANNAD", cover_url: "https://api.paugram.com/wallpaper/", status: "plan", progress: "0/48", rating: 0, review: "", created_at: 1191456000 },
-];
+// 删除硬编码的假数据，改为从数据库读取
 
 interface BangumiSubject {
     id: number;
@@ -94,8 +78,38 @@ interface BangumiFullData {
 
 export async function loader({ params, context }: Route.LoaderArgs) {
     const id = Number(params.id);
-    const localAnime = sampleAnimes.find((a: any) => a.id === id);
-
+    
+    if (isNaN(id) || id <= 0) {
+        throw new Response("Invalid ID", { status: 400 });
+    }
+    
+    const { anime_db } = (context as any).cloudflare?.env || {};
+    if (!anime_db) {
+        throw new Response("Database not configured", { status: 500 });
+    }
+    
+    // 从数据库查询用户的番剧记录
+    const { getSessionId, verifySession } = await import("~/utils/auth");
+    const sessionId = getSessionId(context?.request || new Request(""));
+    let userId: number | null = null;
+    
+    if (sessionId) {
+        const session = await verifySession(sessionId, anime_db);
+        if (session?.user) {
+            userId = session.user.id;
+        }
+    }
+    
+    // 查询该番剧记录（包含 bangumi_id）
+    const stmt = anime_db
+        .prepare("SELECT * FROM animes WHERE id = ?")
+        .bind(id);
+    
+    // 尝试获取用户自己的记录，或任意用户的记录用于公开浏览
+    const localAnime = userId !== null
+        ? await stmt.first()
+        : await anime_db.prepare("SELECT * FROM animes WHERE id = ?").bind(id).first();
+    
     if (!localAnime) {
         throw new Response("Not Found", { status: 404 });
     }
@@ -176,13 +190,45 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
     const { localAnime, bangumiData } = loaderData;
+    const [animeStatus, setAnimeStatus] = useState(localAnime.status);
 
     // 基础信息直接使用本地数据，实现秒开
     const title = localAnime.title;
     const cover = localAnime.cover_url;
 
+    const statusConfig: Record<string, { label: string; color: string }> = {
+        watching: { label: '在看', color: 'bg-emerald-500/20 text-emerald-500' },
+        completed: { label: '看过', color: 'bg-blue-500/20 text-blue-500' },
+        plan: { label: '想看', color: 'bg-purple-500/20 text-purple-500' },
+        dropped: { label: '抛弃', color: 'bg-red-500/20 text-red-500' },
+    };
+
     return (
         <div className="min-h-screen relative overflow-hidden -mt-20 md:-mt-24">
+            {/* 灵动岛导航 */}
+            <FloatingSubNav
+                title={title}
+                backUrl="/bangumi"
+                rightContent={
+                    <select
+                        value={animeStatus}
+                        onChange={(e) => setAnimeStatus(e.target.value as any)}
+                        className={cn(
+                            'px-3 py-1.5 rounded-full text-[12px] font-bold border-none outline-none cursor-pointer transition-all',
+                            statusConfig[animeStatus]?.color
+                        )}
+                    >
+                        <option value="watching">在看</option>
+                        <option value="completed">看过</option>
+                        <option value="plan">想看</option>
+                        <option value="dropped">抛弃</option>
+                    </select>
+                }
+            />
+
+            {/* 顶部留白（适配灵动岛导航） */}
+            <div className="h-14" />
+
             {/* 深邃质感背景模糊层 */}
             <div className="absolute inset-0 -z-10 pointer-events-none">
                 <OptimizedImage
@@ -194,16 +240,7 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                 <div className="absolute inset-0 bg-white/20 dark:bg-black/40 backdrop-blur-[2px]" />
             </div>
 
-            <div className="container max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-32">
-                {/* 极简返回栏 */}
-                <Link
-                    to="/bangumi"
-                    className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors mb-12"
-                >
-                    <span className="text-lg leading-none mt-[-2px] tracking-tighter">←</span>
-                    Bangumi
-                </Link>
-
+            <div className="container max-w-7xl mx-auto px-5 sm:px-8 pt-8 md:pt-12">
                 <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
                     {/* 左侧：封面与评分中枢 */}
                     <motion.div
@@ -213,7 +250,7 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                         className="w-full lg:w-[320px] flex-shrink-0 space-y-6"
                     >
                         {/* 震撼海报 */}
-                        <div className="relative aspect-[3/4] rounded-[32px] overflow-hidden shadow-2xl shadow-indigo-500/10 dark:shadow-white/5 ring-1 ring-slate-200 dark:ring-white/10">
+                        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/10 dark:shadow-white/5 ring-1 ring-slate-200 dark:ring-white/10">
                             <OptimizedImage
                                 src={cover}
                                 alt={title}
@@ -222,7 +259,7 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                         </div>
 
                         {/* HIG 极简评分台 */}
-                        <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-[24px] p-6 text-center border border-slate-200/50 dark:border-white/5 content-center min-h-[140px]">
+                        <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-xl p-6 text-center border border-slate-200/50 dark:border-white/5 content-center min-h-[140px]">
                             <Suspense fallback={<div className="animate-pulse space-y-3 flex flex-col items-center"><div className="h-3 w-16 bg-slate-300 dark:bg-slate-700 rounded-full"></div><div className="h-10 w-24 bg-slate-300 dark:bg-slate-700 rounded-lg"></div></div>}>
                                 <Await resolve={bangumiData} errorElement={<p className="text-red-500 text-sm font-medium">评分加载失败</p>}>
                                     {(data) => {
@@ -250,7 +287,7 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
                         </div>
 
                         {/* 状态与进度台 */}
-                        <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-[24px] p-6 border border-slate-200/50 dark:border-white/5">
+                        <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-xl p-6 border border-slate-200/50 dark:border-white/5">
                             <h3 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">
                                 My Status
                             </h3>
@@ -268,7 +305,7 @@ export default function BangumiDetail({ loaderData }: Route.ComponentProps) {
 
                         {/* 个人评价台 */}
                         {(localAnime.rating > 0 || localAnime.review) && (
-                            <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-[24px] p-6 border border-slate-200/50 dark:border-white/5">
+                            <div className="bg-slate-50/80 dark:bg-[#151515]/80 backdrop-blur-xl rounded-xl p-6 border border-slate-200/50 dark:border-white/5">
                                 <h3 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-5">
                                     My Review
                                 </h3>

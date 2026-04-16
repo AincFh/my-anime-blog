@@ -187,18 +187,34 @@ export async function getUserPrivilegeValue<T extends keyof TierPrivileges>(
 
 /**
  * 检查用户是否是 VIP 或更高
+ * 兼容旧名称（vip）和新名称（moonchild, star-guardian, galaxy-lord）
  */
 export async function isVIPOrAbove(db: Database, userId: number): Promise<boolean> {
     const { tier } = await getUserMembershipTier(db, userId);
-    return tier ? tier.name !== 'free' : false;
+    if (!tier) return false;
+    // 新等级体系：moonchild(1), star-guardian(2), galaxy-lord(3) 都是 VIP+
+    // 旧等级体系：vip
+    return tier.name !== 'traveler' && tier.name !== 'free';
 }
 
 /**
- * 检查用户是否是 SVIP
+ * 检查用户是否是 SVIP 或更高
+ * 兼容旧名称（svip）和新名称（star-guardian, galaxy-lord）
  */
 export async function isSVIP(db: Database, userId: number): Promise<boolean> {
     const { tier } = await getUserMembershipTier(db, userId);
-    return tier?.name === 'svip';
+    if (!tier) return false;
+    // 新等级体系：star-guardian(2), galaxy-lord(3) 是 SVIP+
+    // 旧等级体系：svip
+    return tier.name === 'svip' || tier.name === 'star-guardian' || tier.name === 'galaxy-lord';
+}
+
+/**
+ * 检查用户是否是银河领主（最高等级）
+ */
+export async function isGalaxyLord(db: Database, userId: number): Promise<boolean> {
+    const { tier } = await getUserMembershipTier(db, userId);
+    return tier?.name === 'galaxy-lord';
 }
 
 /**

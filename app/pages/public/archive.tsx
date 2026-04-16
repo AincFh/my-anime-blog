@@ -102,7 +102,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
                                     transition={{ delay: yearIdx * 0.1 }}
                                     className="flex items-center gap-6 md:gap-8 mb-8"
                                 >
-                                    <div className="w-16 h-16 md:w-24 md:h-24 shrink-0 bg-slate-100 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-white/5 rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-sm z-10">
+                                    <div className="w-16 h-16 md:w-24 md:h-24 shrink-0 bg-slate-100 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-white/5 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm z-10">
                                         <span className="text-xl md:text-3xl font-black tracking-tighter text-slate-800 dark:text-white">{year}</span>
                                     </div>
                                     <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800/50" />
@@ -130,10 +130,10 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
                                                 <div className="absolute left-[-5px] top-6 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-[3px] border-slate-300 dark:border-slate-600 group-hover:border-slate-800 dark:group-hover:border-white transition-colors duration-300 z-20" />
 
                                                 {/* 主卡片 */}
-                                                <div className="bg-white dark:bg-slate-900/40 rounded-[28px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100 dark:border-white/5 flex flex-col md:flex-row p-4 md:p-6 gap-6">
+                                                <div className="bg-white dark:bg-slate-900/40 rounded-2xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100 dark:border-white/5 flex flex-col md:flex-row p-4 md:p-6 gap-6">
                                                     {/* 配图区 */}
                                                     {item.cover && (
-                                                        <div className="w-full md:w-64 shrink-0 aspect-video md:aspect-square rounded-[20px] md:rounded-[24px] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                                                        <div className="w-full md:w-64 shrink-0 aspect-video md:aspect-square rounded-xl md:rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
                                                             <OptimizedImage
                                                                 src={item.cover}
                                                                 alt={item.title}

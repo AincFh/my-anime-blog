@@ -35,7 +35,7 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         enterKeyHint="next"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full pl-5 pr-12 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-[20px] text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
+                        className="block w-full pl-5 pr-12 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-xl text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
                         placeholder="请输入电子邮箱或账户名"
                         required
                     />
@@ -51,7 +51,7 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         enterKeyHint="done"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full pl-5 pr-16 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-[20px] text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
+                        className="block w-full pl-5 pr-16 py-[18px] bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-xl text-[15px] font-bold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
                         placeholder="请输入密码"
                         required
                     />
@@ -77,7 +77,7 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-[16px] flex items-center gap-3 text-[14px] font-bold mt-2"
+                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-xl flex items-center gap-3 text-[14px] font-bold mt-2"
                     >
                         <AlertCircle size={18} className="flex-shrink-0" />
                         {error}
@@ -88,7 +88,7 @@ export function LoginForm({ onSubmit, isLoading, error, defaultEmail = "" }: Log
             <button
                 type="submit"
                 disabled={isLoading || !email || !password}
-                className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
+                className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-xl text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
             >
                 {isLoading ? <Loader2 className="animate-spin" size={20} /> : "立刻登录"}
                 {!isLoading && <ArrowRight size={20} />}

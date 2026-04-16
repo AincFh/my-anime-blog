@@ -6,12 +6,28 @@ import type { ActionFunctionArgs } from "react-router";
  */
 export async function action({ request, context }: ActionFunctionArgs) {
   const { anime_db } = (context as any).cloudflare.env;
+  
+  // 验证用户会话
+  const { getSessionId, verifySession } = await import("~/utils/auth");
+  const sessionId = getSessionId(request);
+  
+  if (!sessionId) {
+    return Response.json({ success: false, error: "请先登录" }, { status: 401 });
+  }
+  
+  const session = await verifySession(sessionId, anime_db);
+  if (!session.valid || !session.user) {
+    return Response.json({ success: false, error: "会话已过期" }, { status: 401 });
+  }
+  
   const formData = await request.formData();
-
-  const userId = formData.get("user_id") as string;
   const achievementId = formData.get("achievement_id") as string;
+  
+  // 使用会话中的用户ID，不接受前端传入的user_id
+  // 防止越权：用户只能解锁自己的成就
+  const userId = session.user.id;
 
-  if (!userId || !achievementId) {
+  if (!achievementId) {
     return Response.json({ success: false, error: "参数缺失" }, { status: 400 });
   }
 
@@ -19,7 +35,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // 获取用户当前成就
     const user = await anime_db
       .prepare("SELECT achievements FROM users WHERE id = ?")
-      .bind(parseInt(userId))
+      .bind(userId)
       .first();
 
     if (!user) {
@@ -47,7 +63,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // 更新数据库
     await anime_db
       .prepare("UPDATE users SET achievements = ? WHERE id = ?")
-      .bind(JSON.stringify(achievements), parseInt(userId))
+      .bind(JSON.stringify(achievements), userId)
       .run();
 
     return Response.json({ success: true, achievement: achievementId });

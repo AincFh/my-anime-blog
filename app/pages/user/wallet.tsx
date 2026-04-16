@@ -11,6 +11,7 @@ import { useNavigate } from "react-router";
 import { RECHARGE_PACKAGES } from "~/config/game";
 import { toast } from "~/components/ui/Toast";
 import { IconEmoji } from "~/components/ui/IconEmoji";
+import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 
 // ==================== 数据加载 ====================
 
@@ -135,8 +136,21 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
     }
 
     return (
-        <div className="min-h-screen py-8 px-4">
-            <div className="max-w-2xl mx-auto space-y-8">
+        <>
+            {/* 灵动岛导航 */}
+            <FloatingSubNav
+                title="我的星尘"
+                backUrl="/user/dashboard"
+                rightContent={
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all active:scale-95">
+                        <Sparkles className="w-4 h-4" />
+                        充值
+                    </button>
+                }
+            />
+
+            <div className="min-h-screen pt-20 md:pt-24 pb-8 px-4">
+                <div className="max-w-2xl mx-auto space-y-8">
 
                 {/* 余额卡片 */}
                 <motion.div
@@ -303,5 +317,6 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
                 </AnimatePresence>
             </div>
         </div>
+        </>
     );
 }

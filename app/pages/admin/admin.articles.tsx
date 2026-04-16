@@ -13,6 +13,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const { anime_db } = (context as any).cloudflare.env;
+  const { verifySession } = await import("~/utils/auth");
+  const session = await verifySession(sessionId, anime_db);
+
+  if (!session) {
+    throw redirect("/panel/login");
+  }
+
+  // 验证管理员权限
+  if (session.user.role !== "admin") {
+    throw redirect("/");
+  }
 
   try {
     const { results } = await anime_db
@@ -431,7 +442,7 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
         {correctionTarget && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setCorrectionTarget(null)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md bg-[#0f111a] border border-white/10 rounded-[32px] p-8 relative z-10 shadow-2xl">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md bg-[#0f111a] border border-white/10 rounded-2xl p-8 relative z-10 shadow-2xl">
               <h2 className="text-xl font-black text-white italic uppercase tracking-tighter mb-6 flex items-center gap-3">
                 <ShieldAlert className="text-amber-500" />
                 热度数据修正

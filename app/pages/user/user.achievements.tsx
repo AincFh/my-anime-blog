@@ -10,6 +10,7 @@ import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import type { Route } from "./+types/user.achievements";
 import { Moon, Coffee, Zap, MessageSquare, Eye, Cat, MousePointer2 } from "lucide-react";
+import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 
 // Mock Achievement Data (Should be shared with AchievementSystem.tsx ideally)
 const ALL_ACHIEVEMENTS = [
@@ -130,6 +131,17 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
 
     return (
         <>
+            {/* 灵动岛导航 */}
+            <FloatingSubNav
+                title="成就殿堂"
+                backUrl="/user/dashboard"
+                rightContent={
+                    <div className="flex items-center gap-1 text-amber-400">
+                        <span className="text-[13px] font-bold">{unlocked}/{total}</span>
+                    </div>
+                }
+            />
+
             <ClientOnly>
                 {() => <>
                     <StatusHUD user={userData} stats={{ coins: stats.coins }} />
@@ -138,7 +150,10 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
             </ClientOnly>
             <NavMenu />
 
-            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6.5rem)] md:pt-[calc(env(safe-area-inset-top)+7.5rem)] pb-24 px-4 md:px-12 flex flex-col items-center scroll-smooth">
+            {/* 顶部留白（适配灵动岛导航） */}
+            <div className="h-14" />
+
+            <div className="w-full h-screen overflow-y-auto pt-4 md:pt-4 pb-24 px-4 md:px-12 flex flex-col items-center scroll-smooth">
                 {/* Header Section */}
                 <div className="w-full max-w-6xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-16 px-4">
                     <div className="flex-1 text-center md:text-left">
@@ -229,7 +244,7 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="glass-card p-10 max-w-2xl w-full mx-auto text-center bg-white/[0.03] border border-white/10 backdrop-blur-2xl rounded-[32px] mt-24 relative overflow-hidden group"
+                        className="glass-card p-10 max-w-2xl w-full mx-auto text-center bg-white/[0.03] border border-white/10 backdrop-blur-2xl rounded-2xl mt-24 relative overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-grid-white/[0.02] [mask-image:radial-gradient(white,transparent_85%)]" />
                         <div className="grid grid-cols-3 gap-8 relative z-10">

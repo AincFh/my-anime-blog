@@ -15,6 +15,7 @@ import { ColorPicker } from "~/components/ui/ColorPicker";
 import { ThemeToggle } from "~/components/ui/ThemeToggle";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { cn } from "~/utils/cn";
+import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 import { verifySession, updateUserProfile, changePassword, updateUserPreferences, getSessionToken, type User as AuthUser } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 
@@ -224,12 +225,26 @@ export default function SettingsPage() {
 
     return (
         <>
+            {/* 灵动岛导航 */}
+            <FloatingSubNav
+                title="设置"
+                backUrl="/user/dashboard"
+                rightContent={
+                    <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all active:scale-95">
+                        <Save className="w-5 h-5" />
+                    </button>
+                }
+            />
+
             <ClientOnly>
                 {() => <StatusHUD user={userData} stats={{ coins: stats.coins }} />}
             </ClientOnly>
             <NavMenu />
 
-            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6.5rem)] md:pt-[calc(env(safe-area-inset-top)+7.5rem)] pb-32 px-4 md:px-12 scroll-smooth">
+            {/* 顶部留白（适配灵动岛导航） */}
+            <div className="h-14" />
+
+            <div className="w-full h-screen overflow-y-auto pt-4 md:pt-4 pb-32 px-4 md:px-12 scroll-smooth">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
 
                     {/* Sidebar / Topbar on Mobile - Segmented Control Style */}

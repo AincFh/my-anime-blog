@@ -119,7 +119,7 @@ export default function AdminShop() {
                     <motion.div
                         key={item.id}
                         layout
-                        className={`p-6 bg-[#0f1629]/80 backdrop-blur-xl border rounded-[32px] flex flex-col gap-4 transition-all group ${item.is_active ? "border-white/5" : "border-red-500/20 grayscale opacity-60"}`}
+                        className={`p-6 bg-[#0f1629]/80 backdrop-blur-xl border rounded-2xl flex flex-col gap-4 transition-all group ${item.is_active ? "border-white/5" : "border-red-500/20 grayscale opacity-60"}`}
                     >
                         <div className="flex justify-between items-start">
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner border
@@ -168,7 +168,7 @@ export default function AdminShop() {
                 {(editingItem || isAdding) && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => { setEditingItem(null); setIsAdding(false); }} />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-2xl bg-[#111827] border border-white/10 rounded-[40px] p-10 relative z-10 shadow-2xl">
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-2xl bg-[#111827] border border-white/10 rounded-3xl p-10 relative z-10 shadow-2xl">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">
                                     {isAdding ? "新增商品" : "编辑商品信息"}

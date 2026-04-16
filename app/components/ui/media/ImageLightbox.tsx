@@ -14,6 +14,9 @@ export function ImageLightbox() {
   } | null>(null);
 
   useEffect(() => {
+    // 保存每个图片元素的事件处理函数引用，用于清理
+    const handlers: Map<HTMLImageElement, () => void> = new Map();
+
     // 为所有文章图片添加点击事件
     const images = document.querySelectorAll(".markdown-content img, .prose img");
     
@@ -26,7 +29,7 @@ export function ImageLightbox() {
 
       imageElement.style.cursor = "zoom-in";
       
-      imageElement.addEventListener("click", () => {
+      const handler = () => {
         // 尝试从data属性获取Pixiv信息
         const pixivId = imageElement.dataset.pixivId;
         const artist = imageElement.dataset.artist;
@@ -37,13 +40,22 @@ export function ImageLightbox() {
           pixivId,
           artist,
         });
-      });
+      };
+
+      handlers.set(imageElement, handler);
+      imageElement.addEventListener("click", handler);
     });
 
     return () => {
       images.forEach((img) => {
         const imageElement = img as HTMLImageElement;
         imageElement.dataset.lightbox = "false";
+        // 正确移除事件监听器，防止内存泄漏
+        const handler = handlers.get(imageElement);
+        if (handler) {
+          imageElement.removeEventListener("click", handler);
+          handlers.delete(imageElement);
+        }
       });
     };
   }, []);

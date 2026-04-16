@@ -13,6 +13,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
     const { anime_db } = (context as any).cloudflare.env;
 
+    // 验证管理员权限
+    const { verifySession } = await import("~/utils/auth");
+    const session = await verifySession(sessionId, anime_db);
+    if (!session || !session.user || session.user.role !== "admin") {
+        throw redirect("/");
+    }
+
     try {
         const { results } = await anime_db.prepare(
             "SELECT id, username, email, avatar_url, role, level, exp, coins, created_at FROM users ORDER BY created_at DESC"
@@ -66,7 +73,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
 
     const intent = formData.get("intent");
-    const userId = formData.get("userId");
+    const userId = parseInt(formData.get("userId") as string);
+    
+    if (isNaN(userId)) {
+        return { success: false, error: "无效的用户ID" };
+    }
+
+    // 禁止操作自己
+    if (userId === (session.user as any).id) {
+        return { success: false, error: "无法对自己执行此操作" };
+    }
 
     if (intent === "godModeUpdate") {
         const level = parseInt(formData.get("level") as string);
@@ -74,6 +90,11 @@ export async function action({ request, context }: Route.ActionArgs) {
         const coins = parseInt(formData.get("coins") as string);
         const username = formData.get("username") as string;
         const email = formData.get("email") as string;
+
+        // 禁止通过 godMode 修改角色字段
+        if (isNaN(level) || isNaN(exp) || isNaN(coins)) {
+            return { success: false, error: "数值参数无效" };
+        }
 
         try {
             await anime_db.prepare(`
@@ -97,17 +118,14 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
 
     if (intent === "toggleRole") {
-        const currentRole = formData.get("currentRole");
+        const currentRole = formData.get("currentRole") as string;
         const newRole = currentRole === "admin" ? "user" : "admin";
         await anime_db.prepare("UPDATE users SET role = ? WHERE id = ?").bind(newRole, userId).run();
         return { success: true, message: `用户角色已更新为 ${newRole}` };
     }
 
     if (intent === "toggleStatus") {
-        const currentRole = formData.get("currentRole");
-        const newRole = currentRole === "banned" ? "user" : "banned";
-        await anime_db.prepare("UPDATE users SET role = ? WHERE id = ?").bind(newRole, userId).run();
-        return { success: true, message: currentRole === "banned" ? "用户已解禁" : "用户已被限制访问" };
+        return { success: false, error: "封禁功能暂不可用，需先更新数据库结构" };
     }
 
     if (intent === "addUser") {
@@ -155,9 +173,9 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
         if (fetcher.state === "idle" && fetcher.data) {
             const data = fetcher.data as any;
             if (data.error || !data.success) {
-                alert(<IconEmoji emoji="🚨" size={16} /> + " 指令执行失败: " + (data.error || data.message || "未知异常"));
+                alert("指令执行失败: " + (data.error || data.message || "未知异常"));
             } else if (data.success) {
-                alert(<IconEmoji emoji="✅" size={16} /> + " " + data.message);
+                alert(data.message);
                 setShowAddModal(false);
                 setResetPasswordId(null);
                 setGodModeUser(null);

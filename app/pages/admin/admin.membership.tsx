@@ -93,12 +93,12 @@ export default function AdminMembership() {
                     <motion.div
                         key={tier.id}
                         layout
-                        className="group relative bg-[#0f172a]/60 backdrop-blur-2xl border border-white/5 rounded-[40px] overflow-hidden hover:border-violet-500/30 transition-all p-8 flex flex-col gap-6 shadow-2xl"
+                        className="group relative bg-[#0f172a]/60 backdrop-blur-2xl border border-white/5 rounded-3xl overflow-hidden hover:border-violet-500/30 transition-all p-8 flex flex-col gap-6 shadow-2xl"
                     >
                         <div className="flex justify-between items-start">
                             <div className="flex items-center gap-5">
                                 <div
-                                    className="w-16 h-16 rounded-[24px] flex items-center justify-center text-3xl shadow-2xl relative overflow-hidden"
+                                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-2xl relative overflow-hidden"
                                     style={{ backgroundColor: tier.badge_color + '20', color: tier.badge_color, border: `1px solid ${tier.badge_color}40` }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
@@ -153,7 +153,7 @@ export default function AdminMembership() {
                 {editingTier && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={() => setEditingTier(null)} />
-                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 50 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 50 }} className="w-full max-w-4xl bg-[#0a0f1e] border border-white/10 rounded-[48px] p-12 relative z-10 shadow-[0_0_100px_rgba(139,92,246,0.2)] overflow-hidden">
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 50 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 50 }} className="w-full max-w-4xl bg-[#0a0f1e] border border-white/10 rounded-3xl p-12 relative z-10 shadow-[0_0_100px_rgba(139,92,246,0.2)] overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/10 blur-[100px] pointer-events-none" />
 
                             <div className="flex items-center justify-between mb-10">
@@ -208,7 +208,7 @@ export default function AdminMembership() {
                                                 name="privileges"
                                                 defaultValue={editingTier.privileges}
                                                 rows={12}
-                                                className="w-full bg-black/40 border border-white/10 rounded-[32px] p-8 text-violet-300 font-mono text-xs focus:border-violet-500/50 outline-none transition-all leading-relaxed"
+                                                className="w-full bg-black/40 border border-white/10 rounded-2xl p-8 text-violet-300 font-mono text-xs focus:border-violet-500/50 outline-none transition-all leading-relaxed"
                                             />
                                         </div>
                                     </div>

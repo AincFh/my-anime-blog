@@ -246,7 +246,7 @@ export default function PrivacyPolicyPage() {
                     <Section icon={<Baby className="w-5 h-5" />} title="7. 未成年人保护" delay={0.4}>
                         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                             <p className="text-red-700 dark:text-red-300">
-                                本网站不面向 <strong>14 周岁以下</strong>未成年人。如果您是未成年人家长，发现您的孩子未经同意向我们提供了信息，请联系我们删除。
+                                本网站不面向 <strong>16 周岁以下</strong>未成年人。如果您是未成年人家长，发现您的孩子未经同意向我们提供了信息，请联系我们删除。
                             </p>
                         </div>
                     </Section>
@@ -262,11 +262,11 @@ export default function PrivacyPolicyPage() {
                         <p className="mb-4">如有隐私相关问题，请联系：</p>
                         <div className="flex flex-wrap gap-4">
                             <a
-                                href="mailto:fhainc@hotmail.com"
+                                href="mailto:mail@aincfh.dpdns.org"
                                 className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                             >
                                 <Mail className="w-4 h-4" />
-                                fhainc@hotmail.com
+                                mail@aincfh.dpdns.org
                             </a>
                             <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 rounded-lg">
                                 <Server className="w-4 h-4" />

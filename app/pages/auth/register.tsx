@@ -71,12 +71,23 @@ export default function Register() {
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-[4px] transition-all duration-700 pointer-events-none" />
             </div>
 
+            {/* 返回登录按钮 */}
+            <Link
+                to="/auth/login"
+                className="group absolute left-4 top-4 md:left-6 md:top-8 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 hover:border-white/30 hover:bg-white/15 transition-all duration-300"
+            >
+                <svg className="w-[18px] h-[18px] text-white/80 group-hover:text-white group-hover:-translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="text-sm font-medium text-white/80 group-hover:text-white transition-all duration-300">返回登录</span>
+            </Link>
+
             <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[440px] mx-auto px-4 sm:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-black/40"
+                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 md:p-12 shadow-2xl shadow-black/40"
                 >
                     <div className="text-center mb-10">
                         <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight drop-shadow-md">

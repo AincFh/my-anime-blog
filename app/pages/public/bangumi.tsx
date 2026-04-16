@@ -97,7 +97,7 @@ function AnimeCardItem({ anime, index, config, onClick }: AnimeCardItemProps) {
       className="group cursor-pointer flex flex-col h-full relative"
     >
       {/* 修改卡片比例为 3/4 或 2/3 并增加苹果的轻薄边框和软高光反光效果 */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[16px] md:rounded-[20px] bg-slate-100 dark:bg-slate-800 shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-black/5 dark:border-white/5 mx-auto w-full transition-all duration-300">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-xl md:rounded-xl bg-slate-100 dark:bg-slate-800 shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-black/5 dark:border-white/5 mx-auto w-full transition-all duration-300">
         {anime.cover_url ? (
           <img
             src={anime.cover_url}
@@ -118,7 +118,7 @@ function AnimeCardItem({ anime, index, config, onClick }: AnimeCardItemProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
         {/* 顶部微状态徽章 (极简) */}
-        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-[10px] bg-white/20 dark:bg-black/30 backdrop-blur-md border border-white/20">
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-white/20 dark:bg-black/30 backdrop-blur-md border border-white/20">
           <span className={`text-[10px] font-bold uppercase tracking-wider ${config.color.replace('text-', 'text-white drop-shadow-sm ')}`}>
             {config.label}
           </span>
@@ -224,7 +224,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
         className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 mb-12"
       >
         {/* 状态筛选 - iOS 风格切换器 */}
-        <div className="flex overflow-x-auto hide-scrollbar p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-[20px] md:max-w-fit shadow-inner">
+        <div className="flex overflow-x-auto hide-scrollbar p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl md:max-w-fit shadow-inner">
           {[
             { id: 'all', label: '全部' },
             { id: 'watching', label: '在看' },
@@ -235,7 +235,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
             <button
               key={status.id}
               onClick={() => setFilterStatus(status.id)}
-              className={`px-5 py-2.5 rounded-[14px] text-[15px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap flex-1 md:flex-none ${filterStatus === status.id
+              className={`px-5 py-2.5 rounded-lg text-[15px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap flex-1 md:flex-none ${filterStatus === status.id
                 ? 'bg-white text-slate-900 shadow-md dark:bg-slate-700 dark:text-white'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
@@ -255,7 +255,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
             <button
               key={sort.id}
               onClick={() => setSortBy(sort.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-[16px] text-sm font-semibold transition-all duration-300 ${sortBy === sort.id
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${sortBy === sort.id
                 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                 : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
@@ -341,7 +341,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white dark:bg-[#0A0A0A] rounded-[32px] overflow-hidden shadow-2xl flex flex-col sm:flex-row z-10 border border-slate-200 dark:border-white/10"
+              className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white dark:bg-[#0A0A0A] rounded-2xl overflow-hidden shadow-2xl flex flex-col sm:flex-row z-10 border border-slate-200 dark:border-white/10"
             >
               {/* Cover Area */}
               <div className="w-full sm:w-2/5 md:w-1/2 h-[30vh] sm:h-auto min-h-[250px] relative shrink-0">

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { FloatingNav } from "./FloatingNav";
 import { MobileNav } from "./MobileNav";
+import { SiteFooter } from "./SiteFooter";
 import { DynamicBackground } from "~/components/ui/animations/DynamicBackground";
 import { CanvasParticleSystem } from "~/components/ui/animations/CanvasParticleSystem";
 import { shouldEnableParticles } from "~/utils/performance";
@@ -60,6 +61,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
             {/* 移动端底部浮岛导航（MobileNav 自身已有 md:hidden） */}
             <MobileNav />
+
+            {/* 网站底部 Footer */}
+            <SiteFooter />
         </div>
     );
 }

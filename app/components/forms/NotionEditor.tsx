@@ -4,6 +4,7 @@ import { marked } from "marked";
 import { Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code, Image as ImageIcon, Link as LinkIcon, Undo, Redo, X } from "lucide-react";
 import { cn } from "~/utils/cn";
 import { toast } from "~/components/ui/Toast";
+import { sanitizeHtml } from "~/utils/security";
 
 /**
  * Notion风格的后台编辑器
@@ -193,10 +194,10 @@ export function NotionEditor({ value, onChange, placeholder }: NotionEditorProps
             {value ? (
               <div
                 dangerouslySetInnerHTML={{
-                  __html: marked(value, {
+                  __html: sanitizeHtml(marked(value, {
                     breaks: true,
                     gfm: true,
-                  }) as string,
+                  }) as string),
                 }}
                 className="markdown-content"
               />

@@ -189,13 +189,13 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
             filteredComments.map((comment: any, index: number) => (
               <motion.div
                 key={comment.id}
-                className={`glass-card-deep rounded-[32px] p-8 flex flex-col sm:flex-row gap-8 hover:border-violet-500/40 transition-all border ${comment.status === 'pending' ? 'bg-amber-500/5 border-amber-500/10' : 'border-white/5'}`}
+                className={`glass-card-deep rounded-2xl p-8 flex flex-col sm:flex-row gap-8 hover:border-violet-500/40 transition-all border ${comment.status === 'pending' ? 'bg-amber-500/5 border-amber-500/10' : 'border-white/5'}`}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 <div className="flex sm:flex-col items-center gap-4">
-                  <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center text-white font-black text-2xl shadow-2xl relative overflow-hidden group ${comment.isSpam ? "bg-red-600" : "bg-gradient-to-br from-violet-600 to-fuchsia-700"}`}>
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-2xl relative overflow-hidden group ${comment.isSpam ? "bg-red-600" : "bg-gradient-to-br from-violet-600 to-fuchsia-700"}`}>
                     <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {comment.author[0].toUpperCase()}
                   </div>
@@ -251,7 +251,7 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
         {editingComment && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => setEditingComment(null)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-xl bg-[#0a0f1e] border border-white/10 rounded-[48px] p-10 relative z-10 shadow-2xl overflow-hidden">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-xl bg-[#0a0f1e] border border-white/10 rounded-3xl p-10 relative z-10 shadow-2xl overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl" />
               <h2 className="text-2xl font-black text-white italic tracking-tighter mb-8 flex items-center gap-4">
                 <ShieldAlert className="text-amber-500 w-8 h-8" />

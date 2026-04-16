@@ -71,7 +71,7 @@ export default function TermsOfService() {
                         </div>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
-                        生效日期：2025年12月7日 | 请仔细阅读以下条款
+                        生效日期：2026年4月8日 | 请仔细阅读以下条款
                     </p>
                 </motion.div>
 
@@ -219,11 +219,11 @@ export default function TermsOfService() {
                         </div>
                         <p className="text-slate-600 dark:text-slate-300 mb-4">如有任何问题，请联系：</p>
                         <a
-                            href="mailto:fhainc@hotmail.com"
+                            href="mailto:mail@aincfh.dpdns.org"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            fhainc@hotmail.com
+                            mail@aincfh.dpdns.org
                         </a>
                     </motion.div>
                 </div>

@@ -100,6 +100,7 @@ const defaultSettings: SystemSettings = {
   avatar_url: "",
   bio: "欢迎来到我的二次元基地",
   footer_text: "© 2024 Project Blue Sky",
+  icp_number: "",
   start_year: 2024,
   theme: {
     default_wallpaper: "",

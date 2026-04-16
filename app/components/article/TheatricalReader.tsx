@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Type, Minimize2, Maximize2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { sanitizeHtml } from "~/utils/security";
 
 interface TheatricalReaderProps {
     isOpen: boolean;
@@ -95,7 +96,7 @@ export function TheatricalReader({ isOpen, onClose, title, content }: Theatrical
                             <div
                                 className="prose prose-invert prose-lg max-w-none font-serif leading-loose text-gray-300"
                                 style={{ fontSize: `${fontSize}px` }}
-                                dangerouslySetInnerHTML={{ __html: content }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                             />
 
                             <div className="mt-24 pt-12 border-t border-white/10 text-center text-gray-500 text-sm italic">

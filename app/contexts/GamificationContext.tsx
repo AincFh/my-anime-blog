@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react";
 
 interface Achievement {
     id: string;
@@ -180,20 +180,21 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         setStats((prev) => ({ ...prev, mood }));
     };
 
+    // 使用 useMemo 避免 value 引用变化导致所有消费组件重渲染
+    const contextValue = useMemo(() => ({
+        stats,
+        achievements,
+        inventory,
+        addExp,
+        addCoins,
+        spendCoins,
+        unlockAchievement,
+        addToInventory,
+        setMood,
+    }), [stats, achievements, inventory]);
+
     return (
-        <GamificationContext.Provider
-            value={{
-                stats,
-                achievements,
-                inventory,
-                addExp,
-                addCoins,
-                spendCoins,
-                unlockAchievement,
-                addToInventory,
-                setMood,
-            }}
-        >
+        <GamificationContext.Provider value={contextValue}>
             {children}
         </GamificationContext.Provider>
     );

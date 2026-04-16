@@ -1,12 +1,13 @@
 /**
- * 赞助条款页面 - 优化后的UI
+ * 赞助条款页面 - 四级会员体系版本
+ * 包含旅行者、月之子、星之守护者、银河领主四个等级
  */
 
 import { Link } from "react-router";
 import { motion } from "framer-motion";
 import {
-    Heart, Gift, Crown, CreditCard, RefreshCw,
-    XCircle, AlertTriangle, Mail, ArrowLeft, Sparkles, Star
+    Heart, Gift, CreditCard, RefreshCw,
+    XCircle, AlertTriangle, Mail, ArrowLeft, Sparkles, Star, Moon, Shield, Zap
 } from "lucide-react";
 
 interface SectionProps {
@@ -37,6 +38,99 @@ function Section({ icon, title, children, delay = 0 }: SectionProps) {
     );
 }
 
+// 会员等级卡片数据
+const membershipTiers = [
+    {
+        name: "旅行者",
+        nameEn: "Traveler",
+        icon: Shield,
+        color: "gray",
+        gradient: "from-slate-50 to-gray-50",
+        borderColor: "border-slate-200 dark:border-slate-700",
+        textColor: "text-slate-600 dark:text-slate-400",
+        accentColor: "text-slate-500",
+        price: "免费",
+        features: [
+            "基础收藏夹（20条）",
+            "每日图库访问 50 次",
+            "每日 AI 聊天 3 次",
+            "基础头像框",
+            "每日任务"
+        ],
+        isFree: true
+    },
+    {
+        name: "月之子",
+        nameEn: "Moonchild",
+        icon: Moon,
+        color: "purple",
+        gradient: "from-violet-50 to-purple-50",
+        borderColor: "border-violet-200 dark:border-violet-800",
+        textColor: "text-violet-700 dark:text-violet-300",
+        accentColor: "text-violet-500",
+        price: "¥9.9/月",
+        features: [
+            "云端收藏夹（200条）",
+            "无限制图库访问",
+            "每日 AI 聊天 20 次",
+            "去除页面广告",
+            "双倍星尘奖励",
+            "基础头像框"
+        ],
+        isFree: false,
+        badge: "热门"
+    },
+    {
+        name: "星之守护者",
+        nameEn: "Star Guardian",
+        icon: Star,
+        color: "blue",
+        gradient: "from-blue-50 to-indigo-50",
+        borderColor: "border-blue-200 dark:border-blue-800",
+        textColor: "text-blue-700 dark:text-blue-300",
+        accentColor: "text-blue-500",
+        price: "¥29.9/月",
+        features: [
+            "云端收藏夹（500条）",
+            "无限制图库访问",
+            "每日 AI 聊天 100 次",
+            "付费内容抢先 7 天",
+            "3 倍星尘奖励",
+            "高级头像框",
+            "专属表情包",
+            "Gacha 保底 +1"
+        ],
+        isFree: false,
+        badge: "推荐"
+    },
+    {
+        name: "银河领主",
+        nameEn: "Galaxy Lord",
+        icon: Zap,
+        color: "amber",
+        gradient: "from-amber-50 to-orange-50",
+        borderColor: "border-amber-200 dark:border-amber-800",
+        textColor: "text-amber-700 dark:text-amber-300",
+        accentColor: "text-amber-500",
+        price: "¥49.9/月",
+        features: [
+            "无限云端收藏夹",
+            "无限制图库访问",
+            "AI 聊天无限制",
+            "付费内容完全解锁",
+            "5 倍星尘奖励",
+            "限定头像框",
+            "全套表情包",
+            "Gacha 保底 +3",
+            "专属社区圈子",
+            "优先客服支持"
+        ],
+        isFree: false,
+        badge: "至尊",
+        isPremium: true
+    }
+];
+
 export default function SponsorTermsPage() {
     return (
         <div className="min-h-screen pt-4 pb-12 px-4">
@@ -62,12 +156,12 @@ export default function SponsorTermsPage() {
                             <Heart className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 dark:text-white">赞助条款</h1>
-                            <p className="text-slate-500 dark:text-slate-400">Sponsor Terms</p>
+                            <h1 className="text-3xl font-bold text-slate-800 dark:text-white">赞助与会员</h1>
+                            <p className="text-slate-500 dark:text-slate-400">Support & Membership</p>
                         </div>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
-                        最后更新：2024年12月 | 感谢您的支持 ❤️
+                        最后更新：2026年4月8日 | 感谢您的支持 ❤️
                     </p>
                 </motion.div>
 
@@ -80,102 +174,108 @@ export default function SponsorTermsPage() {
                                 旨在支持网站的运营和发展，并非商品或服务交易。
                             </p>
                         </div>
-                        <p>
-                            赞助后获得的"VIP会员"或"SVIP会员"身份及相关权益，是对您赞助行为的感谢回馈，不构成商业合同关系。
+                        <p className="text-sm">
+                            赞助后获得的高级会员身份及相关权益，是对您赞助行为的感谢回馈，不构成商业合同关系。
+                            所有等级均可享受相应的功能提升。
                         </p>
                     </Section>
 
-                    <Section icon={<Gift className="w-5 h-5" />} title="2. 会员权益" delay={0.15}>
+                    <Section icon={<Gift className="w-5 h-5" />} title="2. 会员等级权益" delay={0.15}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* VIP 卡片 */}
-                            <div className="p-5 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Crown className="w-6 h-6 text-amber-500" />
-                                    <span className="font-bold text-lg text-amber-600 dark:text-amber-400">VIP 会员</span>
-                                </div>
-                                <ul className="space-y-2 text-sm">
-                                    {[
-                                        "追番记录无限制",
-                                        "每日 AI 聊天 50 次",
-                                        "去除页面广告",
-                                        "积分获取 1.5 倍",
-                                        "专属头像边框",
-                                        "专属表情包",
-                                        "自定义主题颜色"
-                                    ].map((item, i) => (
-                                        <li key={i} className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
-                                            <span className="text-amber-500">✓</span> {item}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            {/* SVIP 卡片 */}
-                            <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl relative">
-                                <div className="absolute top-3 right-3">
-                                    <Sparkles className="w-5 h-5 text-purple-500" />
-                                </div>
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Star className="w-6 h-6 text-purple-500" />
-                                    <span className="font-bold text-lg text-purple-600 dark:text-purple-400">SVIP 会员</span>
-                                </div>
-                                <ul className="space-y-2 text-sm">
-                                    {[
-                                        "包含 VIP 全部权益",
-                                        "AI 聊天无限制",
-                                        "积分获取 2 倍",
-                                        "专属动态特效",
-                                        "新内容提前 24 小时访问",
-                                        "优先客服响应"
-                                    ].map((item, i) => (
-                                        <li key={i} className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
-                                            <span className="text-purple-500">✓</span> {item}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
+                            {membershipTiers.map((tier, index) => {
+                                const TierIcon = tier.icon;
+                                return (
+                                    <div
+                                        key={tier.name}
+                                        className={`p-5 bg-gradient-to-br ${tier.gradient} dark:from-slate-800/50 dark:to-slate-900/50 border ${tier.borderColor} rounded-xl relative ${tier.isPremium ? 'ring-2 ring-amber-400/50' : ''}`}
+                                    >
+                                        {tier.badge && (
+                                            <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                tier.isPremium
+                                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white'
+                                                    : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                                            }`}>
+                                                {tier.badge}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <TierIcon size={24} className={tier.accentColor} />
+                                            <div>
+                                                <span className={`font-bold text-lg ${tier.textColor}`}>{tier.name}</span>
+                                                <p className="text-xs text-slate-400">{tier.nameEn}</p>
+                                            </div>
+                                        </div>
+                                        <div className={`text-lg font-bold mb-4 ${tier.isFree ? 'text-slate-500' : tier.accentColor}`}>
+                                            {tier.price}
+                                        </div>
+                                        <ul className="space-y-2">
+                                            {tier.features.map((feature, i) => (
+                                                <li key={i} className={`flex items-center gap-2 text-sm ${tier.textColor}`}>
+                                                    <span className={tier.accentColor}>✓</span> {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </Section>
 
-                    <Section icon={<CreditCard className="w-5 h-5" />} title="3. 赞助周期与定价" delay={0.2}>
+                    <Section icon={<CreditCard className="w-5 h-5" />} title="3. 定价详情" delay={0.2}>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-200 dark:border-slate-700">
                                         <th className="py-3 px-4 text-left font-semibold text-slate-800 dark:text-white">等级</th>
                                         <th className="py-3 px-4 text-center font-semibold text-slate-800 dark:text-white">月付</th>
-                                        <th className="py-3 px-4 text-center font-semibold text-slate-800 dark:text-white">
-                                            季付
-                                            <span className="ml-1 text-xs text-green-500">省17%</span>
-                                        </th>
-                                        <th className="py-3 px-4 text-center font-semibold text-slate-800 dark:text-white">
-                                            年付
-                                            <span className="ml-1 text-xs text-green-500">省30%</span>
-                                        </th>
+                                        <th className="py-3 px-4 text-center font-semibold text-slate-800 dark:text-white">季付</th>
+                                        <th className="py-3 px-4 text-center font-semibold text-slate-800 dark:text-white">年付</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
-                                        <td className="py-4 px-4">
+                                    <tr className="border-b border-slate-100 dark:border-slate-800">
+                                        <td className="py-3 px-4">
                                             <div className="flex items-center gap-2">
-                                                <Crown className="w-4 h-4 text-amber-500" />
-                                                <span className="font-medium text-amber-600 dark:text-amber-400">VIP</span>
+                                                <Shield size={16} className="text-slate-400" />
+                                                <span className="font-medium text-slate-600 dark:text-slate-400">旅行者</span>
                                             </div>
                                         </td>
-                                        <td className="py-4 px-4 text-center font-bold">¥19.9</td>
-                                        <td className="py-4 px-4 text-center font-bold">¥49.9</td>
-                                        <td className="py-4 px-4 text-center font-bold text-green-600 dark:text-green-400">¥168</td>
+                                        <td className="py-3 px-4 text-center text-slate-500">免费</td>
+                                        <td className="py-3 px-4 text-center text-slate-500">—</td>
+                                        <td className="py-3 px-4 text-center text-slate-500">—</td>
                                     </tr>
-                                    <tr className="bg-purple-50/50 dark:bg-purple-900/10">
-                                        <td className="py-4 px-4">
+                                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-violet-50/50 dark:bg-violet-900/10">
+                                        <td className="py-3 px-4">
                                             <div className="flex items-center gap-2">
-                                                <Star className="w-4 h-4 text-purple-500" />
-                                                <span className="font-medium text-purple-600 dark:text-purple-400">SVIP</span>
+                                                <Moon size={16} className="text-violet-500" />
+                                                <span className="font-medium text-violet-600 dark:text-violet-400">月之子</span>
                                             </div>
                                         </td>
-                                        <td className="py-4 px-4 text-center font-bold">¥39.9</td>
-                                        <td className="py-4 px-4 text-center font-bold">¥99.9</td>
-                                        <td className="py-4 px-4 text-center font-bold text-green-600 dark:text-green-400">¥299</td>
+                                        <td className="py-3 px-4 text-center font-bold">¥9.9</td>
+                                        <td className="py-3 px-4 text-center font-bold">¥24.9</td>
+                                        <td className="py-3 px-4 text-center font-bold text-green-600 dark:text-green-400">¥99</td>
+                                    </tr>
+                                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+                                        <td className="py-3 px-4">
+                                            <div className="flex items-center gap-2">
+                                                <Star size={16} className="text-blue-500" />
+                                                <span className="font-medium text-blue-600 dark:text-blue-400">星之守护者</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-center font-bold">¥29.9</td>
+                                        <td className="py-3 px-4 text-center font-bold">¥79.9</td>
+                                        <td className="py-3 px-4 text-center font-bold text-green-600 dark:text-green-400">¥299</td>
+                                    </tr>
+                                    <tr className="bg-amber-50/50 dark:bg-amber-900/10">
+                                        <td className="py-3 px-4">
+                                            <div className="flex items-center gap-2">
+                                                <Zap size={16} className="text-amber-500" />
+                                                <span className="font-medium text-amber-600 dark:text-amber-400">银河领主</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-center font-bold">¥49.9</td>
+                                        <td className="py-3 px-4 text-center font-bold">¥129.9</td>
+                                        <td className="py-3 px-4 text-center font-bold text-green-600 dark:text-green-400">¥499</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -192,7 +292,7 @@ export default function SponsorTermsPage() {
                             ].map((item, i) => (
                                 <div key={i} className="flex gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                                     <span className="text-xl">{item.icon}</span>
-                                    <span>{item.text}</span>
+                                    <span className="text-sm">{item.text}</span>
                                 </div>
                             ))}
                         </div>
@@ -254,11 +354,11 @@ export default function SponsorTermsPage() {
                         </div>
                         <p className="text-slate-600 dark:text-slate-300 mb-4">如有任何问题，请联系：</p>
                         <a
-                            href="mailto:fhainc@hotmail.com"
+                            href="mailto:mail@aincfh.dpdns.org"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            fhainc@hotmail.com
+                            mail@aincfh.dpdns.org
                         </a>
                     </motion.div>
 

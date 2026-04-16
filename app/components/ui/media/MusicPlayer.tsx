@@ -13,7 +13,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
     isPlaying, setIsPlaying, togglePlay, handleNext, handlePrev,
     currentTime, setCurrentTime, duration, setDuration, handleSeek,
     volume, setVolume, isMuted, setIsMuted,
-    isLoading, isVisible, setIsVisible, audioRef
+    isLoading, isVisible, setIsVisible, audioRef, networkStatus
   } = useMusicPlayer(externalId);
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -29,6 +29,7 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   // 跳过 React 调度用的原生操控句柄 (主要在 Mini 版本用)
@@ -54,11 +55,31 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
         analyser.connect(ctx.destination);
 
         audioContextRef.current = ctx;
+        mediaSourceRef.current = source;
         setAnalyserNode(analyser);
       } catch (e) {
         console.warn("AudioContext failed", e);
       }
     }
+
+    // 组件卸载时清理 AudioContext，防止内存泄漏
+    return () => {
+      if (audioContextRef.current) {
+        // 断开 MediaElementSource 连接
+        if (mediaSourceRef.current) {
+          try {
+            mediaSourceRef.current.disconnect();
+            mediaSourceRef.current = null;
+          } catch {
+            // source 可能已断开，忽略
+          }
+        }
+        // 关闭 AudioContext 释放资源
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+        setAnalyserNode(null);
+      }
+    };
   }, [isPlaying]);
 
   // Mini 版频谱轮询（全屏时完全不启动，零开销）
@@ -148,7 +169,8 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
     volume, setVolume, isMuted, setIsMuted, isLoading,
     currentTimeRef, progressBarRef, progressFillRef,
     showPlaylist, setShowPlaylist,
-    stylusState, audioData, analyserNode
+    stylusState, audioData, analyserNode,
+    networkStatus
   };
 
   // ==================
@@ -162,13 +184,16 @@ export function MusicPlayer({ playlistId: externalId }: { playlistId?: string })
 
   return (
     <>
+      {/*
+        禁止在 <audio> 上绑定 onEnded：无缝衔接由 useMusicPlayer 内 addEventListener('ended') 统一处理。
+        若同时 handleNext，会重复切歌并让 React 再次改写 src/load，听感明显「断一截」。
+      */}
       {songs.length > 0 && currentSong && (
-        <audio 
-          ref={audioRef} 
-          src={currentSong.url} 
-          preload="metadata" 
-          crossOrigin="anonymous" 
-          onEnded={handleNext}
+        <audio
+          ref={audioRef}
+          src={currentSong.url}
+          preload="auto"
+          crossOrigin="anonymous"
         />
       )}
 

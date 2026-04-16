@@ -9,11 +9,12 @@ import { MockPaymentModal } from "~/components/payment/MockPaymentModal";
 import { useUser } from "~/hooks/useUser";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
-import { getAllTiers } from "~/services/membership/tier.server";
+import { membershipService } from "~/services/membership/membership.server";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { RECHARGE_PACKAGES } from "~/config/game";
 import { confirmModal } from "~/components/ui/Modal";
 import { toast } from "~/components/ui/Toast";
+import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 
 function isMissingShopSchemaError(e: unknown): boolean {
     const msg = e instanceof Error ? e.message : String(e);
@@ -28,16 +29,33 @@ export async function loader({ request, context }: { request: Request; context: 
     const { valid, user } = await verifySession(token, anime_db);
 
     let shopItems: any[] = [];
-    let tiers: Awaited<ReturnType<typeof getAllTiers>> = [];
+    let tiers: any[] = [];
     let schemaIncomplete = false;
 
     try {
         const [shopItemsRes, tiersRes] = await Promise.all([
             anime_db.prepare("SELECT * FROM shop_items WHERE is_active = 1 ORDER BY id DESC").all(),
-            getAllTiers(anime_db),
+            membershipService.getAllTiers(anime_db),
         ]);
         shopItems = shopItemsRes?.results || [];
-        tiers = tiersRes;
+        // 转换 tiers 为兼容格式
+        tiers = tiersRes.map((t) => ({
+          id: t.tier_id,
+          tier_id: t.tier_id,
+          tier_level: t.tier_level,
+          tier_name: t.tier_name,
+          tier_name_en: t.tier_name_en,
+          name: t.tier_name,
+          display_name: t.tier_name,
+          monthly_price_cents: t.monthly_price_cents,
+          yearly_price_cents: t.yearly_price_cents,
+          price_monthly: t.monthly_price_cents,
+          price_yearly: t.yearly_price_cents,
+          description: t.description,
+          features: JSON.stringify(t.features),
+          color_hex: t.color_hex,
+          badge_color: t.color_hex,
+        }));
     } catch (e) {
         if (isMissingShopSchemaError(e)) {
             schemaIncomplete = true;
@@ -73,14 +91,13 @@ export async function loader({ request, context }: { request: Request; context: 
     } | null = null;
 
     try {
-        const { getUserMembershipTier } = await import("~/services/membership/tier.server");
-        const { tier } = await getUserMembershipTier(anime_db, user.id);
-        if (tier) {
+        const userMembership = await membershipService.getUserMembership(anime_db, user.id);
+        if (userMembership) {
             tierSummary = {
-                name: tier.name,
-                display_name: tier.display_name,
-                badge_color: tier.badge_color,
-                privileges: JSON.parse(tier.privileges || "{}") as Record<string, unknown>,
+                name: userMembership.tier_name,
+                display_name: userMembership.tier_name,
+                badge_color: userMembership.color_hex,
+                privileges: {},
             };
         }
     } catch (e) {
@@ -237,11 +254,22 @@ export default function ShopPage() {
 
     return (
         <>
+            {/* 灵动岛导航 */}
+            <FloatingSubNav
+                title="星尘集市"
+                backUrl="/user/dashboard"
+                rightContent={
+                    <button className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-all active:scale-95">
+                        <ShoppingBag className="w-5 h-5" />
+                    </button>
+                }
+            />
+
             <ClientOnly>
-                {() => <div className="fixed inset-0 z-[-1] bg-black/20 backdrop-blur-3xl" />} 
+                                    {() => <div className="fixed inset-0 z-[-1] bg-slate-900/60 backdrop-blur-xl" />}
             </ClientOnly>
 
-            <div className="w-full h-screen overflow-y-auto pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+7rem)] pb-[calc(env(safe-area-inset-bottom)+8rem)] px-4 md:px-12 flex flex-col gap-8 scroll-smooth">
+            <div className="w-full h-screen overflow-y-auto pt-20 md:pt-24 pb-[calc(env(safe-area-inset-bottom)+8rem)] px-4 md:px-12 flex flex-col gap-8 scroll-smooth">
                 <div className="w-full h-full flex flex-col gap-8">
                     {/* Header & Tabs - iOS 风格净化 */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
@@ -354,7 +382,7 @@ export default function ShopPage() {
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{ delay: index * 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                                                className="group bg-white/[0.02] backdrop-blur-3xl rounded-[32px] p-5 hover:bg-white/[0.06] transition-all duration-500 border border-white/[0.05] hover:border-white/[0.15] hover:shadow-[0_0_40px_rgba(255,255,255,0.05)] hover:-translate-y-1 flex flex-col relative overflow-hidden"
+                                                className="group bg-white/15 backdrop-blur-xl rounded-2xl p-5 hover:bg-white/[0.06] transition-all duration-500 border border-white/20 hover:border-white/[0.15] hover:shadow-[0_0_40px_rgba(255,255,255,0.05)] hover:-translate-y-1 flex flex-col relative overflow-hidden"
                                             >
                                                 {/* 极简角标 */}
                                                 {item.is_featured === 1 && (
@@ -366,7 +394,7 @@ export default function ShopPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="aspect-square rounded-[24px] bg-gradient-to-br from-white/[0.05] to-transparent mb-5 flex items-center justify-center overflow-hidden relative group/img border border-white/[0.02] shadow-[inset_0_1px_rgba(255,255,255,0.1)]">
+                                                <div className="aspect-square rounded-xl bg-gradient-to-br from-white/[0.05] to-transparent mb-5 flex items-center justify-center overflow-hidden relative group/img border border-white/10 shadow-inner">
                                                     {item.image_url ? (
                                                         <OptimizedImage
                                                             src={item.image_url}
@@ -382,13 +410,13 @@ export default function ShopPage() {
                                                 </div>
 
                                                 <div className="mb-3">
-                                                    <span className="text-[11px] font-bold text-white/50 uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                                                    <span className="text-[11px] font-bold text-white/80 uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20">
                                                         {CATEGORY_MAP[item.type] || item.type}
                                                     </span>
                                                 </div>
 
                                                 <h3 className="font-bold text-white text-base mb-2 line-clamp-1">{item.name}</h3>
-                                                <p className="text-[13px] text-white/40 mb-6 line-clamp-2 flex-1 leading-relaxed">{item.description}</p>
+                                                <p className="text-[13px] text-white/60 mb-6 line-clamp-2 flex-1 leading-relaxed">{item.description}</p>
 
                                                 <button
                                                     onClick={() => handlePurchase(item, "goods")}
@@ -424,18 +452,18 @@ export default function ShopPage() {
                                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                                 >
                                     {loaderData.rechargePackages.map((pkg: any, index: number) => (
-                                        <div key={pkg.id} className="group bg-white/[0.02] border border-white/5 hover:border-white/30 backdrop-blur-2xl rounded-[36px] p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(255,255,255,0.05)] hover:-translate-y-2 flex flex-col items-center text-center relative overflow-hidden">
+                                        <div key={pkg.id} className="group bg-white/15 border border-white/20 hover:border-white/30 backdrop-blur-xl rounded-2xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(255,255,255,0.05)] hover:-translate-y-2 flex flex-col items-center text-center relative overflow-hidden">
                                             {/* Ambient Glow */}
                                             <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                                             {/* 钛金质感极简 Tag */}
                                             {pkg.tag && (
-                                                <div className="absolute top-5 right-5 text-[10px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full z-10 bg-white/10 backdrop-blur-md text-white border border-white/20 shadow-xl">
+                                                <div className="absolute top-5 right-5 text-[10px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full z-10 bg-white/20 backdrop-blur-xl text-white border border-white/30 shadow-xl">
                                                     {pkg.tag}
                                                 </div>
                                             )}
                                             
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md flex items-center justify-center mb-6 text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all duration-500 ease-out border border-white/10 shadow-[inset_0_1px_rgba(255,255,255,0.2)] relative z-10">
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md flex items-center justify-center mb-6 text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all duration-500 ease-out border border-white/20 shadow-inner relative z-10">
                                                 <Zap size={24} strokeWidth={1.5} />
                                             </div>
                                             <h3 className="text-4xl font-sans font-black tracking-tight text-white mb-2 relative z-10">{pkg.coins}</h3>
@@ -443,12 +471,12 @@ export default function ShopPage() {
                                             {pkg.bonus > 0 ? (
                                                 <p className="text-[13px] text-emerald-400 mb-8 font-bold bg-emerald-400/10 border border-emerald-400/20 px-3 py-1 rounded-full relative z-10">+ {pkg.bonus} 额外星尘</p>
                                             ) : (
-                                                <p className="text-[13px] text-white/30 mb-8 font-medium px-3 py-1 relative z-10">基础包</p>
+                                                <p className="text-[13px] text-white/90 mb-8 font-medium px-3 py-1 relative z-10">基础包</p>
                                             )}
                                             
                                             <button
                                                 onClick={() => handlePurchase(pkg, "recharge")}
-                                                className="w-full py-4 bg-white/10 hover:bg-white text-white hover:text-black rounded-full font-bold text-[15px] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] border border-white/10 relative z-10"
+                                                className="w-full py-4 bg-white/10 hover:bg-white text-white hover:text-black rounded-full font-bold text-[15px] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] border border-white/20 relative z-10"
                                             >
                                                 {pkg.label}
                                             </button>
@@ -457,7 +485,7 @@ export default function ShopPage() {
                                 </motion.div>
                             )}
 
-                            {/* MEMBERSHIP TAB */}
+                            {/* MEMBERSHIP TAB - 新四级会员体系 */}
                             {activeTab === "membership" && (
                                 <motion.div
                                     key="membership"
@@ -465,73 +493,213 @@ export default function ShopPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -20 }}
                                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                                    className="grid grid-cols-1 lg:grid-cols-2 lg:max-w-4xl mx-auto gap-8"
                                 >
-                                    {loaderData.tiers.filter((t: any) => t.name !== 'free').map((tier: any) => (
-                                        <div key={tier.id} className={`
-                                            relative rounded-[40px] p-10 flex flex-col transition-all duration-500 overflow-hidden
-                                            ${tier.name === 'svip'
-                                                ? "bg-gradient-to-br from-amber-100 via-yellow-400 to-amber-600 text-black scale-100 lg:scale-[1.02] shadow-[0_0_80px_rgba(251,191,36,0.15)] z-10 border border-white/40"
-                                                : "bg-white/[0.02] backdrop-blur-2xl text-white border border-white/[0.05] hover:border-white/20 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]"
-                                            }
-                                        `}>
-                                            {/* Volumetric light injection for SVIP */}
-                                            {tier.name === 'svip' && (
-                                                <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-transparent opacity-60 pointer-events-none" />
-                                            )}
+                                    {/* 页面标题 */}
+                                    <div className="text-center mb-8">
+                                        <h3 className="text-2xl font-bold text-white mb-2">星际会员</h3>
+                                        <p className="text-white/60">选择最适合您的会员等级</p>
+                                    </div>
 
-                                            {tier.name === 'svip' && (
-                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-amber-400 text-[11px] font-black tracking-widest px-6 py-2 rounded-full uppercase shadow-xl border border-amber-500/30 z-20">
-                                                    典藏版 SVIP
-                                                </div>
-                                            )}
+                                    {/* 会员等级卡片网格 */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {loaderData.tiers
+                                            .sort((a: any, b: any) => (a.tier_level ?? a.sort_order ?? 0) - (b.tier_level ?? b.sort_order ?? 0))
+                                            .map((tier: any) => {
+                                                const tierLevel = tier.tier_level ?? tier.sort_order ?? 0;
+                                                const tierName = tier.tier_name ?? tier.display_name ?? tier.name ?? "";
+                                                const tierNameEn = tier.tier_name_en ?? "";
+                                                const monthlyPrice = tier.monthly_price_cents ?? tier.price_monthly ?? 0;
+                                                const yearlyPrice = tier.yearly_price_cents ?? tier.price_yearly ?? 0;
+                                                const description = tier.description ?? "";
+                                                const colorHex = tier.color_hex ?? tier.badge_color ?? "#6B7280";
 
-                                            <div className="text-center mb-10 relative z-10">
-                                                <h3 className={`text-2xl font-black tracking-tight mb-4 ${tier.name === 'svip' ? "text-black drop-shadow-sm" : "text-white"}`}>
-                                                    {tier.display_name}
-                                                </h3>
-                                                <div className="flex items-baseline justify-center gap-1">
-                                                    <span className="text-2xl font-bold opacity-70">¥</span>
-                                                    <span className="text-6xl font-sans font-black tracking-tighter drop-shadow-sm">{(tier.price_monthly / 100).toFixed(0)}</span>
-                                                    <span className={`text-base font-bold ${tier.name === 'svip' ? "text-black/60" : "text-white/40"}`}>/mo</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-5 flex-1 mb-10 relative z-10">
-                                                <div className="flex items-center gap-4 text-[15px] font-bold opacity-90">
-                                                    <CheckCircle size={20} strokeWidth={2} className={tier.name === 'svip' ? "text-black" : "text-white"} />
-                                                    <span>{tier.name === 'svip' ? "无限次" : "50次"} AI 对话额度</span>
-                                                </div>
-                                                <div className="flex items-center gap-4 text-[15px] font-bold opacity-90">
-                                                    <CheckCircle size={20} strokeWidth={2} className={tier.name === 'svip' ? "text-black" : "text-white"} />
-                                                    <span>{tier.name === 'svip' ? "2.0x" : "1.5x"} 全局积分加成</span>
-                                                </div>
-                                                <div className="flex items-center gap-4 text-[15px] font-bold opacity-90">
-                                                    <CheckCircle size={20} strokeWidth={2} className={tier.name === 'svip' ? "text-black" : "text-white"} />
-                                                    <span>稀有身份徽章展示</span>
-                                                </div>
-                                                {tier.name === 'svip' && (
-                                                    <div className="flex items-center gap-4 text-[15px] font-bold opacity-90">
-                                                        <CheckCircle size={20} strokeWidth={2} className="text-black" />
-                                                        <span>优先技术支持与尊享特权</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <button
-                                                onClick={() => handlePurchase(tier, "membership")}
-                                                className={`
-                                                    w-full py-4 rounded-full font-black text-[16px] transition-all duration-300 relative z-10
-                                                    ${tier.name === 'svip'
-                                                        ? "bg-black text-amber-400 hover:bg-black/90 shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
-                                                        : "bg-white/10 text-white hover:bg-white hover:text-black border border-white/20 hover:border-transparent hover:scale-[1.02] active:scale-[0.98]"
+                                                // 解析 features
+                                                let features: string[] = [];
+                                                if (tier.features) {
+                                                    try {
+                                                        features = JSON.parse(tier.features);
+                                                    } catch {
+                                                        if (typeof tier.features === "string" && tier.features.includes(",")) {
+                                                            features = tier.features.split(",");
+                                                        }
                                                     }
-                                                `}
-                                            >
-                                                立即订阅
-                                            </button>
+                                                } else if (tier.privileges) {
+                                                    try {
+                                                        const privs = JSON.parse(tier.privileges);
+                                                        features = Object.entries(privs)
+                                                            .filter(([_, v]) => v !== false && v !== 0)
+                                                            .map(([k]) => k);
+                                                    } catch {
+                                                        features = [];
+                                                    }
+                                                }
+
+                                                const isPopular = tierLevel === 2;
+                                                const isFree = tierLevel === 0 || tierName === "free";
+
+                                                // 获取等级图标
+                                                const icons = [Star, Moon, Zap, Crown];
+                                                const Icon = icons[tierLevel] || Star;
+
+                                                return (
+                                                    <div
+                                                        key={tier.id ?? tier.tier_id}
+                                                        className={`
+                                                            relative rounded-2xl backdrop-blur-xl border transition-all duration-300 overflow-hidden
+                                                            ${isPopular
+                                                                ? `bg-gradient-to-b from-blue-500/20 to-purple-500/10 border-yellow-500/40 scale-105 shadow-[0_0_40px_rgba(245,158,11,0.15)] z-10`
+                                                                : isFree
+                                                                    ? "bg-white/5 border-white/10"
+                                                                    : "bg-white/10 border-white/20 hover:border-white/30"
+                                                            }
+                                                        `}
+                                                    >
+                                                        {/* 推荐标记 */}
+                                                        {isPopular && (
+                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full text-xs font-bold text-black shadow-lg z-20">
+                                                                推荐
+                                                            </div>
+                                                        )}
+
+                                                        {/* 等级图标 */}
+                                                        <div className="flex justify-center pt-8 pb-4">
+                                                            <div
+                                                                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                                                                style={{ backgroundColor: `${colorHex}20` }}
+                                                            >
+                                                                <Icon size={32} style={{ color: colorHex }} />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 等级名称 */}
+                                                        <div className="text-center mb-4 px-4">
+                                                            <h4 className="text-xl font-bold text-white mb-1">{tierName}</h4>
+                                                            {tierNameEn && (
+                                                                <p className="text-sm text-white/50">{tierNameEn}</p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* 价格 */}
+                                                        <div className="text-center mb-4 px-4">
+                                                            {isFree ? (
+                                                                <div className="text-2xl font-bold text-white">免费</div>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="flex items-baseline justify-center gap-1">
+                                                                        <span className="text-2xl font-bold text-white">¥{(monthlyPrice / 100).toFixed(0)}</span>
+                                                                        <span className="text-white/60">/月</span>
+                                                                    </div>
+                                                                    {yearlyPrice > 0 && (
+                                                                        <p className="text-xs text-white/40 mt-1">
+                                                                            或 ¥{(yearlyPrice / 100).toFixed(0)}/年
+                                                                        </p>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+
+                                                        {/* 简介 */}
+                                                        {description && (
+                                                            <p className="text-sm text-white/70 text-center mb-4 px-4">
+                                                                {description}
+                                                            </p>
+                                                        )}
+
+                                                        {/* 功能列表 */}
+                                                        {features.length > 0 && (
+                                                            <ul className="space-y-2 mb-6 px-4 text-sm">
+                                                                {features.slice(0, 4).map((feature: string, idx: number) => (
+                                                                    <li key={idx} className="flex items-start gap-2">
+                                                                        <CheckCircle
+                                                                            size={16}
+                                                                            className="mt-0.5 flex-shrink-0"
+                                                                            style={{ color: colorHex }}
+                                                                        />
+                                                                        <span className="text-white/80">{feature}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        )}
+
+                                                        {/* 操作按钮 */}
+                                                        <div className="px-4 pb-6">
+                                                            <button
+                                                                onClick={() => handlePurchase({ ...tier, type: "membership" }, "membership")}
+                                                                className={`
+                                                                    w-full py-3 rounded-xl font-bold transition-all duration-300
+                                                                    ${isFree
+                                                                        ? "bg-white/10 text-white/60 hover:bg-white/15 cursor-default"
+                                                                        : `text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]`
+                                                                    }
+                                                                `}
+                                                                style={
+                                                                    !isFree
+                                                                        ? { background: `linear-gradient(to right, ${colorHex}, ${colorHex}cc)` }
+                                                                        : undefined
+                                                                }
+                                                            >
+                                                                {isFree ? "免费体验" : "立即订阅"}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+
+                                    {/* 会员特权对比 */}
+                                    <div className="mt-12 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+                                        <h4 className="text-lg font-bold text-white mb-4 text-center">会员特权对比</h4>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b border-white/10">
+                                                        <th className="text-left py-3 px-4 text-white/60 font-medium">特权</th>
+                                                        <th className="text-center py-3 px-4 text-white/60 font-medium">旅行者</th>
+                                                        <th className="text-center py-3 px-4 text-purple-400 font-medium">月之子</th>
+                                                        <th className="text-center py-3 px-4 text-blue-400 font-medium">星之守护者</th>
+                                                        <th className="text-center py-3 px-4 text-yellow-400 font-medium">银河领主</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr className="border-b border-white/5">
+                                                        <td className="py-3 px-4 text-white/80">无广告</td>
+                                                        <td className="py-3 px-4 text-center text-white/40">—</td>
+                                                        <td className="py-3 px-4 text-center"><CheckCircle size={16} className="inline text-green-400" /></td>
+                                                        <td className="py-3 px-4 text-center"><CheckCircle size={16} className="inline text-green-400" /></td>
+                                                        <td className="py-3 px-4 text-center"><CheckCircle size={16} className="inline text-green-400" /></td>
+                                                    </tr>
+                                                    <tr className="border-b border-white/5">
+                                                        <td className="py-3 px-4 text-white/80">云端收藏夹</td>
+                                                        <td className="py-3 px-4 text-center text-white/40">50条</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">200条</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">500条</td>
+                                                        <td className="py-3 px-4 text-center text-yellow-400">无限</td>
+                                                    </tr>
+                                                    <tr className="border-b border-white/5">
+                                                        <td className="py-3 px-4 text-white/80">星尘倍率</td>
+                                                        <td className="py-3 px-4 text-center text-white/40">1x</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">2x</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">3x</td>
+                                                        <td className="py-3 px-4 text-center text-yellow-400">5x</td>
+                                                    </tr>
+                                                    <tr className="border-b border-white/5">
+                                                        <td className="py-3 px-4 text-white/80">付费内容</td>
+                                                        <td className="py-3 px-4 text-center text-white/40">—</td>
+                                                        <td className="py-3 px-4 text-center text-white/40">—</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">抢先看</td>
+                                                        <td className="py-3 px-4 text-center text-yellow-400">完全解锁</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="py-3 px-4 text-white/80">专属头像框</td>
+                                                        <td className="py-3 px-4 text-center text-white/40">—</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">基础</td>
+                                                        <td className="py-3 px-4 text-center text-white/80">高级</td>
+                                                        <td className="py-3 px-4 text-center text-yellow-400">限定</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                    ))}
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -551,7 +719,7 @@ export default function ShopPage() {
                             onClick={() => setPaymentModalOpen(false)}
                         />
                         <motion.div
-                            className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 w-full max-w-sm relative z-10 shadow-[0_0_100px_rgba(255,255,255,0.05)] overflow-hidden"
+                            className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-3xl p-8 w-full max-w-sm relative z-10 shadow-[0_0_100px_rgba(255,255,255,0.05)] overflow-hidden"
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -567,7 +735,7 @@ export default function ShopPage() {
                             {paymentStep === "confirm" && selectedItem && (
                                 <div className="space-y-8 relative z-10">
                                     <div className="flex flex-col items-center gap-4 text-center">
-                                        <div className="w-24 h-24 bg-white/5 backdrop-blur-md rounded-[24px] flex items-center justify-center overflow-hidden border border-white/10 shadow-inner">
+                                        <div className="w-24 h-24 bg-white/5 backdrop-blur-md rounded-xl flex items-center justify-center overflow-hidden border border-white/10 shadow-inner">
                                             {selectedItem.image_url ? (
                                                 <OptimizedImage src={selectedItem.image_url} alt={selectedItem.name} className="w-[75%] h-[75%] object-contain drop-shadow-2xl" />
                                             ) : (

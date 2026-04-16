@@ -174,20 +174,31 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 
 -- ================================================
--- 初始数据
+-- 会员等级初始化
+-- 四级会员体系：旅行者、月之子、星之守护者、银河领主
 -- ================================================
 
--- 会员等级初始化
+-- 清空现有数据并重新插入
+DELETE FROM membership_tiers;
+
+-- 会员等级数据（兼容现有代码的 privileges JSON 格式）
 INSERT INTO membership_tiers (name, display_name, description, price_monthly, price_quarterly, price_yearly, privileges, badge_color, sort_order) VALUES
-('free', '普通用户', '基础功能', 0, 0, 0, 
- '{"maxAnimes":20,"maxGalleryPerDay":50,"aiChatPerDay":3,"coinMultiplier":1,"adFree":false,"download":false,"customTheme":false,"exclusiveEmoji":false,"exclusiveEffect":false,"earlyAccess":false,"prioritySupport":false}',
- NULL, 0),
-('vip', 'VIP会员', '解锁更多功能', 1990, 4990, 16800,
- '{"maxAnimes":-1,"maxGalleryPerDay":-1,"aiChatPerDay":50,"coinMultiplier":1.5,"adFree":true,"download":true,"customTheme":true,"exclusiveEmoji":true,"exclusiveEffect":false,"earlyAccess":false,"prioritySupport":false,"badge":"vip"}',
- '#FFD700', 1),
-('svip', 'SVIP会员', '尊享全部特权', 3990, 9990, 29900,
- '{"maxAnimes":-1,"maxGalleryPerDay":-1,"aiChatPerDay":-1,"coinMultiplier":2,"adFree":true,"download":true,"customTheme":true,"exclusiveEmoji":true,"exclusiveEffect":true,"earlyAccess":true,"prioritySupport":true,"badge":"svip"}',
- '#E5C100', 2);
+-- Lv0 旅行者（免费）
+('traveler', '旅行者', '探索这个星际世界的免费旅者', 0, 0, 0, 
+ '{"maxAnimes":20,"maxGalleryPerDay":50,"aiChatPerDay":3,"coinMultiplier":1,"adFree":false,"download":false,"customTheme":false,"exclusiveEmoji":false,"exclusiveEffect":false,"earlyAccess":false,"prioritySupport":false,"exclusiveBadge":false,"missionBonus":0}',
+ '#6B7280', 0),
+-- Lv1 月之子
+('moonchild', '月之子', '沐浴月光之力的守护者', 990, 2490, 9900,
+ '{"maxAnimes":100,"maxGalleryPerDay":200,"aiChatPerDay":20,"coinMultiplier":2,"adFree":true,"download":true,"customTheme":false,"exclusiveEmoji":false,"exclusiveEffect":false,"earlyAccess":false,"prioritySupport":false,"exclusiveBadge":true,"missionBonus":100}',
+ '#8B5CF6', 1),
+-- Lv2 星之守护者
+('star-guardian', '星之守护者', '守护星辰的勇敢战士', 2990, 7990, 29900,
+ '{"maxAnimes":-1,"maxGalleryPerDay":-1,"aiChatPerDay":100,"coinMultiplier":3,"adFree":true,"download":true,"customTheme":true,"exclusiveEmoji":true,"exclusiveEffect":true,"earlyAccess":true,"prioritySupport":false,"exclusiveBadge":true,"missionBonus":200}',
+ '#3B82F6', 2),
+-- Lv3 银河领主
+('galaxy-lord', '银河领主', '统治银河的至高存在', 4990, 12990, 49900,
+ '{"maxAnimes":-1,"maxGalleryPerDay":-1,"aiChatPerDay":-1,"coinMultiplier":5,"adFree":true,"download":true,"customTheme":true,"exclusiveEmoji":true,"exclusiveEffect":true,"earlyAccess":true,"prioritySupport":true,"exclusiveBadge":true,"missionBonus":400}',
+ '#F59E0B', 3);
 
 -- 示例商城商品
 INSERT INTO shop_items (name, description, type, price_coins, image_url, is_active, is_featured) VALUES

@@ -20,3 +20,4 @@ worker-configuration.d.ts
 
 # Wrangler 私有配置 (包含真实 ID)
 wrangler.toml
+wrangler.jsonc

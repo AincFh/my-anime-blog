@@ -77,7 +77,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="block w-full pl-5 pr-[110px] py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                        className="block w-full pl-5 pr-[110px] py-[18px] bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20 focus:border-white/30 rounded-xl text-[15px] font-medium text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300 disabled:opacity-50"
                         placeholder="电子邮箱"
                         disabled={step !== "email" && step !== "verify"}
                     />
@@ -86,13 +86,13 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                             type="button"
                             onClick={handleSendCode}
                             disabled={isLoading || !formData.email}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-bold rounded-[14px] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-3 bg-white/20 backdrop-blur-xl border border-white/10 text-white text-[13px] font-bold rounded-lg hover:bg-white/30 hover:border-white/20 active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all"
                         >
                             {isLoading ? <Loader2 className="animate-spin" size={16} /> : "获取验证码"}
                         </button>
                     )}
                     {step !== "email" && countdown > 0 && (
-                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[14px] text-slate-500 font-mono font-bold">
+                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[14px] text-white/60 font-mono font-bold">
                             {countdown}s
                         </span>
                     )}
@@ -100,7 +100,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         <button
                             type="button"
                             onClick={handleSendCode}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-slate-900 dark:text-white font-bold hover:underline"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-amber-400/80 hover:text-amber-400 font-bold transition-colors"
                         >
                             重新发送
                         </button>
@@ -122,7 +122,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                                 inputMode="numeric"
                                 value={formData.code}
                                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                                className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[18px] text-center font-mono font-bold tracking-[0.2em] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                                className="block w-full px-5 py-[18px] bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20 focus:border-white/30 rounded-xl text-[18px] text-center font-mono font-bold tracking-[0.2em] text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300 disabled:opacity-50"
                                 placeholder="000000"
                                 maxLength={6}
                             />
@@ -134,7 +134,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                                     type="password"
                                     value={formData.newPassword}
                                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                                    className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                                    className="block w-full px-5 py-[18px] bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20 focus:border-white/30 rounded-xl text-[15px] font-medium text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300 disabled:opacity-50"
                                     placeholder="新密码 (最少 6 位)"
                                 />
                             </div>
@@ -146,7 +146,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                                     type="password"
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                    className="block w-full px-5 py-[18px] bg-slate-100 dark:bg-[#2C2C2E] border border-transparent rounded-[18px] text-[15px] font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-300/30 dark:focus:ring-white/10 transition-all duration-300 disabled:opacity-50"
+                                    className="block w-full px-5 py-[18px] bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20 focus:border-white/30 rounded-xl text-[15px] font-medium text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300 disabled:opacity-50"
                                     placeholder="确认新密码"
                                 />
                             </div>
@@ -163,7 +163,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-[18px] text-[16px] font-black tracking-wide text-white bg-slate-900 dark:text-black dark:bg-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
+                            className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-xl text-[16px] font-black tracking-wide text-white bg-gradient-to-r from-amber-400 to-amber-500 hover:shadow-lg hover:shadow-amber-400/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
                             {isLoading ? <Loader2 className="animate-spin" size={20} /> : "重置密码"}
                             {!isLoading && <ArrowRight size={20} />}
@@ -178,7 +178,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-[16px] flex items-center gap-3 text-[14px] font-bold mt-2"
+                        className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-5 py-4 rounded-xl flex items-center gap-3 text-[14px] font-bold mt-2"
                     >
                         <AlertCircle size={18} className="flex-shrink-0" />
                         {error || localError}

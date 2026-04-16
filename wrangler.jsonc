@@ -36,14 +36,14 @@
 	"kv_namespaces": [
 		{
 			"binding": "CACHE_KV",
-			"id": "REPLACE_WITH_YOUR_KV_ID"
+			"id": ""  // TODO: 替换为实际的 KV ID (wrangler secret put CACHE_KV_ID)
 		}
 	],
 	"r2_buckets": [
 		{
 			"binding": "IMAGES_BUCKET",
-			// ⚠️ 替换为你的 R2 存储桶名称
-			"bucket_name": "your-r2-bucket-placeholder"
+			// TODO: 替换为实际的 R2 bucket 名称 (wrangler secret put R2_BUCKET_NAME)
+			"bucket_name": ""
 		}
 	],
 	"ai": {
@@ -52,7 +52,7 @@
 	"analytics_engine_datasets": [
 		{
 			"binding": "ANALYTICS",
-			"dataset": "REPLACE_WITH_YOUR_DATASET_NAME"
+			"dataset": ""  // TODO: 替换为实际的 dataset 名称
 		}
 	],
 	"triggers": {

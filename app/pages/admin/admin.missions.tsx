@@ -186,7 +186,7 @@ export default function AdminMissions() {
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="w-full max-w-2xl bg-[#1e293b] border border-white/10 rounded-[32px] p-8 relative z-10 shadow-2xl"
+                            className="w-full max-w-2xl bg-[#1e293b] border border-white/10 rounded-2xl p-8 relative z-10 shadow-2xl"
                         >
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-bold text-white flex items-center gap-3">

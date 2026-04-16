@@ -32,6 +32,23 @@ export async function action({ request, context }: Route.ActionArgs) {
     const env = (context as any).cloudflare.env;
     const { anime_db } = env;
 
+    // 验证管理员权限
+    const { getSessionId, verifySession } = await import("~/utils/auth");
+    const sessionId = getSessionId(request);
+    
+    if (!sessionId) {
+        return Response.json({ error: "请先登录" }, { status: 401 });
+    }
+    
+    const session = await verifySession(sessionId, anime_db);
+    if (!session.valid || !session.user) {
+        return Response.json({ error: "会话已过期" }, { status: 401 });
+    }
+    
+    if (session.user.role !== "admin") {
+        return Response.json({ error: "需要管理员权限" }, { status: 403 });
+    }
+
     try {
         const formData = await request.formData();
         const method = request.method;
@@ -56,7 +73,10 @@ export async function action({ request, context }: Route.ActionArgs) {
             return Response.json({ success: true });
         } else if (method === "PUT") {
             // 更新番剧记录
-            const id = formData.get("id") as string;
+            const id = parseInt(formData.get("id") as string);
+            if (isNaN(id)) {
+                return Response.json({ error: "无效的ID" }, { status: 400 });
+            }
             const title = formData.get("title") as string;
             const cover_url = formData.get("cover_url") as string;
             const status = formData.get("status") as string;
@@ -76,7 +96,10 @@ export async function action({ request, context }: Route.ActionArgs) {
             return Response.json({ success: true });
         } else if (method === "DELETE") {
             // 删除番剧记录
-            const id = formData.get("id") as string;
+            const id = parseInt(formData.get("id") as string);
+            if (isNaN(id)) {
+                return Response.json({ error: "无效的ID" }, { status: 400 });
+            }
 
             await anime_db
                 .prepare(`DELETE FROM animes WHERE id = ?`)

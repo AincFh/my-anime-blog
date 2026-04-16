@@ -246,7 +246,7 @@ export default function UserInventory() {
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                className="bg-black/40 backdrop-blur-3xl border border-white/10 p-6 md:p-8 flex flex-col rounded-[32px] md:sticky md:top-32"
+                                className="bg-black/40 backdrop-blur-3xl border border-white/10 p-6 md:p-8 flex flex-col rounded-2xl md:sticky md:top-32"
                             >
                                 <div className="aspect-square bg-gradient-to-br from-white/5 to-white/[0.02] rounded-3xl border border-white/10 flex items-center justify-center mb-8 relative overflow-hidden group">
                                     <div className="absolute inset-0 bg-grid-white/[0.02] [mask-image:radial-gradient(white,transparent_85%)]" />
@@ -322,7 +322,7 @@ export default function UserInventory() {
                                 </div>
                             </motion.div>
                         ) : (
-                            <div className="hidden md:flex flex-col items-center justify-center p-12 border border-dashed border-white/10 rounded-[32px] text-white/20 bg-white/[0.01]">
+                            <div className="hidden md:flex flex-col items-center justify-center p-12 border border-dashed border-white/10 rounded-2xl text-white/20 bg-white/[0.01]">
                                 <div className="w-12 h-12 rounded-full border border-current flex items-center justify-center mb-4 opacity-30">
                                     <Filter size={20} />
                                 </div>

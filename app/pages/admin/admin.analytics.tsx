@@ -98,7 +98,7 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 文章浏览量 TOP 10 */}
         <motion.div
-          className="lg:col-span-8 bg-[#0f1629]/80 backdrop-blur-xl border border-white/5 rounded-[32px] p-8 shadow-xl"
+          className="lg:col-span-8 bg-[#0f1629]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-xl"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -145,7 +145,7 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
         <div className="lg:col-span-4 space-y-6">
           {/* 评论健康度 */}
           <motion.div
-            className="bg-[#0f1629]/80 backdrop-blur-xl border border-white/5 rounded-[32px] p-8 shadow-xl"
+            className="bg-[#0f1629]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-xl"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -167,7 +167,7 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
 
           {/* 用户增长 */}
           <motion.div
-            className="bg-[#0f1629]/80 backdrop-blur-xl border border-white/5 rounded-[32px] p-8 shadow-xl"
+            className="bg-[#0f1629]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-xl"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}

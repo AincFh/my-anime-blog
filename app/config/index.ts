@@ -4,7 +4,6 @@
 
 // 认证与安全配置
 export const SECURITY_CONFIG = {
-    csrfSecret: typeof process !== 'undefined' ? process.env.CSRF_SECRET : undefined,
     turnstileLevel: 'strict',
     fingerprintSalt: 'aincrad_sword_art_online',
 };

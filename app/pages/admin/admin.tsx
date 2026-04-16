@@ -231,7 +231,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                   )}
 
                   {/* Comments Monitor */}
-                  <div className="col-span-1 lg:col-span-8 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-[40px] p-8 lg:p-10 shadow-2xl relative overflow-hidden group">
+                  <div className="col-span-1 lg:col-span-8 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-8 lg:p-10 shadow-2xl relative overflow-hidden group">
                     <h2 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
                       <span className="w-2 h-6 bg-gradient-to-b from-blue-400 to-indigo-600 rounded-full" />
                       待审评论监控
@@ -257,7 +257,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                   </div>
 
                   {/* Anime Quick Update */}
-                  <div className="col-span-1 lg:col-span-4 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-[40px] p-8 lg:p-10 shadow-2xl relative overflow-hidden group">
+                  <div className="col-span-1 lg:col-span-4 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-8 lg:p-10 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 blur-[80px] rounded-full mix-blend-screen pointer-events-none" />
                     <h2 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
                       <span className="w-2 h-6 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full" />
@@ -285,7 +285,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                   </div>
 
                   {/* Fast Access Grid */}
-                  <div className="col-span-1 md:col-span-12 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-[40px] p-8 lg:p-10 shadow-2xl flex flex-col">
+                  <div className="col-span-1 md:col-span-12 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-8 lg:p-10 shadow-2xl flex flex-col">
                     <h2 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
                       <span className="w-2 h-6 bg-gradient-to-b from-amber-400 to-orange-600 rounded-full" />
                       核心管理枢纽
@@ -303,23 +303,23 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                   </div>
 
                   {/* System Operational Stats */}
-                  <div className="col-span-1 md:col-span-12 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-[40px] p-8 lg:p-10 shadow-2xl flex flex-col">
+                  <div className="col-span-1 md:col-span-12 bg-[#0a0e1a]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-8 lg:p-10 shadow-2xl flex flex-col">
                     <h2 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
                       <span className="w-2 h-6 bg-gradient-to-b from-fuchsia-400 to-pink-600 rounded-full" />
                       全局同步快照
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                      <div className="p-8 rounded-[32px] bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:bg-white/10 transition-all group">
+                      <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:bg-white/10 transition-all group">
                         <FileText size={24} className="text-violet-400 mb-2 group-hover:scale-110 transition-transform" />
                         <p className="text-[10px] font-black uppercase tracking-widest text-white/30">已发布文章</p>
                         <p className="text-4xl font-black text-white font-orbitron">{stats.articles}</p>
                       </div>
-                      <div className="p-8 rounded-[32px] bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:bg-white/10 transition-all group">
+                      <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:bg-white/10 transition-all group">
                         <MessageSquare size={24} className="text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
                         <p className="text-[10px] font-black uppercase tracking-widest text-white/30">总累积评论</p>
                         <p className="text-4xl font-black text-white font-orbitron">{stats.comments}</p>
                       </div>
-                      <div className="p-8 rounded-[32px] bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:bg-white/10 transition-all group">
+                      <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center text-center gap-3 hover:bg-white/10 transition-all group">
                         <BarChart3 size={24} className="text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
                         <p className="text-[10px] font-black uppercase tracking-widest text-white/30">流量总点击</p>
                         <p className="text-4xl font-black text-white font-orbitron">{displayStats.pv}</p>
@@ -424,7 +424,7 @@ function StatCard({ title, value, color, icon, trend, trendUp }: {
   trendUp?: boolean;
 }) {
   return (
-    <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 rounded-[32px] p-6 lg:p-8 flex flex-col justify-between hover:bg-[#1e293b]/60 hover:border-white/10 transition-all relative overflow-hidden group shadow-2xl">
+    <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6 lg:p-8 flex flex-col justify-between hover:bg-[#1e293b]/60 hover:border-white/10 transition-all relative overflow-hidden group shadow-2xl">
       <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${color.replace('bg-', 'from-').replace('-500', '-500/10')} to-transparent rounded-bl-[100px] -mr-8 -mt-8 transition-transform duration-700 group-hover:scale-110`} />
 
       <div className="flex items-center justify-between mb-8 relative z-10">

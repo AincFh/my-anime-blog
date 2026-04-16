@@ -40,7 +40,7 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
         <div className="mt-12 py-8 px-6 rounded-3xl bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                 <MessageSquare size={20} className="text-primary-start" />
-                评论区
+                最新评论
                 <span className="text-sm font-normal ml-2" style={{ color: 'var(--text-secondary)' }}>
                     ({initialComments.length})
                 </span>

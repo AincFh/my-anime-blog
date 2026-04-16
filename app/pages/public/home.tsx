@@ -209,7 +209,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           className="lg:w-2/5 w-full max-w-2xl mx-auto relative group"
         >
           {/* 玻璃态框架 */}
-          <div className="relative rounded-[32px] md:rounded-[40px] overflow-hidden shadow-2xl shadow-primary-start/10 dark:shadow-none border border-white/50 dark:border-white/10 backdrop-blur-xl bg-white/30 dark:bg-slate-800/30 group-hover:shadow-[0_25px_70px_-15px_rgba(255,159,67,0.2)] transition-all duration-700">
+          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl shadow-primary-start/10 dark:shadow-none border border-white/50 dark:border-white/10 backdrop-blur-xl bg-white/30 dark:bg-slate-800/30 group-hover:shadow-[0_25px_70px_-15px_rgba(255,159,67,0.2)] transition-all duration-700">
             {/* 图片容器 */}
             <div className="relative aspect-[4/3] w-full">
               <OptimizedImage
@@ -269,7 +269,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               transition={{ delay: 0.2 + index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
               <Link to={`/articles/${article.slug}`} className="block h-full group">
-                <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900/40 rounded-[28px] md:rounded-[32px] overflow-hidden border border-slate-200/50 dark:border-white/5 transition-all duration-500 hover:shadow-xl hover:shadow-slate-200 dark:hover:shadow-none dark:hover:border-white/10">
+                <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900/40 rounded-2xl md:rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 transition-all duration-500 hover:shadow-xl hover:shadow-slate-200 dark:hover:shadow-none dark:hover:border-white/10">
                   {/* 极简无界封面 */}
                   {article.cover_image && (
                     <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800">

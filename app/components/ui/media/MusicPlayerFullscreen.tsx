@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, SkipBack, SkipForward, ListMusic, X, Volume2, VolumeX, Minimize2, Repeat, Shuffle, List } from "lucide-react";
 import { PreloadLazyImage } from "./MusicPlayerMini";
@@ -37,6 +37,7 @@ export interface MusicPlayerFullscreenProps {
   analyserNode: AnalyserNode | null;
   onClose: () => void;
   onMinimize: () => void;
+  networkStatus?: 'idle' | 'slow' | 'error';
 }
 
 export function MusicPlayerFullscreen({
@@ -50,7 +51,8 @@ export function MusicPlayerFullscreen({
   currentLyrics, activeLyricIndex, stylusState,
   analyserNode,
   onClose,
-  onMinimize
+  onMinimize,
+  networkStatus = 'idle'
 }: MusicPlayerFullscreenProps) {
 
   const formatTime = (time: number) => {
@@ -94,7 +96,7 @@ export function MusicPlayerFullscreen({
     smoothOverall: 0,
   });
   const [dominantColor, setDominantColor] = useState<[number, number, number]>([255, 122, 0]);
-  const svgIds = React.useId().replace(/:/g, "");
+  const svgIds = useId().replace(/:/g, "");
 
   useEffect(() => {
     if (!currentSong?.pic) return;
@@ -310,18 +312,18 @@ export function MusicPlayerFullscreen({
       )}
 
       {/* 顶部控制岛 */}
-      <div className="fixed top-12 left-12 z-[100] flex items-center gap-4 bg-white/[0.08] backdrop-blur-md px-6 py-3 rounded-[2rem] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] transition-colors pointer-events-auto">
+      <div className="fixed top-12 left-12 z-[100] flex items-center gap-4 bg-white/[0.08] backdrop-blur-md px-6 py-3 rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] transition-colors pointer-events-auto">
         <span className="text-primary-start font-black text-[13px] tracking-widest uppercase mb-[1px]">Hi-Fi</span>
         <div className="w-px h-4 bg-white/20" />
         <span className="text-white/90 text-[13px] font-bold tracking-wide mb-[1px]">Premium Audio</span>
       </div>
         
-      <div className="fixed top-12 right-12 z-[100] flex items-center gap-2 bg-white/[0.08] backdrop-blur-md px-2 py-1.5 rounded-[2rem] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] transition-colors pointer-events-auto">
-        <button onClick={onMinimize} title="缩小至迷你模式" className="w-8 h-8 rounded-[1rem] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all active:scale-95">
+      <div className="fixed top-12 right-12 z-[100] flex items-center gap-2 bg-white/[0.08] backdrop-blur-md px-2 py-1.5 rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] transition-colors pointer-events-auto">
+        <button onClick={onMinimize} title="缩小至迷你模式" className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all active:scale-95">
           <Minimize2 size={16} />
         </button>
         <div className="w-px h-3 bg-white/20 mx-0.5" />
-        <button onClick={onClose} title="隐藏播放器 (后台播放)" className="w-8 h-8 rounded-[1rem] flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500/20 transition-all active:scale-95">
+        <button onClick={onClose} title="隐藏播放器 (后台播放)" className="w-8 h-8 rounded-xl flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500/20 transition-all active:scale-95">
           <X size={18} />
         </button>
       </div>
@@ -562,8 +564,20 @@ export function MusicPlayerFullscreen({
             <button onClick={handlePrev} className="w-12 h-12 flex items-center justify-center text-white/70 hover:text-white transition-transform hover:scale-110 active:scale-95">
               <SkipBack size={24} className="fill-current" />
             </button>
-            <button onClick={togglePlay} className="w-16 h-16 shrink-0 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all">
-              {isPlaying ? <Pause size={24} className="fill-current" /> : <Play size={24} className="fill-current" />}
+            <button onClick={togglePlay} className="w-16 h-16 shrink-0 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all relative">
+              {/* 网络慢时显示转圈 */}
+              {networkStatus === 'slow' ? (
+                <>
+                  <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
+                    网络不佳，正在缓冲...
+                  </div>
+                </>
+              ) : isPlaying ? (
+                <Pause size={24} className="fill-current" />
+              ) : (
+                <Play size={24} className="fill-current" />
+              )}
             </button>
             <button onClick={handleNext} className="w-12 h-12 flex items-center justify-center text-white/70 hover:text-white transition-transform hover:scale-110 active:scale-95">
               <SkipForward size={24} className="fill-current" />

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, Coins, Gift } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
 import { useFetcher } from "react-router";
@@ -35,17 +35,19 @@ export function GachaMachine() {
         fetcher.submit({}, { method: "post", action: "/api/user/gacha" });
     };
 
-    // 监听服务器响应
-    const responseData = fetcher.data;
-    if (responseData && !isRolling) {
-        if (responseData.success && responseData.item) {
-            setResult(responseData.item);
-            // 解锁成就
-            // unlockAchievement("gacha_master");
-        } else if (responseData.error) {
-            toast.error(responseData.error);
+    // 监听服务器响应，使用 useEffect 避免渲染期间调用 setState
+    useEffect(() => {
+        const responseData = fetcher.data;
+        if (responseData && !isRolling) {
+            if (responseData.success && responseData.item) {
+                setResult(responseData.item);
+                // 解锁成就
+                // unlockAchievement("gacha_master");
+            } else if (responseData.error) {
+                toast.error(responseData.error);
+            }
         }
-    }
+    }, [fetcher.data, isRolling]);
 
     return (
         <div className="relative">

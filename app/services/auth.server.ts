@@ -121,15 +121,21 @@ export async function verifyCode(
     return false;
   }
 
-  const storedCode = await kv.get(`verify:${email}`);
-  if (!storedCode) {
+  const storedData = await kv.get(`verify_code:${email}`);
+  if (!storedData) {
     return false;
   }
 
   // 验证后删除（一次性使用）
-  await kv.delete(`verify:${email}`);
+  await kv.delete(`verify_code:${email}`);
 
-  return storedCode === code;
+  // 解析存储的数据并验证
+  try {
+    const { code: storedCode } = JSON.parse(storedData);
+    return storedCode === code;
+  } catch {
+    return false;
+  }
 }
 
 /**

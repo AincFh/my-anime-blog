@@ -87,7 +87,7 @@ export default function Login() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-black/40"
+                    className="bg-white/10 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 md:p-12 shadow-2xl shadow-black/40"
                 >
                     <div className="text-center mb-10">
                         <h1 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight drop-shadow-md">
@@ -104,7 +104,7 @@ export default function Login() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-white p-4 rounded-[20px] mb-8 flex items-center justify-center gap-2 text-[14px] font-bold shadow-lg"
+                                className="bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-white p-4 rounded-xl mb-8 flex items-center justify-center gap-2 text-[14px] font-bold shadow-lg"
                             >
                                 <CheckCircle size={18} className="text-emerald-400" />
                                 登录成功！正在为您跳转...
@@ -116,7 +116,7 @@ export default function Login() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-white p-4 rounded-[20px] mb-8 flex items-center gap-2 text-[14px] font-bold shadow-lg"
+                                className="bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-white p-4 rounded-xl mb-8 flex items-center gap-2 text-[14px] font-bold shadow-lg"
                             >
                                 <CheckCircle size={18} className="text-emerald-400" />
                                 注册成功！请使用账号密码登录

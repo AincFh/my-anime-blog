@@ -50,6 +50,7 @@ export interface MusicPlayerMiniProps {
   stylusState: "iddle" | "lifting" | "playing";
   audioData: Uint8Array | null;
   onFullscreen: () => void;
+  networkStatus?: 'idle' | 'slow' | 'error';
 }
 
 export function MusicPlayerMini({
@@ -78,7 +79,8 @@ export function MusicPlayerMini({
   setShowPlaylist,
   stylusState,
   audioData,
-  onFullscreen
+  onFullscreen,
+  networkStatus = 'idle'
 }: MusicPlayerMiniProps) {
 
   const formatTime = (time: number) => {
@@ -132,7 +134,15 @@ export function MusicPlayerMini({
               </motion.div>
 
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/mini:bg-black/20 rounded-full transition-colors overflow-hidden">
-                {isLoading ? (
+                {/* 网络慢时显示加载动画 */}
+                {networkStatus === 'slow' ? (
+                  <>
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
+                      网络不佳
+                    </div>
+                  </>
+                ) : isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : !isPlaying && (
                   <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
@@ -156,7 +166,7 @@ export function MusicPlayerMini({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2rem] shadow-2xl transition-all duration-700 w-[320px]"
+            className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl transition-all duration-700 w-[320px]"
           >
             <div className="px-6 py-5 flex items-center justify-between border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-2">
@@ -262,19 +272,31 @@ export function MusicPlayerMini({
                   <button onClick={() => handlePrev()} className="text-slate-400 hover:text-primary-start transition-colors">
                     <SkipBack size={24} className="fill-current" />
                   </button>
-                  <button onClick={() => togglePlay()} className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-xl hover:scale-105 transition-transform">
-                    {isPlaying ? <Pause size={28} className="fill-current" /> : <Play size={28} className="fill-current ml-1" />}
+                  <button onClick={() => togglePlay()} className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shadow-xl hover:scale-105 transition-transform relative">
+                    {/* 网络慢时显示转圈 */}
+                    {networkStatus === 'slow' ? (
+                      <>
+                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
+                          网络不佳
+                        </div>
+                      </>
+                    ) : isPlaying ? (
+                      <Pause size={28} className="fill-current" />
+                    ) : (
+                      <Play size={28} className="fill-current ml-1" />
+                    )}
                   </button>
                   <button onClick={() => handleNext()} className="text-slate-400 hover:text-primary-start transition-colors">
                     <SkipForward size={24} className="fill-current" />
                   </button>
                 </div>
 
-                <div className="relative flex items-center justify-center shrink-0 group hover:z-50 ml-auto">
-                  <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center bg-transparent group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors text-slate-500">
+                <div className="relative flex items-center justify-center shrink-0 group/vol hover:z-50 ml-auto">
+                  <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center bg-transparent group-hover/vol:bg-slate-200 dark:group-hover/vol:bg-white/10 transition-colors text-slate-500">
                     {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
                   </button>
-                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-10 h-32 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full shadow-2xl opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 flex flex-col items-center justify-center py-4 z-50">
+                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-10 h-32 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full shadow-2xl opacity-0 translate-y-4 pointer-events-none group-hover/vol:opacity-100 group-hover/vol:translate-y-0 group-hover/vol:pointer-events-auto transition-all duration-300 flex flex-col items-center justify-center py-4 z-50">
                     <div className="flex-1 w-full flex items-center justify-center">
                       <input 
                         type="range" 

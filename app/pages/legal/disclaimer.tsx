@@ -6,7 +6,7 @@ import { Link } from "react-router";
 import { motion } from "framer-motion";
 import {
     Shield, FileText, AlertTriangle, Scale, User,
-    Server, Brain, Lock, RefreshCw, Mail, ArrowLeft
+    Server, Brain, Lock, RefreshCw, Mail, ArrowLeft, Tv, Link2, Link as LinkIcon
 } from "lucide-react";
 
 interface SectionProps {
@@ -270,11 +270,11 @@ export default function Disclaimer() {
                         </div>
                         <p className="text-slate-600 dark:text-slate-300 mb-4">如有疑问，请通过邮件联系：</p>
                         <a
-                            href="mailto:fhainc@hotmail.com"
+                            href="mailto:mail@aincfh.dpdns.org"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            fhainc@hotmail.com
+                            mail@aincfh.dpdns.org
                         </a>
                     </motion.div>
                 </div>

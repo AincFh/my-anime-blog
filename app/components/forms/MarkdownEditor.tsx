@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { sanitizeMarkdownPreview } from "~/utils/security";
 
 interface MarkdownEditorProps {
     value: string;
@@ -50,7 +51,7 @@ export function MarkdownEditor({ value, onChange, placeholder }: MarkdownEditorP
                         className="w-full min-h-[500px] p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg
                      text-white prose prose-invert prose-pink max-w-none overflow-auto"
                     >
-                        <div dangerouslySetInnerHTML={{ __html: preview.replace(/\n/g, '<br>') }} />
+                        <div dangerouslySetInnerHTML={{ __html: sanitizeMarkdownPreview(preview) }} />
                     </div>
                 )}
             </motion.div>

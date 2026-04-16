@@ -4,7 +4,7 @@
 
 import { Link, useLoaderData } from "react-router";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock, ArrowRight, BookOpen } from "lucide-react";
+import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock, ArrowRight, BookOpen, Bookmark } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/articles.$slug";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
@@ -12,6 +12,8 @@ import { getPlaceholderCover } from "~/utils/placeholder_covers";
 import { CommentsSection } from "~/components/ui/interactive/CommentsSection";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
+import { cn } from "~/utils/cn";
 
 interface Article {
     id: number;
@@ -232,69 +234,45 @@ export default function ArticleDetailPage() {
 
     return (
         <div ref={articleRef} className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+            {/* 灵动岛导航 */}
+            <FloatingSubNav
+                title={article.title}
+                backUrl="/articles"
+                rightContent={
+                    <>
+                        <button
+                            onClick={handleLike}
+                            className={cn(
+                                'flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 active:scale-95',
+                                isLiked
+                                    ? 'bg-rose-500/20 text-rose-500'
+                                    : 'hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300'
+                            )}
+                        >
+                            <Bookmark className={cn('w-4 h-4', isLiked && 'fill-current')} />
+                            <span className="hidden xs:inline">{likeCount}</span>
+                        </button>
+                        <button
+                            onClick={handleShare}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-semibold hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all duration-200 active:scale-95"
+                        >
+                            <Share2 className="w-4 h-4" />
+                        </button>
+                    </>
+                }
+            />
+
             {/* 阅读进度条 */}
             <motion.div
-                className="fixed top-0 left-0 right-0 h-[3px] z-[100] origin-left"
+                className="fixed top-14 left-0 right-0 h-[2px] z-[90] origin-left"
                 style={{
                     scaleX: scrollYProgress,
                     background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end))'
                 }}
             />
 
-            {/* 顶部导航 */}
-            <header className="sticky top-0 z-50 backdrop-blur-2xl border-b" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}>
-                <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link
-                            to="/articles"
-                            className="flex items-center gap-2 text-[15px] font-semibold hover:opacity-70 transition-colors"
-                            style={{ color: 'var(--text-secondary)' }}
-                        >
-                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                            <span className="hidden sm:inline">返回</span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                            <div className="w-24 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--glass-border)' }}>
-                                <motion.div
-                                    className="h-full rounded-full"
-                                    style={{
-                                        width: `${readProgress}%`,
-                                        background: 'linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end))'
-                                    }}
-                                />
-                            </div>
-                            <span>{readProgress}%</span>
-                        </div>
-                    </div>
-
-                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 max-w-[300px] truncate text-[15px] font-bold">
-                        {article.title}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleLike}
-                            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all border"
-                            style={isLiked
-                                ? { backgroundColor: 'var(--color-primary-end)', color: 'white', borderColor: 'var(--color-primary-end)' }
-                                : { backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }
-                            }
-                        >
-                            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                            <span>{likeCount}</span>
-                        </button>
-
-                        <button
-                            onClick={handleShare}
-                            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all border"
-                            style={{ backgroundColor: 'var(--glass-bg)', color: 'var(--text-secondary)', borderColor: 'var(--glass-border)' }}
-                        >
-                            <Share2 className="w-4 h-4" />
-                            <span className="hidden sm:inline">分享</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
+            {/* 顶部留白（适配灵动岛导航） */}
+            <div className="h-14" />
 
             {/* 封面 */}
             {article.cover_image && (
@@ -372,7 +350,7 @@ export default function ArticleDetailPage() {
                         transition={{ duration: 0.6, delay: 0.3 }}
                         className="hidden xl:block mb-12"
                     >
-                        <div className="sticky top-24 p-6 rounded-[24px] glass-card">
+                        <div className="sticky top-24 p-6 rounded-2xl glass-card">
                             <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
                                 <BookOpen className="w-4 h-4" />
                                 目录
@@ -461,7 +439,7 @@ export default function ArticleDetailPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="p-8 md:p-10 rounded-[32px] border mb-16"
+                    className="p-8 md:p-10 rounded-2xl border mb-16"
                     style={{
                         background: 'linear-gradient(135deg, rgba(255, 159, 67, 0.08), rgba(255, 107, 107, 0.05))',
                         borderColor: 'var(--glass-border)'
@@ -509,7 +487,7 @@ export default function ArticleDetailPage() {
                                 >
                                     <Link
                                         to={`/articles/${related.slug}`}
-                                        className="group block rounded-[24px] overflow-hidden glass-card"
+                                        className="group block rounded-2xl overflow-hidden glass-card"
                                     >
                                         <div className="relative aspect-[16/9] overflow-hidden">
                                             <OptimizedImage
@@ -531,7 +509,7 @@ export default function ArticleDetailPage() {
                 )}
 
                 {/* 评论区 */}
-                <section className="p-8 md:p-12 rounded-[32px] glass-card mb-16">
+                <section className="p-8 md:p-12 rounded-2xl glass-card mb-16">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="w-1.5 h-8 rounded-full" style={{ background: 'linear-gradient(180deg, var(--color-primary-start), var(--color-primary-end))' }} />
                         <h2 className="text-2xl md:text-3xl font-black">评论区</h2>
