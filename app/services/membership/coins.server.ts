@@ -4,6 +4,7 @@
  */
 
 import { execute, queryFirst, type Database } from '../db.server';
+import { getLogger } from '~/utils/logger';
 
 export interface CoinTransaction {
     id: number;
@@ -29,7 +30,10 @@ export type CoinSource =
     | 'achievement'
     | 'admin'
     | 'refund'
-    | 'shop';
+    | 'shop'
+    | 'gacha'
+    | 'mission_reward'
+    | 'makeup_signin';
 
 /**
  * 获取用户积分余额
@@ -89,8 +93,8 @@ export async function addCoins(
 
         return { success: true, newBalance };
     } catch (error) {
-        console.error('Add coins error (Transaction):', error);
-        return { success: false, newBalance: 0, error: '积分增加失败 (并发限制)' };
+    getLogger().error('Add coins failed (transaction)', { error: error instanceof Error ? error.message : String(error) });
+    return { success: false, newBalance: 0, error: '积分增加失败 (并发限制)' };
     }
 }
 
@@ -146,8 +150,8 @@ export async function spendCoins(
 
         return { success: true, newBalance };
     } catch (error) {
-        console.error('Spend coins error (Transaction):', error);
-        return { success: false, newBalance: 0, error: '支付失败，请重试' };
+    getLogger().error('Spend coins failed (transaction)', { error: error instanceof Error ? error.message : String(error) });
+    return { success: false, newBalance: 0, error: '支付失败，请重试' };
     }
 }
 
@@ -276,7 +280,7 @@ export async function giftCoins(
 
         return { success: true, newBalance };
     } catch (error) {
-        console.error('Gift coins error:', error);
-        return { success: false, newBalance: 0, error: '赠送失败' };
+    getLogger().error('Gift coins failed', { error: error instanceof Error ? error.message : String(error) });
+    return { success: false, newBalance: 0, error: '赠送失败' };
     }
 }

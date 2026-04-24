@@ -3,10 +3,11 @@
  * 处理用户每日签到领取积分
  */
 
-import { getSessionToken, verifySession } from '~/services/auth.server';
+import type { LoaderFunctionArgs } from "react-router";
 import { addCoins, getUserCoins } from '~/services/membership/coins.server';
 import { getUserSubscription } from '~/services/membership/subscription.server';
 import { getTierById } from '~/services/membership/tier.server';
+import { getSessionToken, verifySession } from '~/services/auth.server';
 
 interface SignInResult {
     success: boolean;
@@ -18,8 +19,8 @@ interface SignInResult {
 }
 
 // 获取签到状态
-export async function loader({ request, context }: { request: Request; context: any }) {
-    const { anime_db } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
@@ -56,12 +57,12 @@ export async function loader({ request, context }: { request: Request; context: 
     return Response.json({
         success: true,
         signedIn: !!signInRecord,
-        streak: (streakResult as any)?.streak || 0,
+        streak: (streakResult as { streak?: number })?.streak || 0,
         coins,
     });
 }
 
-export async function action({ request, context }: { request: Request; context: any }) {
+export async function action({ request, context }: LoaderFunctionArgs) {
     const { anime_db, CACHE_KV } = context.cloudflare.env;
 
     const token = getSessionToken(request);
@@ -148,7 +149,7 @@ export async function action({ request, context }: { request: Request; context: 
             .bind(user.id)
             .first();
 
-        streak = ((streakResult as any)?.count || 0) + 1;
+        streak = ((streakResult as { count?: number })?.count || 0) + 1;
 
         // 连续签到奖励：每7天额外奖励
         if (streak % 7 === 0) {
@@ -166,6 +167,13 @@ export async function action({ request, context }: { request: Request; context: 
         'daily_signin',
         `每日签到${bonus > 0 ? ` (连续${streak}天奖励)` : ''}`
     );
+
+    // 写入签到记录表（支持补签日历）
+    await anime_db.prepare(`
+        INSERT OR REPLACE INTO user_signin_records
+        (user_id, signin_date, is_makeup, reward_coins, bonus_coins, streak_days, created_at)
+        VALUES (?, ?, 0, ?, ?, ?, unixepoch())
+    `).bind(user.id, today, baseCoins, bonus, streak).run();
 
     // 更新任务系统进度
     const { updateMissionProgress } = await import('~/services/membership/mission.server');

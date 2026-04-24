@@ -85,7 +85,10 @@ export default [
   // 用户服务接口
   route("api/user/me", "api/user/api.user.me.ts"),
   route("api/user/purchases", "api/user/api.user.purchases.ts"),
+  route("api/user/notifications", "api/user/api.user.notifications.ts"),
+  route("api/user/missions/claim", "api/user/api.missions.claim.ts"),
   route("api/daily-signin", "api/user/api.daily-signin.ts"),
+  route("api/makeup-signin", "api/user/api.makeup-signin.ts"),
   route("api/user/gacha", "api/user/api.gacha.ts"),
 
   // 监控与治理
@@ -111,15 +114,16 @@ export default [
   route("api/bangumi/search", "api/bangumi/api.bangumi.search.ts"),
   route("api/bangumi/detail", "api/bangumi/api.bangumi.detail.ts"),
   route("api/animes", "api/misc/api.animes.ts"),
+  route("api/article/like", "api/article/api.article.like.ts"),
 
   // Notion 相关
-  route("api/notion/debug", "api/api.notion.debug.ts"),
   route("api/notion/sync", "api/notion/api.notion.sync.ts"),
 
   // 杂项
   route("action/set-theme", "api/misc/action.set-theme.ts"),
   route("api/og", "api/misc/api.og.tsx"),
   route("api/achievement", "api/misc/api.achievement.tsx"),
+  route("api/search", "api/misc/api.search.ts"),
 
   // 全局 404 兜底
   route("*", "pages/error/404.tsx"),

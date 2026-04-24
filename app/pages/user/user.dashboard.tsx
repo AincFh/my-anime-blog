@@ -1,24 +1,72 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type { LoaderFunctionArgs } from "react-router";
 import { useFetcher, useNavigate, useLoaderData } from "react-router";
 import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLayout";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
 import { ActionPanel } from "~/components/dashboard/game/ActionPanel";
 import { GamificationProvider, useGamification } from "~/contexts/GamificationContext";
 import { useUser } from "~/hooks/useUser";
-import { ClientOnly } from "~/components/common/ClientOnly";
+import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import { getUserMissions } from "~/services/membership/mission.server";
+import { getMissedSigninDays, calculateMakeupCost, getMonthlySigninRecords } from "~/services/membership/makeup-signin.server";
 import { MissionBoard } from "~/components/dashboard/widgets/MissionBoard";
 import { ServerStatus } from "~/components/dashboard/widgets/ServerStatus";
 import { ActivityLog } from "~/components/dashboard/widgets/ActivityLog";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
+import { onSignIn } from "~/components/ui/system/AchievementSystem";
+
+function buildMonthDays(
+    year: number,
+    month: number,
+    signedDates: Set<string>
+): Array<{
+    date: string;
+    formatted: string;
+    signedIn: boolean;
+    isMakeup: boolean;
+    isToday: boolean;
+    isFuture: boolean;
+    rewardCoins: number;
+}> {
+    const days = [];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const startWeekday = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+
+    // 填充空白格子
+    for (let i = 0; i < startWeekday; i++) {
+        days.push({ date: '', formatted: '', signedIn: false, isMakeup: false, isToday: false, isFuture: false, rewardCoins: 0 });
+    }
+
+    // 填充日期格子
+    for (let d = 1; d <= totalDays; d++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isFuture = dateStr > todayStr;
+        days.push({
+            date: dateStr,
+            formatted: `${month}月${d}日`,
+            signedIn: signedDates.has(dateStr),
+            isMakeup: false,
+            isToday: dateStr === todayStr,
+            isFuture,
+            rewardCoins: 5,
+        });
+    }
+
+    return days;
+}
 
 // Loader: 获取真实数据
-export async function loader({ request, context }: { request: Request; context: any }) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
-    const { anime_db } = context.cloudflare.env;
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
 
@@ -28,7 +76,9 @@ export async function loader({ request, context }: { request: Request; context: 
         user: null,
         stats: { coins: 0, level: 1, exp: 0, maxExp: 100 },
         signInStatus: { hasSignedIn: false, consecutiveDays: 0 },
-        missions: []
+        missions: [],
+        calendar: [],
+        makeupInfo: { canMakeup: false, missedDays: [], missedDaysFormatted: [], consecutiveMakeupCount: 1, currentCost: 30, maxDaysBack: 7 },
       };
     }
 
@@ -49,6 +99,22 @@ export async function loader({ request, context }: { request: Request; context: 
           AND created_at > unixepoch('now', '-30 days')
       `).bind(user.id).first().catch(() => null),
 
+    const [signInRecord, streakResult, coins, missions, membership, monthData, makeupStatus] = await Promise.all([
+      // 1. 今日签到状态
+      anime_db.prepare(`
+          SELECT 1 FROM coin_transactions
+          WHERE user_id = ? AND source = 'daily_signin'
+          AND date(created_at, 'unixepoch') = date('now')
+      `).bind(user.id).first().catch(() => null),
+
+      // 2. 连续签到天数
+      anime_db.prepare(`
+          SELECT COUNT(DISTINCT date(created_at, 'unixepoch')) as streak
+          FROM coin_transactions
+          WHERE user_id = ? AND source = 'daily_signin'
+          AND created_at > unixepoch('now', '-30 days')
+      `).bind(user.id).first().catch(() => null),
+
       // 3. 积分
       getUserCoins(anime_db, user.id).catch(() => 0),
 
@@ -63,10 +129,49 @@ export async function loader({ request, context }: { request: Request; context: 
         } catch {
           return { tier: null, subscription: null };
         }
+      })(),
+
+      // 6. 当月签到日历数据
+      (async () => {
+        try {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth() + 1;
+          const records = await getMonthlySigninRecords(anime_db, user.id, year, month);
+          return { year, month, records };
+        } catch {
+          return { year: new Date().getFullYear(), month: new Date().getMonth() + 1, records: new Map() };
+        }
+      })(),
+
+      // 7. 补签信息
+      (async () => {
+        try {
+          return await getMissedSigninDays(anime_db, user.id);
+        } catch {
+          return { canMakeup: false, missedDays: [], missedDaysFormatted: [], consecutiveMakeupCount: 1, currentCost: 50, maxDaysBack: 7 };
+        }
       })()
     ]);
 
     const { tier } = membership;
+
+    // 构建签到日历 Set（从 Map 转 Set 便于序列化）
+    const signedDatesSet = new Set<string>();
+    if (monthData?.records) {
+      for (const [date] of monthData.records) {
+        signedDatesSet.add(date);
+      }
+    }
+
+    const currentMonth = buildMonthDays(
+      monthData.year,
+      monthData.month,
+      signedDatesSet
+    );
+
+    // 序列化 Map 为 Array（JSON 不支持 Map）
+    const signedDatesArray = Array.from(signedDatesSet);
 
     return {
       loggedIn: true,
@@ -97,7 +202,16 @@ export async function loader({ request, context }: { request: Request; context: 
         hasSignedIn: !!signInRecord,
         consecutiveDays: (streakResult as any)?.streak || 0,
       },
-      missions: missions || []
+      missions: missions || [],
+      calendar: currentMonth,
+      makeupInfo: makeupStatus || {
+        canMakeup: false,
+        missedDays: [],
+        missedDaysFormatted: [],
+        consecutiveMakeupCount: 1,
+        currentCost: 50,
+        maxDaysBack: 7,
+      },
     };
   } catch (error) {
     console.error("Dashboard Loader Error:", error);
@@ -108,7 +222,9 @@ export async function loader({ request, context }: { request: Request; context: 
       user: null,
       stats: { coins: 0, level: 1, exp: 0, maxExp: 100 },
       signInStatus: { hasSignedIn: false, consecutiveDays: 0 },
-      missions: []
+      missions: [],
+      calendar: [],
+      makeupInfo: { canMakeup: false, missedDays: [], missedDaysFormatted: [], consecutiveMakeupCount: 1, currentCost: 30, maxDaysBack: 7 },
     };
   }
 }
@@ -138,10 +254,12 @@ function DashboardContent() {
 
   useEffect(() => {
     if (fetcher.data?.success) {
+      const streak = (fetcher.data as any).streak || 1;
+      onSignIn(streak);
       setSignInStatus(prev => ({
         ...prev,
         hasSignedIn: true,
-        consecutiveDays: (fetcher.data as any).streak || prev.consecutiveDays + 1
+        consecutiveDays: streak
       }));
     }
   }, [fetcher.data]);
@@ -241,7 +359,7 @@ export default function UserDashboard() {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error?: unknown }) {
   let message = "仪表盘加载失败";
   let details = "无法显示仪表盘内容，请稍后重试";
   let stack: string | undefined;
