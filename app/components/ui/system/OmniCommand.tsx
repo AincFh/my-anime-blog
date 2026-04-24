@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+import { useTheme } from "remix-themes";
+import { Theme } from "remix-themes";
 import { musicPlayerToggle } from "~/hooks/useMusicPlayer";
 import { Moon, Music, Lock, Sparkles, Coffee, Search } from "lucide-react";
 
@@ -23,6 +25,7 @@ export function OmniCommand() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const [theme, setTheme] = useTheme();
 
   // 系统指令
   const systemCommands: Command[] = [
@@ -33,7 +36,11 @@ export function OmniCommand() {
       icon: <Moon className="w-6 h-6" />,
       category: "system",
       action: () => {
-        document.documentElement.classList.toggle("dark");
+        if (setTheme && theme) {
+          setTheme(theme === Theme.DARK ? Theme.LIGHT : Theme.DARK);
+        } else {
+          document.documentElement.classList.toggle("dark");
+        }
         setIsOpen(false);
       },
     },
