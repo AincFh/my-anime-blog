@@ -1,7 +1,6 @@
-import { useLoaderData, Form, useNavigation, useActionData, useSubmit, redirect } from "react-router";
-import type { Route } from "./+types/admin.anime.manage";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { getSessionId } from "~/utils/auth";
+import { requireAdmin } from "~/utils/auth";
 import { useState, useEffect, useCallback } from "react";
 import { RadarChart } from "~/components/ui/system/RadarChart";
 import { QuickSyncButton } from "~/components/admin/QuickSyncButton";
@@ -32,11 +31,31 @@ interface BangumiResult {
     eps_count?: number;
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-    const sessionId = getSessionId(request);
-    if (!sessionId) throw redirect("/panel/login");
+// 数据库 Anime 记录类型
+interface AnimeRecord {
+    id: number;
+    title: string;
+    cover_url: string | null;
+    name_cn: string | null;
+    name_jp: string | null;
+    status: string;
+    progress: string | null;
+    rating: number | null;
+    rating_radar: string | null;
+    review: string | null;
+    bangumi_id: number | null;
+    bangumi_score: number | null;
+    studio: string | null;
+    air_date: string | null;
+    total_episodes: number | null;
+    summary: string | null;
+    created_at: number;
+}
 
-    const { anime_db } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+    const session = await requireAdmin(request, anime_db);
+    if (!session) throw redirect("/panel/login");
 
     try {
         const { results } = await anime_db
@@ -50,11 +69,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-    const sessionId = getSessionId(request);
-    if (!sessionId) throw redirect("/panel/login");
-
-    const { anime_db } = context.cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+    const session = await requireAdmin(request, anime_db);
+    if (!session) throw redirect("/panel/login");
 
     try {
         const formData = await request.formData();
@@ -136,10 +154,11 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
 }
 
-export default function AnimeManage({ loaderData }: Route.ComponentProps) {
+export default function AnimeManage() {
+    const loaderData = useLoaderData<typeof loader>();
     const { animes } = loaderData;
     const [showForm, setShowForm] = useState(false);
-    const [selectedAnime, setSelectedAnime] = useState<any>(null);
+    const [selectedAnime, setSelectedAnime] = useState<Record<string, unknown> | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const actionData = useActionData<{ success?: boolean; error?: string }>();
     const submit = useSubmit();
@@ -204,7 +223,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
         setIsSearching(true);
         try {
             const response = await fetch(`/api/bangumi/search?q=${encodeURIComponent(query)}`);
-            const data = await response.json() as any;
+            const data = await response.json() as { results?: BangumiResult[] };
             setBangumiResults(data.results || []);
             setShowBangumiDropdown(true);
         } catch (error) {
@@ -235,7 +254,7 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
         // 获取详细信息
         try {
             const response = await fetch(`/api/bangumi/detail?id=${item.id}`);
-            const detail = await response.json() as any;
+            const detail = await response.json() as Record<string, unknown>;
 
             setFormData({
                 ...formData,
@@ -569,10 +588,10 @@ export default function AnimeManage({ loaderData }: Route.ComponentProps) {
                     {animes && animes.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {animes
-                                .filter((anime: any) =>
+                                .filter((anime: AnimeRecord) =>
                                     anime.title.toLowerCase().includes(searchQuery.toLowerCase())
                                 )
-                                .map((anime: any, index: number) => (
+                                .map((anime: AnimeRecord, index: number) => (
                                     <motion.div
                                         key={anime.id}
                                         className="bg-[#0f111a] rounded-2xl overflow-hidden shadow-sm border border-white/5 cursor-pointer group"

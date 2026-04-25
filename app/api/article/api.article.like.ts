@@ -1,16 +1,12 @@
 /**
  * 文章点赞 API
  */
-import type { Route } from "./+types/api.article.like";
+import type { ActionFunctionArgs } from "react-router";
 import { getDB } from "~/utils/db";
 import { getSessionId, verifySession } from "~/utils/auth";
 import { verifySameOrigin } from "~/utils/security";
-import { RATE_LIMITS, checkRateLimit, createRateLimitResponse } from "~/services/rate-limiter.server";
 
-// 点赞限制配置：每分钟最多 30 次
-const LIKE_RATE_LIMIT = { windowSeconds: 60, maxRequests: 30 };
-
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
     // 0. CSRF 防护：同源检测
     if (!verifySameOrigin(request)) {
         return Response.json({ error: "非法的跨站请求" }, { status: 403 });
@@ -32,8 +28,9 @@ export async function action({ request, context }: Route.ActionArgs) {
     // 2. 速率限制
     const { CACHE_KV } = context.cloudflare.env;
     if (CACHE_KV) {
-        // 使用用户 ID 作为限流 key
+        const { checkRateLimit, createRateLimitResponse } = await import("~/services/rate-limiter.server");
         const rateLimitKey = `like:${session.user.id}`;
+        const LIKE_RATE_LIMIT = { windowSeconds: 60, maxRequests: 30 };
         const rateLimitResult = await checkRateLimit(CACHE_KV, rateLimitKey, LIKE_RATE_LIMIT);
         if (!rateLimitResult.allowed) {
             return createRateLimitResponse(rateLimitResult);

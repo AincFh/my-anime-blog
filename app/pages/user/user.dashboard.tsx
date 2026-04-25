@@ -11,18 +11,20 @@ import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import { getUserMissions } from "~/services/membership/mission.server";
-import { getMissedSigninDays, calculateMakeupCost, getMonthlySigninRecords } from "~/services/membership/makeup-signin.server";
 import { MissionBoard } from "~/components/dashboard/widgets/MissionBoard";
 import { ServerStatus } from "~/components/dashboard/widgets/ServerStatus";
 import { ActivityLog } from "~/components/dashboard/widgets/ActivityLog";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
 import { onSignIn } from "~/components/ui/system/AchievementSystem";
 
-function buildMonthDays(
+// Loader: 获取真实数据
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  // Helper: 构建月历格子数据（必须在 loader 内以保持服务端边界）
+  function buildMonthDays(
     year: number,
     month: number,
     signedDates: Set<string>
-): Array<{
+  ): Array<{
     date: string;
     formatted: string;
     signedIn: boolean;
@@ -30,7 +32,7 @@ function buildMonthDays(
     isToday: boolean;
     isFuture: boolean;
     rewardCoins: number;
-}> {
+  }> {
     const days = [];
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -40,31 +42,27 @@ function buildMonthDays(
     const startWeekday = firstDay.getDay();
     const totalDays = lastDay.getDate();
 
-    // 填充空白格子
     for (let i = 0; i < startWeekday; i++) {
-        days.push({ date: '', formatted: '', signedIn: false, isMakeup: false, isToday: false, isFuture: false, rewardCoins: 0 });
+      days.push({ date: '', formatted: '', signedIn: false, isMakeup: false, isToday: false, isFuture: false, rewardCoins: 0 });
     }
 
-    // 填充日期格子
     for (let d = 1; d <= totalDays; d++) {
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const isFuture = dateStr > todayStr;
-        days.push({
-            date: dateStr,
-            formatted: `${month}月${d}日`,
-            signedIn: signedDates.has(dateStr),
-            isMakeup: false,
-            isToday: dateStr === todayStr,
-            isFuture,
-            rewardCoins: 5,
-        });
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const isFuture = dateStr > todayStr;
+      days.push({
+        date: dateStr,
+        formatted: `${month}月${d}日`,
+        signedIn: signedDates.has(dateStr),
+        isMakeup: false,
+        isToday: dateStr === todayStr,
+        isFuture,
+        rewardCoins: 5,
+      });
     }
 
     return days;
-}
+  }
 
-// Loader: 获取真实数据
-export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
     const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
     const token = getSessionToken(request);
@@ -81,23 +79,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         makeupInfo: { canMakeup: false, missedDays: [], missedDaysFormatted: [], consecutiveMakeupCount: 1, currentCost: 30, maxDaysBack: 7 },
       };
     }
-
-    // 并行获取数据以提升性能
-    const [signInRecord, streakResult, coins, missions, membership] = await Promise.all([
-      // 1. 今日签到状态
-      anime_db.prepare(`
-          SELECT 1 FROM coin_transactions 
-          WHERE user_id = ? AND source = 'daily_signin' 
-          AND date(created_at, 'unixepoch') = date('now')
-      `).bind(user.id).first().catch(() => null),
-
-      // 2. 连续签到天数
-      anime_db.prepare(`
-          SELECT COUNT(DISTINCT date(created_at, 'unixepoch')) as streak
-          FROM coin_transactions 
-          WHERE user_id = ? AND source = 'daily_signin'
-          AND created_at > unixepoch('now', '-30 days')
-      `).bind(user.id).first().catch(() => null),
 
     const [signInRecord, streakResult, coins, missions, membership, monthData, makeupStatus] = await Promise.all([
       // 1. 今日签到状态
@@ -134,6 +115,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       // 6. 当月签到日历数据
       (async () => {
         try {
+          const { getMonthlySigninRecords } = await import("~/services/membership/makeup-signin.server");
           const now = new Date();
           const year = now.getFullYear();
           const month = now.getMonth() + 1;
@@ -147,6 +129,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       // 7. 补签信息
       (async () => {
         try {
+          const { getMissedSigninDays } = await import("~/services/membership/makeup-signin.server");
           return await getMissedSigninDays(anime_db, user.id);
         } catch {
           return { canMakeup: false, missedDays: [], missedDaysFormatted: [], consecutiveMakeupCount: 1, currentCost: 50, maxDaysBack: 7 };

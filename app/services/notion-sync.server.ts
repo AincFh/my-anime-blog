@@ -15,6 +15,7 @@
  */
 
 import type { D1Database, KVNamespace } from '@cloudflare/workers-types';
+import { getLogger } from '~/utils/logger';
 
 export interface NotionArticle {
     id: string;
@@ -66,15 +67,15 @@ async function fetchNotionArticles(
         try {
             const cached = await kv.get(cacheKey);
             if (cached) {
-                console.log('[Notion Sync] Using cache');
+                getLogger().debug('Notion sync cache hit');
                 return JSON.parse(cached);
             }
         } catch { /* ignore */ }
     }
 
-    console.log('[Notion Sync] Fetching from Notion...');
+    getLogger().debug('Fetching from Notion for sync');
     
-    let allResults: any[] = [];
+    let allResults: Record<string, unknown>[] = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
 
@@ -143,7 +144,7 @@ function mapNotionToArticle(page: any): NotionArticle {
     const category = props["分类"]?.select?.name || "未分类";
 
     // 提取标签
-    const tags = props["标签"]?.multi_select?.map((s: any) => s.name) || [];
+    const tags = props["标签"]?.multi_select?.map((s: Record<string, unknown>) => s.name as string) || [];
 
     // 提取内容类型
     const content_type = props["内容类型"]?.select?.name || "随笔";
@@ -206,7 +207,7 @@ export async function getNotionArticleContent(
 
         return mdString.parent;
     } catch (error) {
-        console.error('[Notion Sync] Failed to get content:', error);
+        getLogger().error('Notion sync get content failed', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 }
@@ -232,7 +233,7 @@ export async function syncNotionArticles(
     try {
         // 1. 从 Notion 获取文章
         const notionArticles = await fetchNotionArticles(notionToken, databaseId, kv);
-        console.log(`[Notion Sync] Found ${notionArticles.length} articles`);
+        getLogger().info('Notion sync found articles', { count: notionArticles.length });
 
         if (notionArticles.length === 0) {
             result.success = true;
@@ -261,8 +262,8 @@ export async function syncNotionArticles(
                     .bind(notionId)
                     .run();
                 result.deleted++;
-            } catch (e: any) {
-                result.errors.push(`Delete failed: ${e.message}`);
+            } catch (e: unknown) {
+                result.errors.push(`Delete failed: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
 
@@ -319,8 +320,8 @@ export async function syncNotionArticles(
                         .run();
                     result.added++;
                 }
-            } catch (e: any) {
-                result.errors.push(`Sync failed: ${article.title}: ${e.message}`);
+            } catch (e: unknown) {
+                result.errors.push(`Sync failed: ${article.title}: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
 
@@ -344,11 +345,12 @@ export async function syncNotionArticles(
         }
 
         result.success = true;
-        console.log(`[Notion Sync] Done: +${result.added} ~${result.updated} -${result.deleted}`);
+        getLogger().info('Notion sync completed', { added: result.added, updated: result.updated, deleted: result.deleted });
         
-    } catch (error: any) {
-        result.errors.push(`Sync error: ${error.message}`);
-        console.error('[Notion Sync] Critical error:', error);
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        result.errors.push(`Sync error: ${errMsg}`);
+        getLogger().error('Notion sync critical error', { error: error instanceof Error ? error.message : String(error) });
     }
 
     return result;

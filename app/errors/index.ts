@@ -13,6 +13,17 @@ export type ErrorCode =
     | 'EXTERNAL_SERVICE_ERROR'
     | 'PAYMENT_ERROR';
 
+/** 类型守卫：判断是否为 AppError */
+export function isAppError(error: unknown): error is AppError {
+    return error instanceof AppError;
+}
+
+/** 类型守卫：判断是否为路由错误 */
+export function isRouteError(error: unknown): boolean {
+    return (error as { status?: number })?.status === 404
+        || (error as { status?: number })?.status === 500;
+}
+
 export class AppError extends Error {
     public readonly code: ErrorCode;
     public readonly statusCode: number;

@@ -176,7 +176,6 @@ const emojiToIcon: Record<string, React.ComponentType<{ className?: string; size
   "📋": FileText,
   "💵": DollarSign,
   "∞": Infinity,
-  "⬇️": Download,
   "🔗": LinkIcon,
   "📎": LinkIcon,
   "🖇️": LinkIcon,

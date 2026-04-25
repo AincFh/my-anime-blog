@@ -1,9 +1,16 @@
-export async function action({ request, context }: Route.ActionArgs) {
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useEffect } from "react";
+import { redirect, useFetcher, useLoaderData } from "react-router";
+import { getSessionId } from "~/utils/auth";
+import { Search, MessageSquare, CheckCircle, ShieldAlert, Trash2, Reply, MoreVertical } from "lucide-react";
+
+export async function action({ request, context }: ActionFunctionArgs) {
   const { requireAdmin } = await import("~/utils/auth");
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env;
 
   const session = await requireAdmin(request, anime_db);
-    if (!session) throw redirect("/panel/login");
+  if (!session) throw redirect("/panel/login");
 
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -20,34 +27,37 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
     if (intent === "delete") {
       await anime_db.prepare("DELETE FROM comments WHERE id = ?").bind(commentId).run();
-      return { success: true, message: "评论已物理抹除" };
+      return { success: true, message: "评论已删除" };
     }
     if (intent === "godModeEdit") {
       const content = formData.get("content");
       const guest_name = formData.get("author");
       await anime_db.prepare("UPDATE comments SET content = ?, guest_name = ? WHERE id = ?").bind(content, guest_name, commentId).run();
-      return { success: true, message: "上帝指令：评论元数据已篡改" };
+      return { success: true, message: "评论已修改" };
     }
     return { success: false, error: "未知指令" };
-  } catch (e: any) {
-    return { success: false, error: e.message };
+  } catch (e: unknown) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo, useEffect } from "react";
-import type { Route } from "./+types/admin.comments";
-import { redirect, useFetcher } from "react-router";
-import { getSessionId } from "~/utils/auth";
-import { Search, MessageSquare, CheckCircle, ShieldAlert, Trash2, Reply, MoreVertical } from "lucide-react";
+interface Comment {
+  id: number;
+  author: string;
+  article: string;
+  content: string;
+  status: string;
+  isSpam: number;
+  time: string;
+}
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
     throw redirect("/panel/login");
   }
 
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env;
 
   try {
     const { results } = await anime_db
@@ -61,7 +71,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       `)
       .all();
 
-    const comments = (results || []).map((comment: any) => {
+    const comments = (results || []).map((comment: Record<string, unknown>) => {
       const createdAt = new Date(comment.created_at * 1000);
       const now = new Date();
       const diffMs = now.getTime() - createdAt.getTime();
@@ -93,11 +103,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 }
 
-export default function CommentsManager({ loaderData }: Route.ComponentProps) {
-  const { comments } = loaderData;
+export default function CommentsManager() {
+  const { comments } = useLoaderData<typeof loader>();
   const [filter, setFilter] = useState<"all" | "pending" | "spam">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingComment, setEditingComment] = useState<any | null>(null);
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
   const fetcher = useFetcher();
 
   useEffect(() => {
@@ -107,7 +117,7 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
   }, [fetcher.state, fetcher.data]);
 
   const filteredComments = useMemo(() => {
-    return comments.filter((c: any) => {
+    return comments.filter((c: Comment) => {
       const author = c.author || "";
       const content = c.content || "";
       const article = c.article || "";
@@ -129,7 +139,7 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
     fetcher.submit(formData, { method: "POST" });
   };
 
-  const pendingCount = comments.filter((c: any) => c.status === "pending").length;
+  const pendingCount = comments.filter((c: Comment) => c.status === "pending").length;
 
   return (
     <div className="w-full">
@@ -186,7 +196,7 @@ export default function CommentsManager({ loaderData }: Route.ComponentProps) {
               当前虚空中没有符合条件的信标...
             </div>
           ) : (
-            filteredComments.map((comment: any, index: number) => (
+            filteredComments.map((comment: Comment, index: number) => (
               <motion.div
                 key={comment.id}
                 className={`glass-card-deep rounded-2xl p-8 flex flex-col sm:flex-row gap-8 hover:border-violet-500/40 transition-all border ${comment.status === 'pending' ? 'bg-amber-500/5 border-amber-500/10' : 'border-white/5'}`}

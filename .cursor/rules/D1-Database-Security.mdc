@@ -1,10 +1,14 @@
 ---
 alwaysApply: true
 globs: "**/*.ts"
-description: D1数据库安全规范 - SQL注入防护、查询优化、事务安全
+description: D1数据库安全规范 — 数据是用户最宝贵的资产
 ---
 
 # D1 数据库安全规范
+
+> **核心理念：用户的数据是他们最宝贵的资产。像 Apple 保护用户隐私一样保护每一行数据——不只防外部攻击，也防内部疏忽。**
+
+---
 
 ## SQL 注入防护（核心规则）
 
@@ -43,6 +47,8 @@ const stmt = env.DB.prepare('SELECT * FROM articles WHERE tag = ?').bind(tag);
 const users = await stmt.all();
 ```
 
+---
+
 ## 数据验证
 
 ### 输入类型检查
@@ -76,6 +82,8 @@ if (!userIdHeader || !/^\d+$/.test(userIdHeader)) {
 const userId = parseInt(userIdHeader, 10);
 ```
 
+---
+
 ## 查询权限控制
 
 ### 最小权限原则
@@ -92,11 +100,11 @@ const userId = parseInt(userIdHeader, 10);
        .prepare('SELECT 1 FROM article_editors WHERE article_id = ? AND user_id = ?')
        .bind(articleId, userId)
        .first();
-     
+
      if (!canEdit) {
        throw new ForbiddenError('无权限编辑此文章');
      }
-     
+
      // 执行更新
      await env.DB
        .prepare('UPDATE articles SET title = ?, content = ? WHERE id = ?')
@@ -105,6 +113,8 @@ const userId = parseInt(userIdHeader, 10);
    }
    ```
 
+---
+
 ## 事务安全
 
 ### 批量操作的事务处理
@@ -112,15 +122,17 @@ const userId = parseInt(userIdHeader, 10);
 ```typescript
 async function batchCreateArticles(env: Env, articles: ArticleData[]) {
   // D1 不支持显式事务，但可以通过批量操作确保原子性
-  const statements = articles.map(article => 
+  const statements = articles.map(article =>
     env.DB.prepare('INSERT INTO articles (title, slug) VALUES (?, ?)')
       .bind(article.title, article.slug)
   );
-  
+
   // 使用 batch 确保全部成功或全部失败
   await env.DB.batch(statements);
 }
 ```
+
+---
 
 ## 错误处理
 
@@ -129,16 +141,16 @@ async function batchCreateArticles(env: Env, articles: ArticleData[]) {
 ```typescript
 // ❌ 危险 - 暴露数据库结构
 catch (e) {
-  return Response.json({ 
-    error: `Database error: ${e.message}\nSQL: ${e.query}` 
+  return Response.json({
+    error: `Database error: ${e.message}\nSQL: ${e.query}`
   });
 }
 
 // ✅ 安全 - 通用错误消息
 catch (e) {
   console.error('Database error:', e);
-  return Response.json({ 
-    error: '数据库操作失败，请稍后重试' 
+  return Response.json({
+    error: '数据库操作失败，请稍后重试'
   }, { status: 500 });
 }
 ```
@@ -154,3 +166,18 @@ try {
   logger.error('数据库查询失败', { operation: 'findUserByEmail', errorType: typeof e });
 }
 ```
+
+---
+
+## 数据库安全自检清单
+
+- [ ] 所有查询都使用了参数化查询吗？
+- [ ] 用户输入都经过 zod 验证了吗？
+- [ ] 写操作都有权限检查吗？
+- [ ] 错误消息不暴露内部结构吗？
+- [ ] 日志不记录 SQL 参数吗？
+
+### 自我审视
+- [ ] 我自己信任这个数据访问层吗？
+- [ ] 如果这是银行系统，这个查询安全吗？
+- [ ] 我愿意把这个代码开源给所有人看吗？（如果答案是否定的，说明还有漏洞）

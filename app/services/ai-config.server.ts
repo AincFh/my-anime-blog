@@ -5,6 +5,7 @@
 
 import { queryFirst } from './db.server';
 import { type Database } from './db.server';
+import { getLogger } from '~/utils/logger';
 
 // ============ 类型定义 ============
 
@@ -74,7 +75,7 @@ export async function getAIConfig(db: Database): Promise<AIConfig> {
             },
         };
     } catch (error) {
-        console.error('Failed to get AI config:', error);
+        getLogger().error('Get AI config failed', { error: error instanceof Error ? error.message : String(error) });
         return DEFAULT_AI_CONFIG;
     }
 }
@@ -128,7 +129,7 @@ export async function buildBlogContext(db: Database): Promise<string> {
       WHERE status = 'published'
       ORDER BY created_at DESC
       LIMIT 20
-    `).all() as { results: any[] };
+    `).all<{ title: string; slug: string; summary: string; category: string; tags: string }>();
 
         // 获取番剧列表
         const animes = await db.prepare(`
@@ -136,7 +137,7 @@ export async function buildBlogContext(db: Database): Promise<string> {
       FROM animes
       ORDER BY created_at DESC
       LIMIT 10
-    `).all() as { results: any[] };
+    `).all<{ title: string; status: string; rating: number | null; review: string | null }>();
 
         let context = '## 博客文章\n';
         for (const article of articles.results || []) {
@@ -157,7 +158,7 @@ export async function buildBlogContext(db: Database): Promise<string> {
 
         return context;
     } catch (error) {
-        console.error('Failed to build blog context:', error);
+        getLogger().error('Build blog context failed', { error: error instanceof Error ? error.message : String(error) });
         return '暂无博客信息';
     }
 }

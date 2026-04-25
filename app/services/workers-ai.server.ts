@@ -3,6 +3,8 @@
  * 使用 Cloudflare 原生 AI 模型替代第三方 API
  */
 
+import { getLogger } from '~/utils/logger';
+
 // AI 模型类型
 export type AIModel =
     | '@cf/meta/llama-3-8b-instruct'
@@ -41,7 +43,7 @@ export async function generateText(
 
         return response.response || '';
     } catch (error) {
-        console.error('Workers AI error:', error);
+        getLogger().error('Workers AI generation failed', { error: error instanceof Error ? error.message : String(error) });
         // 保留原始错误信息，便于调试
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`AI 生成失败: ${message}`, { cause: error });

@@ -7,6 +7,8 @@ import { execute, queryFirst } from './db.server';
 import { type Database } from './db.server';
 import type { AIMessage, AICompletionOptions, AICompletionResult } from '~/utils/ai-shared';
 import { AI_PROMPTS, buildMessages, safeParseJSON } from '~/utils/ai-shared';
+import type { Ai } from '@cloudflare/workers-types';
+import { getLogger } from '~/utils/logger';
 
 export type { AIMessage, AICompletionOptions, AICompletionResult };
 export { AI_PROMPTS, buildMessages, safeParseJSON };
@@ -36,7 +38,7 @@ const DEFAULT_MODEL = 'deepseek-chat';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
-import { AI_DAILY_LIMITS } from '~/config/game';
+import { AI_DAILY_LIMITS } from '~/services/membership/game-config';
 export const DEFAULT_DAILY_LIMITS = AI_DAILY_LIMITS;
 
 // ============ 核心函数 ============
@@ -46,7 +48,7 @@ export const DEFAULT_DAILY_LIMITS = AI_DAILY_LIMITS;
  */
 export async function callDeepseek(
     apiKey: string,
-    options: AICompletionOptions & { aiBinding?: any }
+    options: AICompletionOptions & { aiBinding?: Ai }
 ): Promise<AICompletionResult> {
     const {
         model = DEFAULT_MODEL,
@@ -100,7 +102,7 @@ export async function callDeepseek(
             };
         } catch (error) {
             lastError = error as Error;
-            console.error(`Deepseek API attempt ${attempt} failed:`, error);
+            getLogger().error(`Deepseek API attempt ${attempt} failed`, { error: error instanceof Error ? error.message : String(error) });
 
             if (attempt < MAX_RETRIES) {
                 await sleep(RETRY_DELAY_MS * attempt);
@@ -111,7 +113,7 @@ export async function callDeepseek(
     // Circuit Breaker: 尝试降级到 Workers AI
     if (aiBinding) {
         try {
-            console.warn('Deepseek API exhausted, falling back to Workers AI...');
+            getLogger().warn('Deepseek API exhausted, falling back to Workers AI');
             // 动态导入以避免循环依赖风险
             const { generateText } = await import('./workers-ai.server');
 
@@ -132,7 +134,7 @@ export async function callDeepseek(
                 cached: false,
             };
         } catch (fallbackError) {
-            console.error('Workers AI Fallback failed:', fallbackError);
+            getLogger().error('Workers AI fallback failed', { error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError) });
         }
     }
 
@@ -149,7 +151,7 @@ export async function callDeepseekWithCache(
     apiKey: string,
     kv: KVNamespace | null,
     cacheKey: string,
-    options: AICompletionOptions & { aiBinding?: any },
+    options: AICompletionOptions & { aiBinding?: Ai },
     cacheTTL: number = 3600 // 默认缓存 1 小时
 ): Promise<AICompletionResult> {
     // 尝试从缓存获取
@@ -165,7 +167,7 @@ export async function callDeepseekWithCache(
                 };
             }
         } catch (error) {
-            console.error('KV cache read error:', error);
+            getLogger().error('KV cache read failed', { error: error instanceof Error ? error.message : String(error) });
         }
     }
 
@@ -177,7 +179,7 @@ export async function callDeepseekWithCache(
         try {
             await kv.put(cacheKey, result.content, { expirationTtl: cacheTTL });
         } catch (error) {
-            console.error('KV cache write error:', error);
+            getLogger().error('KV cache write failed', { error: error instanceof Error ? error.message : String(error) });
         }
     }
 
@@ -203,7 +205,7 @@ export async function trackAIUsage(
             record.tokensUsed
         );
     } catch (error) {
-        console.error('Failed to track AI usage:', error);
+            getLogger().error('Track AI usage failed', { error: error instanceof Error ? error.message : String(error) });
     }
 }
 
@@ -231,7 +233,7 @@ export async function checkDailyLimit(
             const cached = await kv.get(counterKey);
             currentCount = cached ? parseInt(cached, 10) : 0;
         } catch (error) {
-            console.error('KV counter read error:', error);
+            getLogger().error('KV counter read failed', { error: error instanceof Error ? error.message : String(error) });
         }
     }
 
@@ -261,7 +263,7 @@ export async function incrementDailyCount(
         // 设置过期时间为次日 0 点后 1 小时（确保覆盖时区差异）
         await kv.put(counterKey, String(currentCount + 1), { expirationTtl: 90000 });
     } catch (error) {
-        console.error('KV counter increment error:', error);
+            getLogger().error('KV counter increment failed', { error: error instanceof Error ? error.message : String(error) });
     }
 }
 

@@ -1,4 +1,4 @@
-import type { Route } from "./+types/api.r2.$";
+import type { LoaderFunctionArgs } from "react-router";
 import type { Env } from "~/types/env";
 import type { Headers as CloudflareHeaders } from "@cloudflare/workers-types";
 
@@ -7,9 +7,9 @@ import type { Headers as CloudflareHeaders } from "@cloudflare/workers-types";
  * 通过 Workers 访问 R2 存储桶中的图片
  * 路由: /api/r2/* -> R2 bucket
  */
-export async function loader({ params, context, request }: Route.LoaderArgs) {
+export async function loader({ params, context, request }: LoaderFunctionArgs) {
     // 显式类型断言，确保 Env 类型正确
-    const env = (context as any).cloudflare.env as Env;
+    const env = context.cloudflare.env as Env;
     const { IMAGES_BUCKET } = env;
 
     if (!IMAGES_BUCKET) {
@@ -68,8 +68,9 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
 
         // 显式断言 body 类型，解决 Cloudflare ReadableStream 与 Web Standard ReadableStream 的类型不兼容
         return new Response(object.body as unknown as BodyInit, { headers: headers as unknown as Headers });
-    } catch (error: any) {
-        console.error(`R2 fetch error for key '${key}':`, error);
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error(`R2 fetch error for key '${key}':`, errMsg);
         return new Response("Internal Server Error: Failed to fetch file", { status: 500 });
     }
 }

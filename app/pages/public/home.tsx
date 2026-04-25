@@ -1,82 +1,121 @@
-import { GlassCard } from "~/components/layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import { GlitchText } from "~/components/ui/animations/GlitchText";
 import { motion } from "framer-motion";
-import { Link } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { useState, useEffect } from "react";
 import { BookOpen, Clapperboard, ShoppingBag, Sparkles, FileText } from "lucide-react";
-import type { Route } from "./+types/home";
+import type { LoaderFunctionArgs } from "react-router";
 import { AnimeCard } from "~/components/anime/AnimeCard";
+import { getAnnouncements, getChangelog, getSiteContent } from "~/services/index";
+import type { Announcement } from "~/types/announcement";
+import type { ChangelogItem } from "~/types/changelog";
+import type { SiteContent } from "~/types/site-content";
 
 import type { Env } from "~/types/env";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const env = context.cloudflare.env as unknown as Env;
+interface ArticleRow {
+    id: number;
+    slug: string;
+    title: string;
+    summary: string | null;
+    category: string | null;
+    cover_image: string | null;
+    views: number;
+    created_at: number;
+}
+
+interface AnimeRow {
+    id: number;
+    title: string;
+    cover_url: string | null;
+    status: string | null;
+    progress: string | null;
+    rating: number | null;
+    review: string | null;
+}
+
+export async function loader({ context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as {
+    anime_db?: import('~/services/db.server').Database;
+    CACHE_KV?: import('@cloudflare/workers-types').KVNamespace;
+    NOTION_TOKEN?: string;
+    NOTION_ANNOUNCEMENT_DATABASE_ID?: string;
+    NOTION_CHANGELOG_DATABASE_ID?: string;
+    NOTION_SITE_CONTENT_DATABASE_ID?: string;
+  };
   const { anime_db, CACHE_KV } = env;
 
-  // 1. 数据库连接检查
   if (!anime_db) {
     console.error("CRITICAL: Database 'anime_db' is not bound or configured.");
     return {
-      articles: [],
-      animes: [],
-      error: "Database connection failed"
+      articles: [] as ArticleRow[],
+      animes: [] as AnimeRow[],
+      announcements: [] as Announcement[],
+      featuredChangelog: [] as ChangelogItem[],
+      siteContent: {} as Record<string, SiteContent>,
     };
   }
 
-  try {
-    // 直接查询数据库，不使用缓存
-    // 获取最新文章（仅查询已发布的）
-    const articlesQuery = `
-      SELECT id, slug, title, summary, category, cover_image, views, created_at
-      FROM articles
-      WHERE status = 'published'
-      ORDER BY created_at DESC
-      LIMIT 6
-    `;
+  // 并行拉取：D1 数据 + Notion CMS 数据
+  const [dbResult, notionAnnouncements, notionChangelog, notionSiteContent] = await Promise.allSettled([
+    // D1: 文章 + 番剧
+    (async () => {
+      const [articlesResult, animesResult] = await Promise.all([
+        anime_db.prepare(`
+          SELECT id, slug, title, summary, category, cover_image, views, created_at
+          FROM articles WHERE status = 'published' ORDER BY created_at DESC LIMIT 6
+        `).all(),
+        anime_db.prepare(`
+          SELECT id, title, cover_url, status, progress, rating, review
+          FROM animes WHERE status IN ('watching','completed')
+          ORDER BY CASE status WHEN 'watching' THEN 1 ELSE 2 END, created_at DESC LIMIT 8
+        `).all(),
+      ]);
+      return {
+        articles: (articlesResult.results || []) as ArticleRow[],
+        animes: (animesResult.results || []) as AnimeRow[],
+      };
+    })(),
+    // Notion: 首页横幅公告（三重过滤：已发布 + 首页展示 + 时间窗）
+    getAnnouncements(env.NOTION_TOKEN, env.NOTION_ANNOUNCEMENT_DATABASE_ID, CACHE_KV, {
+      featuredOnly: true,
+      displayMode: "顶部横幅",
+    }),
+    // Notion: 首页精选更新日志
+    getChangelog(env.NOTION_TOKEN, env.NOTION_CHANGELOG_DATABASE_ID, CACHE_KV, {
+      featuredOnly: true,
+    }),
+    // Notion: 首页设定
+    getSiteContent(env.NOTION_TOKEN, env.NOTION_SITE_CONTENT_DATABASE_ID, CACHE_KV, {
+      page: "首页",
+    }),
+  ]);
 
-    // 获取正在追的番剧
-    const animesQuery = `
-      SELECT id, title, cover_url, status, progress, rating, review
-      FROM animes
-      WHERE status IN ('watching', 'completed')
-      ORDER BY 
-        CASE status
-          WHEN 'watching' THEN 1
-          WHEN 'completed' THEN 2
-        END,
-        created_at DESC
-      LIMIT 8
-    `;
+  const dbData = dbResult.status === "fulfilled" ? dbResult.value : { articles: [], animes: [] };
+  const announcementData = notionAnnouncements.status === "fulfilled"
+    ? (notionAnnouncements.value as any).data || []
+    : [];
+  const changelogData = notionChangelog.status === "fulfilled"
+    ? (notionChangelog.value as any).data || []
+    : [];
+  const siteContentList = notionSiteContent.status === "fulfilled"
+    ? (notionSiteContent.value as any).data || []
+    : [];
 
-    // 并行执行查询以提高性能
-    const [articlesResult, animesResult] = await Promise.all([
-      anime_db.prepare(articlesQuery).all(),
-      anime_db.prepare(animesQuery).all()
-    ]);
-
-    // 检查查询错误
-    if (!articlesResult.success) {
-      console.error("Articles query failed:", articlesResult.error);
-    }
-    if (!animesResult.success) {
-      console.error("Animes query failed:", animesResult.error);
-    }
-
-    return {
-      articles: articlesResult.results || [],
-      animes: animesResult.results || [],
-    };
-  } catch (error: any) {
-    // 5. 详细错误日志
-    console.error("Failed to fetch home data:", error);
-    if (error.stack) {
-      console.error("Stack trace:", error.stack);
-    }
-
-    // 返回空数据而不是抛出500，保证页面至少能渲染部分内容
-    return { articles: [], animes: [] };
+  // 将 siteContent 转为 { pageKey: item } Map 方便模板读取
+  const siteContent: Record<string, SiteContent> = {};
+  for (const item of siteContentList) {
+    if (item.pageKey) siteContent[item.pageKey] = item;
   }
+
+  return {
+    articles: dbData.articles,
+    animes: dbData.animes,
+    announcements: announcementData,
+    featuredChangelog: changelogData,
+    siteContent,
+  };
 }
 
 function GreetingText() {
@@ -124,8 +163,16 @@ function TimeIndicator() {
   );
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-  const { articles, animes } = loaderData;
+export default function Home() {
+  const loaderData = useLoaderData<typeof loader>();
+  const { articles, animes, announcements, featuredChangelog, siteContent } = loaderData;
+
+  // 从 Notion 网站设定中读取首页文案（有值就用，没有就兜底默认值）
+  const heroTitle = siteContent["home.hero.title"]?.summary || "你好，旅人";
+  const heroSubtitle = siteContent["home.hero.subtitle"]?.summary || "每天发现不一样的梦境瞬间";
+  const heroCTA = siteContent["home.hero.cta"]?.summary || "探索文章";
+  const heroCTA2 = siteContent["home.hero.cta2"]?.summary || "时光机";
+  const heroCTA3 = siteContent["home.hero.cta3"]?.summary || "杂货铺";
 
   return (
     <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-24 md:pb-32 px-4 md:px-6 lg:px-10 xl:px-12">
@@ -163,9 +210,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             className="flex flex-wrap gap-4"
           >
             {[
-              { name: "探索文章", path: "/articles", isPrimary: true, icon: BookOpen },
-              { name: "时光机", path: "/archive", isPrimary: false, icon: Clapperboard },
-              { name: "杂货铺", path: "/shop", isPrimary: false, icon: ShoppingBag },
+              { name: heroCTA, path: "/articles", isPrimary: true, icon: BookOpen },
+              { name: heroCTA2, path: "/archive", isPrimary: false, icon: Clapperboard },
+              { name: heroCTA3, path: "/shop", isPrimary: false, icon: ShoppingBag },
             ].map((item, index) => (
               <Link key={item.name} to={item.path} className="group">
                 <div
@@ -261,7 +308,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8 md:gap-10 2xl:gap-12">
-          {articles.map((article: any, index: number) => (
+          {articles.map((article, index) => (
             <motion.div
               key={article.id}
               initial={{ opacity: 0, scale: 0.98 }}
@@ -280,7 +327,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       />
                       <div className="absolute top-4 left-4 z-10">
                         <span className="px-3 py-1.5 bg-white/90 dark:bg-black/50 backdrop-blur-md text-slate-900 dark:text-white shadow-sm rounded-full text-[11px] font-bold uppercase tracking-wider">
-                          {article.category}
+                          {article.category ?? '未分类'}
                         </span>
                       </div>
                     </div>
@@ -291,9 +338,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <h3 className="text-xl md:text-2xl font-bold tracking-tight text-slate-700 dark:text-slate-200 mb-3 line-clamp-2 leading-snug group-hover:text-amber-500 transition-colors">
                         {article.title}
                       </h3>
-                      {article.description && (
+                      {article.summary && (
                         <p className="text-[15px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-normal mb-8">
-                          {article.description}
+                          {article.summary}
                         </p>
                       )}
                     </div>

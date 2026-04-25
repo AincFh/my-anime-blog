@@ -1,8 +1,19 @@
 import { motion } from "framer-motion";
 import { useState, useRef, useMemo } from "react";
-import type { Route } from "./+types/admin.gallery";
-import { redirect, useSubmit, useNavigation, Form } from "react-router";
-import { getSessionId } from "~/utils/auth";
+import type { LoaderFunctionArgs } from "react-router";
+import type { R2Object, R2Bucket } from "@cloudflare/workers-types";
+
+interface GalleryImage {
+    id: number;
+    url: string;
+    name: string;
+    size: number;
+    uploadedAt: string;
+    key: string;
+}
+
+import { redirect, useSubmit, useNavigation, Form, useLoaderData, type LoaderFunctionArgs, type ActionFunctionArgs } from "react-router";
+import { requireAdmin } from "~/utils/auth";
 import { SmartCrop } from "~/components/admin/SmartCrop";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { uploadToR2, deleteFromR2, getR2PublicUrl } from "~/services/r2.server";
@@ -10,35 +21,34 @@ import { Search, Filter, Trash2, CheckCircle2, Circle, Copy, Eye, Plus, CloudUpl
 import { confirmModal } from "~/components/ui/Modal";
 import { toast } from "~/components/ui/Toast";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = (context as any).cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as { IMAGES_BUCKET: R2Bucket; anime_db: import('~/services/db.server').Database };
   const bucket = env.IMAGES_BUCKET;
 
-  // 检查是否已登录
-  const sessionId = getSessionId(request);
-  if (!sessionId) {
+  // 检查是否已登录 + 验证管理员权限
+  const session = await requireAdmin(request, env.anime_db);
+  if (!session) {
     throw redirect("/panel/login");
   }
 
   // 从R2获取图片列表
-  let images: any[] = [];
+  let images: GalleryImage[] = [];
   let totalSize = 0;
   const maxSize = 10000; // MB (Mock limit)
 
   if (bucket) {
     try {
       const list = await bucket.list({ limit: 100 });
-      images = list.objects.map((obj: any, index: number) => ({
-        id: index + 1, // temporary ID
+      images = list.objects.map((obj: R2Object, index: number) => ({
+        id: index + 1,
         url: getR2PublicUrl(obj.key, undefined, env),
         name: obj.key,
-        size: Math.round(obj.size / 1024), // KB
+        size: Math.round(obj.size / 1024),
         uploadedAt: obj.uploaded.toISOString().split('T')[0],
         key: obj.key
       }));
 
-      // Calculate total usage
-      totalSize = Math.round(list.objects.reduce((acc: number, obj: any) => acc + obj.size, 0) / 1024 / 1024);
+      totalSize = Math.round(list.objects.reduce((acc: number, obj: R2Object) => acc + obj.size, 0) / 1024 / 1024);
     } catch (e) {
       console.error("Failed to list R2 objects", e);
     }
@@ -47,9 +57,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { images, totalSize, maxSize };
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const env = (context as any).cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+  const env = context.cloudflare.env as { IMAGES_BUCKET: R2Bucket; anime_db: import('~/services/db.server').Database };
   const bucket = env.IMAGES_BUCKET;
+
+  // 强制管理员鉴权
+  const session = await requireAdmin(request, env.anime_db);
+  if (!session) {
+    throw redirect("/panel/login");
+  }
+
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -86,8 +103,9 @@ export async function action({ request, context }: Route.ActionArgs) {
   return null;
 }
 
-export default function AdminGallery({ loaderData }: Route.ComponentProps) {
-  const { images, totalSize, maxSize } = loaderData;
+export default function AdminGallery() {
+    const loaderData = useLoaderData<typeof loader>();
+    const { images, totalSize, maxSize } = loaderData;
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,7 +117,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
   const isSubmitting = navigation.state === "submitting";
 
   const filteredImages = useMemo(() => {
-    return images.filter((img: any) => {
+    return images.filter((img: GalleryImage) => {
       const matchesSearch = img.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === "all" || img.name.startsWith(categoryFilter + "/");
       return matchesSearch && matchesCategory;
@@ -116,7 +134,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
     if (selectedKeys.length === filteredImages.length) {
       setSelectedKeys([]);
     } else {
-      setSelectedKeys(filteredImages.map((img: any) => img.key));
+      setSelectedKeys(filteredImages.map((img: GalleryImage) => img.key));
     }
   };
 
@@ -321,7 +339,7 @@ export default function AdminGallery({ loaderData }: Route.ComponentProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {filteredImages.map((image: any, index: number) => (
+            {filteredImages.map((image: GalleryImage, index: number) => (
               <motion.div
                 key={image.key}
                 className={`relative group cursor-pointer transition-transform will-change-transform ${selectedKeys.includes(image.key) ? "scale-[0.98]" : ""}`}

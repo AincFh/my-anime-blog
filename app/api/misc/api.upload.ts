@@ -1,4 +1,4 @@
-import type { Route } from "./+types/api.upload";
+import type { ActionFunctionArgs } from "react-router";
 import { jsonWithSecurity } from "~/utils/security";
 import { getSessionId } from "~/utils/auth";
 
@@ -6,10 +6,10 @@ import { getSessionId } from "~/utils/auth";
  * R2 文件上传 API
  * 功能：接收文件并上传到 Cloudflare R2 存储桶
  */
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
     // 1. 权限验证
     const sessionId = getSessionId(request);
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; IMAGES_BUCKET?: import('@cloudflare/workers-types').R2Bucket };
     const { anime_db } = env;
     const r2_bucket = env.IMAGES_BUCKET;
 

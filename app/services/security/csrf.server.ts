@@ -1,4 +1,5 @@
 import { generateCSRFToken as generateSignedToken, verifyCSRFToken as verifySignedToken } from "~/utils/security";
+import type { KVNamespace } from "@cloudflare/workers-types";
 
 /**
  * CSRF 安全服务 - 为 Admin 后台提供强化的安全校验
@@ -8,15 +9,14 @@ import { generateCSRFToken as generateSignedToken, verifyCSRFToken as verifySign
 /**
  * 生成 CSRF Token
  * @param sessionId 会话ID
- * @param kv KV命名空间 (保留接口，目前使用无状态签名)
+ * @param _kv KV命名空间 (保留接口，目前使用无状态签名)
  * @param secret 签名密钥
  */
 export async function generateCSRFToken(
     sessionId: string,
-    kv: any,
+    _kv: KVNamespace | null | undefined,
     secret: string
 ): Promise<string> {
-    // 优先使用 utils/security 中的带签名逻辑
     return await generateSignedToken(sessionId, secret);
 }
 
@@ -24,13 +24,13 @@ export async function generateCSRFToken(
  * 验证 CSRF Token
  * @param token 待验证的Token
  * @param sessionId 会话ID
- * @param kv KV命名空间 (保留接口)
+ * @param _kv KV命名空间 (保留接口)
  * @param secret 签名密钥
  */
 export async function validateCSRFToken(
     token: string,
     sessionId: string,
-    kv: any,
+    _kv: KVNamespace | null | undefined,
     secret: string
 ): Promise<{ valid: boolean; error?: string }> {
     if (!token) {

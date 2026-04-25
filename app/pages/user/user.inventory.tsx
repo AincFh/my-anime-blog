@@ -3,7 +3,7 @@ import { useLoaderData, useNavigate, useFetcher } from "react-router";
 import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLayout";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
-import { ClientOnly } from "~/components/common/ClientOnly";
+import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import { useState } from "react";

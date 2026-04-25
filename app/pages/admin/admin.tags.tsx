@@ -1,17 +1,30 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import type { Route } from "./+types/admin.tags";
-import { redirect } from "react-router";
-import { getSessionId } from "~/utils/auth";
+import type { LoaderFunctionArgs } from "react-router";
+
+interface TagItem {
+    id: number;
+    name: string;
+    color: string;
+    article_count?: number;
+}
+
+interface CategoryItem {
+    id: number;
+    name: string;
+    sortOrder?: number;
+}
+
+import { redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from "react-router";
+import { requireAdmin } from "~/utils/auth";
 import { Tag, BookOpen, Archive, Plus, Edit3, Trash2, Loader2, CheckCircle2 } from "lucide-react";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const sessionId = getSessionId(request);
-  if (!sessionId) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+  const session = await requireAdmin(request, anime_db);
+  if (!session) {
     throw redirect("/panel/login");
   }
-
-  const { anime_db } = context.cloudflare.env;
 
   try {
     // 从数据库获取标签（聚合查询）
@@ -50,13 +63,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const sessionId = getSessionId(request);
-  if (!sessionId) {
+export async function action({ request, context }: ActionFunctionArgs) {
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+  const session = await requireAdmin(request, anime_db);
+  if (!session) {
     throw redirect("/panel/login");
   }
 
-  const { anime_db } = context.cloudflare.env;
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -164,9 +177,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 }
 
-export default function TagManager({ loaderData }: Route.ComponentProps) {
+export default function TagManager() {
+    const loaderData = useLoaderData<typeof loader>();
   const { tags, categories } = loaderData;
-  const [selectedTag, setSelectedTag] = useState<any>(null);
+  const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
@@ -247,7 +261,7 @@ export default function TagManager({ loaderData }: Route.ComponentProps) {
             )}
 
             <div className="flex flex-wrap gap-3">
-              {tags.map((tag: any) => (
+              {tags.map((tag: TagItem) => (
                 <motion.button
                   key={tag.id}
                   className="px-4 py-2 rounded-xl text-sm font-medium text-white shadow-sm hover:shadow-md transition-shadow flex items-center gap-2 group"
@@ -323,7 +337,7 @@ export default function TagManager({ loaderData }: Route.ComponentProps) {
             )}
 
             <div className="space-y-2">
-              {categories.map((category: any) => (
+              {categories.map((category: CategoryItem) => (
                 <motion.div
                   key={category.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-move group"

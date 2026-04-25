@@ -3,6 +3,8 @@
  * 使用 KV 实现简单的 API 速率限制
  */
 
+import { getLogger } from '~/utils/logger';
+
 export interface RateLimitConfig {
     /** 时间窗口（秒） */
     windowSeconds: number;
@@ -39,16 +41,23 @@ export const RATE_LIMITS = {
 
 /**
  * 检查速率限制
+ * @param kv KV 命名空间
+ * @param identifierOrKey 标识符（IP、用户ID等）或预构建的完整 key
+ * @param config 限制配置（如果提供则自动拼接 keyPrefix）
  */
 export async function checkRateLimit(
     kv: KVNamespace,
-    key: string,
+    identifierOrKey: string,
     config: RateLimitConfig
 ): Promise<RateLimitResult> {
     const now = Math.floor(Date.now() / 1000);
     const windowStart = now - (now % config.windowSeconds);
     const resetAt = windowStart + config.windowSeconds;
 
+    // 兼容两种调用方式：identifier + config（有 keyPrefix）或预构建 key
+    const key = config.keyPrefix
+        ? `${config.keyPrefix}:${identifierOrKey}`
+        : identifierOrKey;
     const kvKey = `ratelimit:${key}:${windowStart}`;
 
     try {
@@ -76,7 +85,7 @@ export async function checkRateLimit(
             resetAt,
         };
     } catch (error) {
-        console.error('Rate limit error:', error);
+    getLogger().error('Rate limit check failed', { error: error instanceof Error ? error.message : String(error) });
         // 出错时允许请求，避免影响正常使用
         return {
             allowed: true,
@@ -161,4 +170,20 @@ export function getRateLimitKey(request: Request, prefix: string): string {
         'unknown';
 
     return `${prefix}:${ip}`;
+}
+
+/**
+ * 从请求中获取客户端 IP
+ * 与 getRateLimitKey 不同点：使用标准 HTTP 头命名 (CF-Connecting-IP 大写)
+ */
+export function getClientIP(request: Request): string {
+    const cfConnectingIP = request.headers.get('CF-Connecting-IP');
+    if (cfConnectingIP) return cfConnectingIP;
+
+    const xForwardedFor = request.headers.get('X-Forwarded-For');
+    if (xForwardedFor) {
+        return xForwardedFor.split(',')[0].trim();
+    }
+
+    return 'unknown';
 }

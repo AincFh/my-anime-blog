@@ -1,5 +1,6 @@
 import { Client } from "@notionhq/client";
 import { NotionToMarkdown } from "notion-to-md";
+import { getLogger } from '~/utils/logger';
 
 /**
  * Notion API 服务封装 (Server Only)
@@ -40,9 +41,9 @@ export async function fetchNotionArticles(context: any): Promise<NotionArticle[]
         } catch { /* ignore */ }
     }
 
-    console.log("[Notion Sync] Fetching articles with native fetch...");
+    getLogger().debug('Fetching articles from Notion via native fetch');
 
-    let allResults: any[] = [];
+    let allResults: Record<string, unknown>[] = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
 
@@ -88,7 +89,7 @@ export async function fetchNotionArticles(context: any): Promise<NotionArticle[]
         }
 
         const articles = allResults.map((page: any) => mapNotionProperties(page));
-        console.log(`[Notion Sync] Successfully fetched ${articles.length} articles.`);
+        getLogger().info('Fetched articles from Notion', { count: articles.length });
 
         // 写入缓存
         if (kv && articles.length > 0) {
@@ -97,7 +98,7 @@ export async function fetchNotionArticles(context: any): Promise<NotionArticle[]
 
         return articles;
     } catch (error) {
-        console.error("[Notion Sync] Critical failure:", error);
+        getLogger().error('Notion sync critical failure', { error: error instanceof Error ? error.message : String(error) });
         return [];
     }
 }
@@ -152,7 +153,7 @@ export async function getNotionArticleContent(slug: string, context: any) {
             }
         }
     } catch (e) {
-        console.error("[Notion Sync] Detail query failed:", e);
+        getLogger().error('Notion detail query failed', { error: e instanceof Error ? e.message : String(e) });
     }
 
     // 策略2: slug 可能就是 page_id（经过格式化）
@@ -203,7 +204,7 @@ function mapNotionProperties(page: any): NotionArticle {
     const category = props["分类"]?.select?.name || "未分类";
 
     // 提取标签
-    const tags = props["标签"]?.multi_select?.map((s: any) => s.name) || [];
+    const tags = props["标签"]?.multi_select?.map((s: Record<string, unknown>) => s.name as string) || [];
 
     // 提取日期：优先「发布日期」，其次「创建时间」
     const publishDate = props["发布日期"]?.date?.start;

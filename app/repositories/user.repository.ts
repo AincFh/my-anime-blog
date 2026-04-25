@@ -59,7 +59,7 @@ export class UserRepository implements IRepository<User, CreateUserDTO> {
 
     async update(id: number, data: Partial<User>): Promise<User | null> {
         const fields: string[] = [];
-        const values: any[] = [];
+        const values: (string | number | undefined)[] = [];
 
         if (data.username !== undefined) {
             fields.push('username = ?');

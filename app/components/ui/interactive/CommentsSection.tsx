@@ -2,6 +2,7 @@ import { useFetcher } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Send, MessageSquare } from "lucide-react";
+import { onComment } from "~/components/ui/system/AchievementSystem";
 
 interface Comment {
     id: number;
@@ -32,12 +33,13 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
             setIsSubmitting(false);
             if (isSuccess && formRef.current) {
                 formRef.current.reset();
+                onComment();
             }
         }
     }, [fetcher.state, isSuccess]);
 
     return (
-        <div className="mt-12 py-8 px-6 rounded-3xl bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
+        <div className="mt-12 py-8 px-6 rounded-3xl bg-slate-100/50 dark:bg-[rgba(37,40,54,0.85)] backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                 <MessageSquare size={20} className="text-primary-start" />
                 最新评论
@@ -47,7 +49,7 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
             </h3>
 
             {/* 评论表单 */}
-            <div className="mb-8 p-6 rounded-2xl bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
+            <div className="mb-8 p-6 rounded-2xl bg-white/80 dark:bg-[rgba(46,50,68,0.90)] backdrop-blur-xl border border-slate-200/50 dark:border-white/5">
                 <fetcher.Form
                     method="post"
                     action="/api/comments"
@@ -64,14 +66,14 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                     name="author"
                                     required
                                     placeholder="昵称 *"
-                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    className="w-full px-4 py-3 bg-white dark:bg-[rgba(37,40,54,0.85)] border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors"
                                     style={{ color: 'var(--text-primary)' }}
                                 />
                                 <input
                                     type="email"
                                     name="email"
                                     placeholder="邮箱 (可选)"
-                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors"
+                                    className="w-full px-4 py-3 bg-white dark:bg-[rgba(37,40,54,0.85)] border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors"
                                     style={{ color: 'var(--text-primary)' }}
                                 />
                             </div>
@@ -80,7 +82,7 @@ export function CommentsSection({ articleId, comments: initialComments }: Commen
                                 required
                                 rows={3}
                                 placeholder="发表你的看法..."
-                                className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors resize-none"
+                                className="w-full px-4 py-3 bg-white dark:bg-[rgba(37,40,54,0.85)] border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-primary-start transition-colors resize-none"
                                 style={{ color: 'var(--text-primary)' }}
                             />
                         </div>

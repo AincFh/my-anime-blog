@@ -1,16 +1,16 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import type { Route } from "./+types/archive";
+import type { LoaderFunctionArgs } from "react-router";
+import { useLoaderData } from "react-router";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { FileText, Clapperboard, Clock, Sparkles } from "lucide-react";
-import { getTimeline } from "~/services/timeline.server";
+import { getTimeline } from "~/services/timeline";
 import type { TimelineItem } from "~/types/timeline";
 
-export async function loader({ context }: Route.LoaderArgs) {
-    const env = context.cloudflare.env as any;
+export async function loader({ context }: LoaderFunctionArgs) {
+    const env = context.cloudflare.env as { NOTION_TOKEN?: string; NOTION_TIMELINE_DATABASE_ID?: string; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace };
 
     try {
-        // 从 Notion 时光机数据库获取数据
         const result = await getTimeline(
             env.NOTION_TOKEN,
             env.NOTION_TIMELINE_DATABASE_ID,
@@ -24,15 +24,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 
         const items: TimelineItem[] = result.data;
 
-        // 按年份分组
         const groupedByYear = items.reduce((acc: Record<string, TimelineItem[]>, item) => {
             const date = new Date(item.date);
             const year = date.getFullYear().toString();
-
-            if (!acc[year]) {
-                acc[year] = [];
-            }
-
+            if (!acc[year]) acc[year] = [];
             acc[year].push(item);
             return acc;
         }, {});
@@ -44,7 +39,6 @@ export async function loader({ context }: Route.LoaderArgs) {
     }
 }
 
-// 类型图标映射
 const TYPE_ICONS: Record<string, React.ElementType> = {
     '网站里程碑': Sparkles,
     '功能上线': Sparkles,
@@ -53,10 +47,10 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
     '开发随记': FileText,
 };
 
-// 默认图标
 const DEFAULT_ICON = Sparkles;
 
-export default function Archive({ loaderData }: Route.ComponentProps) {
+export default function Archive() {
+    const loaderData = useLoaderData<typeof loader>();
     const { groupedByYear } = loaderData;
     const years = Object.keys(groupedByYear).sort((a, b) => parseInt(b) - parseInt(a));
     const containerRef = useRef<HTMLDivElement>(null);

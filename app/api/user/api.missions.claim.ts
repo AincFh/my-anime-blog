@@ -1,8 +1,9 @@
+import type { ActionFunctionArgs } from "react-router";
 import { getSessionToken, verifySession } from '~/services/auth.server';
 import { claimMissionReward } from '~/services/membership/mission.server';
 
-export async function action({ request, context }: { request: Request; context: any }) {
-    const { anime_db } = context.cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
     const formData = await request.formData();
     const missionId = formData.get("missionId") as string;
 

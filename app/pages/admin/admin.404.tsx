@@ -56,12 +56,6 @@ export default function Admin404() {
 
                 {/* 操作按钮 */}
                 <div className="flex gap-4 justify-center">
-                    <Link
-                        to="/admin"
-                        className="px-6 py-3 bg-gradient-to-r from-at-orange to-at-purple text-white font-bold rounded-lg hover:shadow-lg transition-all"
-                    >
-                        返回控制台
-                    </Link>
                     <button
                         onClick={() => window.history.back()}
                         className="px-6 py-3 border border-slate-600 text-slate-300 hover:border-at-orange hover:text-at-orange rounded-lg transition-all"

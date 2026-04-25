@@ -1,5 +1,5 @@
 import { Form, redirect, useActionData, useNavigation } from "react-router";
-import type { Route } from "./+types/admin.login";
+import type { LoaderFunctionArgs } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, User, Shield, AlertTriangle } from "lucide-react";
@@ -11,7 +11,7 @@ import { IconEmoji } from "~/components/ui/IconEmoji";
  * 设计：二次元科技感风格，登录成功有炫酷动画
  */
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   // 如果已登录并具有管理员权限，重定向到后台
   const { getDBSafe } = await import("~/utils/db");
   const db = getDBSafe(context);
@@ -25,7 +25,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return null;
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const username = formData.get("username") as string;
   const password = formData.get("password") as string;

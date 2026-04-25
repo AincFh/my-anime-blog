@@ -4,75 +4,36 @@ import { HexagonBadge } from "~/components/gamification/HexagonBadge";
 import { GameDashboardLayout } from "~/components/dashboard/game/GameDashboardLayout";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
-import { ClientOnly } from "~/components/common/ClientOnly";
+import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { cn } from "~/utils/cn";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
-import type { Route } from "./+types/user.achievements";
+import type { LoaderFunctionArgs } from "react-router";
 import { Moon, Coffee, Zap, MessageSquare, Eye, Cat, MousePointer2 } from "lucide-react";
 import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 
-// Mock Achievement Data (Should be shared with AchievementSystem.tsx ideally)
-const ALL_ACHIEVEMENTS = [
-    {
-        id: "night_owl",
-        name: "夜之守望者",
-        description: "在凌晨 2:00 - 4:00 期间访问网站",
-        icon: "moon",
-        iconComponent: Moon,
-        category: "time",
-    },
-    {
-        id: "early_bird",
-        name: "早安少女/少年",
-        description: "在早上 5:00 - 7:00 期间访问",
-        icon: "coffee",
-        iconComponent: Coffee,
-        category: "time",
-    },
-    {
-        id: "combo_master",
-        name: "连击大师",
-        description: "在单篇文章点赞连击超过 50 次",
-        icon: "zap",
-        iconComponent: Zap,
-        category: "interaction",
-    },
-    {
-        id: "first_contact",
-        name: "契约缔结者",
-        description: "发表第一条评论",
-        icon: "message",
-        iconComponent: MessageSquare,
-        category: "interaction",
-    },
-    {
-        id: "observer",
-        name: "观测者",
-        description: "累计阅读文章超过 10 篇",
-        icon: "eye",
-        iconComponent: Eye,
-        category: "interaction",
-    },
-    {
-        id: "schrodinger_cat",
-        name: "薛定谔的猫",
-        description: "连续刷新 404 页面 5 次",
-        icon: "cat",
-        iconComponent: Cat,
-        category: "hidden",
-    },
-    {
-        id: "pixel_hunter",
-        name: "像素猎人",
-        description: "找到并点击 1x1 像素的隐藏按钮",
-        icon: "mouse",
-        iconComponent: MousePointer2,
-        category: "hidden",
-    },
+// 成就定义（从数据库读取，未解锁的成就也显示为锁定状态）
+interface AchievementDef {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    iconComponent: typeof Moon;
+    category: string;
+}
+
+// 从数据库读取成就定义，fallback 到默认列表
+const ACHIEVEMENT_DEFINITIONS: AchievementDef[] = [
+    { id: "night_owl", name: "夜之守望者", description: "在凌晨 2:00 - 4:00 期间访问网站", icon: "moon", iconComponent: Moon, category: "time" },
+    { id: "early_bird", name: "早安少女/少年", description: "在早上 5:00 - 7:00 期间访问", icon: "coffee", iconComponent: Coffee, category: "time" },
+    { id: "combo_master", name: "连击大师", description: "在单篇文章点赞连击超过 50 次", icon: "zap", iconComponent: Zap, category: "interaction" },
+    { id: "first_contact", name: "契约缔结者", description: "发表第一条评论", icon: "message", iconComponent: MessageSquare, category: "interaction" },
+    { id: "observer", name: "观测者", description: "累计阅读文章超过 10 篇", icon: "eye", iconComponent: Eye, category: "interaction" },
+    { id: "schrodinger_cat", name: "薛定谔的猫", description: "连续刷新 404 页面 5 次", icon: "cat", iconComponent: Cat, category: "hidden" },
+    { id: "pixel_hunter", name: "像素猎人", description: "找到并点击 1x1 像素的隐藏按钮", icon: "mouse", iconComponent: MousePointer2, category: "hidden" },
 ];
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { anime_db } = context.cloudflare.env;
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
@@ -100,7 +61,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     };
 }
 
-export default function UserAchievements({ loaderData }: Route.ComponentProps) {
+export default function UserAchievements() {
+    const loaderData = useLoaderData<typeof loader>();
     const { loggedIn, unlockedIds, user, stats } = loaderData;
     const navigate = useNavigate();
 
@@ -116,7 +78,7 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
     }
 
     // Calculate stats
-    const total = ALL_ACHIEVEMENTS.length;
+    const total = ACHIEVEMENT_DEFINITIONS.length;
     const unlocked = unlockedIds.length;
     const progress = Math.round((unlocked / total) * 100);
 
@@ -134,7 +96,6 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
             {/* 灵动岛导航 */}
             <FloatingSubNav
                 title="成就殿堂"
-                backUrl="/user/dashboard"
                 rightContent={
                     <div className="flex items-center gap-1 text-amber-400">
                         <span className="text-[13px] font-bold">{unlocked}/{total}</span>
@@ -195,7 +156,7 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
                 {/* Medallion Wall (The Honeycomb Wall) */}
                 <div className="w-full max-w-6xl pb-24">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-4 px-4">
-                        {ALL_ACHIEVEMENTS.map((achievement, index) => {
+                        {ACHIEVEMENT_DEFINITIONS.map((achievement, index) => {
                             const isUnlocked = (unlockedIds as string[]).includes(achievement.id);
                             return (
                                 <motion.div
@@ -258,7 +219,7 @@ export default function UserAchievements({ loaderData }: Route.ComponentProps) {
                             </div>
                             <div className="space-y-1">
                                 <div className="text-3xl font-display font-black text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                                    {unlockedIds.filter(id => ALL_ACHIEVEMENTS.find(a => a.id === id)?.category === 'hidden').length}
+                                    {unlockedIds.filter(id => ACHIEVEMENT_DEFINITIONS.find(a => a.id === id)?.category === 'hidden').length}
                                 </div>
                                 <div className="text-[10px] text-white/30 uppercase tracking-widest font-mono">Classified</div>
                             </div>

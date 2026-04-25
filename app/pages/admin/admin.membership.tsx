@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useLoaderData, useFetcher } from "react-router";
+import { useLoaderData, useFetcher, redirect } from "react-router";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { Crown, Edit3, Save, X, Palette, DollarSign, Settings, ShieldCheck, Loader2, List } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
 
@@ -21,15 +22,31 @@ interface MembershipTier {
 }
 
 // --- Loader ---
-export async function loader({ request, context }: any) {
-    const { anime_db } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+
+    // 检查是否已登录 + 验证管理员权限
+    const { requireAdmin } = await import("~/utils/auth");
+    const session = await requireAdmin(request, anime_db);
+    if (!session) {
+        throw redirect("/panel/login");
+    }
+
     const tiers = await anime_db.prepare("SELECT * FROM membership_tiers ORDER BY sort_order ASC").all();
     return { tiers: tiers.results as MembershipTier[] };
 }
 
 // --- Action ---
-export async function action({ request, context }: any) {
-    const { anime_db } = context.cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+
+    // 强制管理员鉴权
+    const { requireAdmin } = await import("~/utils/auth");
+    const session = await requireAdmin(request, anime_db);
+    if (!session) {
+        throw redirect("/panel/login");
+    }
+
     const formData = await request.formData();
     const action = formData.get("action");
 
@@ -56,8 +73,8 @@ export async function action({ request, context }: any) {
             return { success: true, message: "会员权益更新成功" };
         }
         return { success: false, error: "未知的操作" };
-    } catch (e: any) {
-        return { success: false, error: e.message };
+    } catch (e: unknown) {
+        return { success: false, error: e instanceof Error ? e.message : String(e) };
     }
 }
 

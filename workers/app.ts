@@ -1,4 +1,6 @@
 import { createRequestHandler } from "react-router";
+import type { AppLoadContext } from "~/types/context";
+import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 
 const requestHandler = createRequestHandler(
     () => import("virtual:react-router/server-build"),
@@ -8,8 +10,8 @@ const requestHandler = createRequestHandler(
 export default {
     fetch(request: Request, env: Env, ctx: ExecutionContext) {
         return requestHandler(request, {
-            cloudflare: { env: env as any, cf: request.cf as any, ctx },
-        });
+            cloudflare: { env: env, cf: request.cf as IncomingRequestCfProperties, ctx },
+        } satisfies AppLoadContext);
     },
 
     // Cron Trigger: 定时同步 Notion

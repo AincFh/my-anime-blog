@@ -7,6 +7,7 @@ import { SubscriptionRepository } from '~/repositories';
 import type { Subscription } from '~/repositories/subscription.repository';
 import { calculateEndDate } from './tier.server';
 import { type Database } from '../db.server';
+import { getLogger } from '~/utils/logger';
 
 export type { Subscription };
 
@@ -52,7 +53,7 @@ export async function createSubscription(
 
         return { success: true, subscription };
     } catch (error) {
-        console.error('Create subscription error:', error);
+        getLogger().error('Create subscription failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: '创建订阅失败' };
     }
 }
@@ -101,7 +102,7 @@ async function upgradeSubscription(
 
         return { success: true, subscription: updatedSub };
     } catch (error) {
-        console.error('Upgrade subscription error:', error);
+        getLogger().error('Upgrade subscription failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: '升级订阅失败' };
     }
 }
@@ -134,7 +135,7 @@ export async function cancelSubscription(
 
         return { success: true };
     } catch (error) {
-        console.error('Cancel subscription error:', error);
+        getLogger().error('Cancel subscription failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: '取消订阅失败' };
     }
 }
@@ -168,7 +169,7 @@ export async function resumeAutoRenew(
 
         return { success: true };
     } catch (error) {
-        console.error('Resume auto renew error:', error);
+        getLogger().error('Resume auto renew failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: '恢复续费失败' };
     }
 }

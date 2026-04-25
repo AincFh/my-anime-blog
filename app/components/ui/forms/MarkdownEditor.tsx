@@ -86,7 +86,7 @@ export function MarkdownEditor({ value, onChange, placeholder }: MarkdownEditorP
                             onClick={item.action}
                             className="w-full text-left flex items-center gap-3 px-2 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm text-gray-700 dark:text-gray-200"
                         >
-                            <span className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-slate-900 rounded text-xs font-bold">
+                            <span className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-[rgba(37,40,54,0.85)] rounded text-xs font-bold">
                                 {item.icon}
                             </span>
                             {item.label}

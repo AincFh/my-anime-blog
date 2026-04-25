@@ -1,14 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import type { Route } from "./+types/admin.settings";
-import { redirect, useSubmit, useNavigation } from "react-router";
+import { redirect, useSubmit, useNavigation, useLoaderData, useActionData, type LoaderFunctionArgs, type ActionFunctionArgs } from "react-router";
 import { requireAdmin } from "~/utils/auth";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import type { SystemSettings } from "~/contexts/SettingsContext";
 import { Save, RefreshCw, Settings as SettingsIcon, Palette, Box, Link as LinkIcon, Shield, Info, Check, Server, Zap, Type, Languages, Moon, Volume2, Gamepad2, Coins, ShieldAlert, CheckCircle2, CloudFog, Key, Crown } from "lucide-react";
 import { confirmModal } from "~/components/ui/Modal";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const { getDB } = await import("~/utils/db");
   const db = getDB(context);
 
@@ -19,7 +18,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   try {
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { CSRF_SECRET?: string; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace };
     const secret = env.CSRF_SECRET;
     if (!secret) {
       console.error("Critical Security Error: CSRF_SECRET is not set in environment.");
@@ -45,7 +44,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const { getDB } = await import("~/utils/db");
   const db = getDB(context);
 
@@ -60,7 +59,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const csrfToken = formData.get("_csrf") as string;
 
   // 验证 CSRF Token
-  const env = (context as any).cloudflare.env;
+  const env = context.cloudflare.env as { CSRF_SECRET?: string; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace };
 
   const secret = env.CSRF_SECRET;
   if (!secret) {
@@ -155,7 +154,7 @@ const defaultSettings: SystemSettings = {
 type SettingsTab = "basic" | "theme" | "features" | "integrations" | "security" | "god" | "about";
 
 // 深度合并对象，确保不会出现 undefined 属性导致崩溃
-function mergeSettings(defaultObj: any, dbObj: any): SystemSettings {
+function mergeSettings(defaultObj: SystemSettings, dbObj: unknown): SystemSettings {
   if (!dbObj) return defaultObj;
   const result = { ...defaultObj };
   for (const key in result) {
@@ -170,7 +169,9 @@ function mergeSettings(defaultObj: any, dbObj: any): SystemSettings {
   return result as SystemSettings;
 }
 
-export default function Settings({ loaderData, actionData }: Route.ComponentProps) {
+export default function Settings() {
+    const loaderData = useLoaderData<typeof loader>();
+    const actionData = useActionData<typeof action>();
   const [activeTab, setActiveTab] = useState<SettingsTab>("basic");
 
   const initialSettings = mergeSettings(defaultSettings, loaderData?.settings);

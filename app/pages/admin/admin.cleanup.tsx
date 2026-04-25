@@ -3,18 +3,17 @@ import { useState } from "react";
 import { Trash2, AlertTriangle, ShieldCheck, Database, RefreshCcw, CheckCircle2, History, XCircle, Search, Box, Sparkles, Loader2 } from "lucide-react";
 import { confirmModal } from "~/components/ui/Modal";
 import { redirect, Form, useActionData, useNavigation, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
-import { getSessionId } from "~/utils/auth";
+import { requireAdmin } from "~/utils/auth";
 import { getArchiveStats, runAllArchives } from "~/services/maintenance/archive.server";
 import { toast } from "~/components/ui/Toast";
 import { getOrphanFiles, deleteR2Files, formatFileSize } from "~/services/r2-manager.server";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const sessionId = getSessionId(request);
-  if (!sessionId) {
+  const { anime_db, IMAGES_BUCKET } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; IMAGES_BUCKET: R2Bucket };
+  const session = await requireAdmin(request, anime_db);
+  if (!session) {
     throw redirect("/panel/login");
   }
-
-  const { anime_db, IMAGES_BUCKET } = context.cloudflare.env;
 
   // 获取日志归档统计
   let archiveStats = { auditLogs: 0, loginHistory: 0, coinTransactions: 0 };
@@ -25,10 +24,11 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   }
 
   // 扫描 R2 孤儿文件
-  let orphanFiles: any[] = [];
+  interface OrphanFile { key: string; name: string; size: number; sizeFormatted: string; uploadedAt: string; }
+  let orphanFiles: OrphanFile[] = [];
   try {
     const orphans = await getOrphanFiles(IMAGES_BUCKET, anime_db);
-    orphanFiles = orphans.map(file => ({
+    orphanFiles = orphans.map((file: { key: string; size: number; uploadedAt: Date }) => ({
       key: file.key,
       name: file.key.split('/').pop() || file.key,
       size: file.size,
@@ -46,12 +46,11 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const sessionId = getSessionId(request);
-  if (!sessionId) {
+  const { anime_db, IMAGES_BUCKET } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; IMAGES_BUCKET: R2Bucket };
+  const session = await requireAdmin(request, anime_db);
+  if (!session) {
     throw redirect("/panel/login");
   }
-
-  const { anime_db, IMAGES_BUCKET } = context.cloudflare.env;
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -316,7 +315,7 @@ export default function AssetCleaner() {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {orphanFiles.map((file: any, index: number) => (
+              {orphanFiles.map((file: OrphanFile, index: number) => (
                 <motion.div
                   key={file.key}
                   className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${

@@ -1,35 +1,43 @@
 ---
 alwaysApply: true
 globs: "**/*.{ts,tsx}"
-description: 代码风格和命名规范 - 变量命名、函数规范、注释要求
+description: 代码风格和命名规范 — 只写自己愿意长期维护的代码
 ---
 
 # 代码风格和命名规范
+
+> **核心原则：写的每一行代码，都要问自己——这是我自己愿意接手维护的代码吗？如果答案不确定，打回去重写。**
+
+代码不只是给机器读的，更是给人读的。未来的你、接手你的同事、甚至一个陌生人都要读你的代码。一段好的代码像一篇好的散文：思路清晰、结构合理、细节考究。
+
+---
 
 ## 变量命名
 
 ### 通用规则
 
 ```typescript
-// ✅ 好的命名 - 清晰表达意图
+// ✅ 好的命名 - 一眼就知道是什么
 const isLoading = true;
 const hasError = false;
 const userCount = 42;
 const articleList: Article[] = [];
 const userProfile = { name: '张三' };
 
-// ❌ 坏的命名 - 不清晰的缩写或无意义名称
+// ❌ 坏的命名 - 让人摸不着头脑
 const isL = true;
 const flag = false;
 const cnt = 42;
 const list: Article[] = [];
 const u = { name: '张三' };
+
+// 自检：我愿意接手这段代码吗？后者让人一眼看过去全是问号。
 ```
 
 ### 布尔值命名
 
 ```typescript
-// ✅ 使用 is, has, can, should, will 前缀
+// ✅ 使用 is, has, can, should, will 前缀，语义清晰
 const isActive = true;
 const hasPermission = true;
 const canEdit = true;
@@ -45,7 +53,7 @@ const isNotFound = result === null;
 ### 函数命名
 
 ```typescript
-// ✅ 动词 + 名词结构
+// ✅ 动词 + 名词结构，意图一目了然
 function getUserById(id: number): User { }
 function createArticle(data: ArticleInput): Article { }
 function updateUserProfile(id: number, data: ProfileData): User { }
@@ -64,13 +72,13 @@ function isValidEmail(email: string): boolean { }    // 布尔判断
 ### 常量命名
 
 ```typescript
-// ✅ 使用 UPPER_SNAKE_CASE
+// ✅ 使用 UPPER_SNAKE_CASE，一眼就知道是固定值
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const DEFAULT_PAGE_SIZE = 20;
 const API_BASE_URL = 'https://api.example.com';
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
 
-// ✅ 相关常量组合成对象
+// ✅ 相关常量组合成对象，逻辑更清晰
 const HttpStatus = {
   OK: 200,
   CREATED: 201,
@@ -88,12 +96,14 @@ const ArticleStatus = {
 } as const;
 ```
 
+---
+
 ## 函数规范
 
 ### 函数声明
 
 ```typescript
-// ✅ 显式返回类型
+// ✅ 显式返回类型，调用者不需要猜
 function greet(name: string): string {
   return `你好，${name}！`;
 }
@@ -111,7 +121,7 @@ async function fetchUser(id: number): Promise<User> {
 ### 参数处理
 
 ```typescript
-// ✅ 必选参数在前，可选参数在后
+// ✅ 必选参数在前，可选参数在后，符合直觉
 function createButton(
   label: string,           // 必选
   onClick: () => void,      // 必选
@@ -119,7 +129,7 @@ function createButton(
   disabled = false          // 可选，默认值
 ): JSX.Element { }
 
-// ❌ 参数顺序混乱
+// ❌ 参数顺序混乱，使用者需要反复查看文档
 function createButton(
   disabled = false,
   variant?: 'primary' | 'secondary',
@@ -135,11 +145,11 @@ function createButton(
 async function getArticle(slug: string): Promise<Article> {
   try {
     const article = await articleRepository.findBySlug(env.DB, slug);
-    
+
     if (!article) {
       throw new NotFoundError(`文章不存在: ${slug}`);
     }
-    
+
     return article;
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -150,15 +160,15 @@ async function getArticle(slug: string): Promise<Article> {
   }
 }
 
-// ✅ 使用 Result 模式处理错误
-type Result<T, E = Error> = 
+// ✅ 使用 Result 模式处理错误，调用者明确知道可能失败
+type Result<T, E = Error> =
   | { ok: true; value: T }
   | { ok: false; error: E };
 
 async function getArticle(slug: string): Promise<Result<Article>> {
   try {
     const article = await articleRepository.findBySlug(env.DB, slug);
-    return article 
+    return article
       ? { ok: true, value: article }
       : { ok: false, error: new NotFoundError('文章不存在') };
   } catch (error) {
@@ -167,6 +177,8 @@ async function getArticle(slug: string): Promise<Result<Article>> {
 }
 ```
 
+---
+
 ## 注释规范
 
 ### 文档注释
@@ -174,11 +186,11 @@ async function getArticle(slug: string): Promise<Result<Article>> {
 ```typescript
 /**
  * 获取用户信息
- * 
+ *
  * @param userId - 用户ID
  * @returns 用户信息对象
  * @throws {NotFoundError} 用户不存在时抛出
- * 
+ *
  * @example
  * const user = await getUserById(123);
  */
@@ -204,6 +216,8 @@ const isLoading = true;
 // TODO: 当后端支持分页后，添加分页功能
 // FIXME: 修复深色模式下颜色不正确的问题
 ```
+
+---
 
 ## 代码组织
 
@@ -247,6 +261,8 @@ export type { Article, ArticleInput } from './types/article';
 // ✅ 默认导出仅用于根组件
 export default function App() { }
 ```
+
+---
 
 ## 格式规范
 
@@ -295,6 +311,8 @@ function greet() {
 }
 ```
 
+---
+
 ## 代码块顺序（类/组件内）
 
 ```typescript
@@ -302,27 +320,29 @@ export class ArticleService {
   // 1. 静态属性和静态方法
   static defaultConfig = { /* ... */ };
   static createInstance() { /* ... */ };
-  
+
   // 2. 实例属性
   private cache: Map<string, Article>;
   private env: Env;
-  
+
   // 3. 构造函数
   constructor(env: Env) {
     this.env = env;
     this.cache = new Map();
   }
-  
+
   // 4. 公共方法（按重要性/使用频率排序）
   async getArticle(id: number): Promise<Article> { }
   async createArticle(data: ArticleInput): Promise<Article> { }
   async updateArticle(id: number, data: ArticleInput): Promise<Article> { }
-  
+
   // 5. 私有方法
   private async fetchFromDb(id: number): Promise<Article | null> { }
   private invalidateCache(key: string): void { }
 }
 ```
+
+---
 
 ## 禁止的做法
 
@@ -359,3 +379,36 @@ for (const item of items) {
   process(item);
 }
 ```
+
+---
+
+## 代码自检清单
+
+在提交任何代码之前，用这个清单自检：
+
+### 命名质量
+- [ ] 变量名能"望文生义"吗？不需要注释就能理解吗？
+- [ ] 函数名是否清晰表达了它的作用？
+- [ ] 常量名是否一眼就知道是固定值？
+- [ ] 有没有缩写过度导致歧义的命名？
+
+### 代码结构
+- [ ] 函数是否"单一职责"？一个函数只做一件事吗？
+- [ ] 函数长度是否控制在合理范围内？（建议不超过50行）
+- [ ] 嵌套层级是否过深？（建议不超过3层）
+- [ ] import 语句是否按规范排序？
+
+### 错误处理
+- [ ] 所有异步操作都有错误处理吗？
+- [ ] 错误消息是否对用户友好？
+- [ ] 错误是否被正确分类和传播？
+
+### 可读性
+- [ ] 代码逻辑能否一口气读懂？
+- [ ] 复杂逻辑有没有清晰的注释（解释"为什么"，而非"是什么"）？
+- [ ] 有没有留下令人困惑的"技巧"？
+
+### 可维护性
+- [ ] 这段代码，三个月后我自己还能看懂吗？
+- [ ] 如果别人接手，能顺利理解吗？
+- [ ] 有没有硬编码的"魔法数字"？

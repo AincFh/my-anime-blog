@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Sparkles, Coins, Gift } from "lucide-react";
 import { toast } from "~/components/ui/Toast";
 import { useFetcher } from "react-router";
+import { onGacha } from "~/components/ui/system/AchievementSystem";
 
 const GACHA_COST = 100;
 
@@ -41,8 +42,7 @@ export function GachaMachine() {
         if (responseData && !isRolling) {
             if (responseData.success && responseData.item) {
                 setResult(responseData.item);
-                // 解锁成就
-                // unlockAchievement("gacha_master");
+                onGacha();
             } else if (responseData.error) {
                 toast.error(responseData.error);
             }

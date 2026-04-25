@@ -16,6 +16,46 @@ interface Notification {
   isRead?: boolean;
 }
 
+// 映射 API 返回的 Notification 到组件使用的 Notification
+function mapApiNotification(raw: {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  created_at: number;
+  is_read?: number;
+  is_important?: number;
+  action_url?: string | null;
+  metadata?: string | null;
+}): Notification {
+  const typeMap: Record<string, Notification["type"]> = {
+    achievement: "success",
+    signin: "success",
+    mission: "info",
+    mission_reward: "info",
+    membership: "warning",
+    comment_reply: "info",
+    system: "info",
+    purchase: "success",
+    gacha: "success",
+  };
+
+  return {
+    id: String(raw.id),
+    type: typeMap[raw.type] ?? "info",
+    title: raw.title,
+    message: raw.message,
+    timestamp: new Date(raw.created_at * 1000).toLocaleString("zh-CN", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    isImportant: Boolean(raw.is_important),
+    isRead: Boolean(raw.is_read),
+  };
+}
+
 interface NotificationPanelProps {
   notifications: Notification[];
   isOpen: boolean;
@@ -112,11 +152,20 @@ export function NotificationPanel({ notifications, isOpen, onClose, onRead }: No
   const [typingIndex, setTypingIndex] = useState(0);
 
   useEffect(() => {
-    if (isOpen && notifications.length > 0) {
-      // 简单处理：打开时显示所有通知，不逐个打字了，避免复杂状态
+    if (isOpen && notifications.length === 0) {
+      // 打开时从 API 加载通知
+      fetch("/api/user/notifications")
+        .then((r) => r.json())
+        .then((data: { notifications?: any[] }) => {
+          if (data.notifications) {
+            setDisplayedNotifications(data.notifications.map(mapApiNotification));
+          }
+        })
+        .catch(() => {});
+    } else if (notifications.length > 0) {
       setDisplayedNotifications(notifications);
     }
-  }, [notifications, isOpen]);
+  }, [isOpen]);
 
   const handleRead = (id: string) => {
     if (onRead) {

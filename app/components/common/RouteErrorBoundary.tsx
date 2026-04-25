@@ -3,7 +3,7 @@
  * 提供全站一致的错误处理 UI
  */
 import { Link } from "react-router";
-import { GlassCard } from "../layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import { IconEmoji } from "~/components/ui/IconEmoji";
 
 interface Props {
@@ -25,7 +25,7 @@ export function RouteErrorBoundary({ error, title, message }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-[#1c1f2b] relative overflow-hidden">
       {/* 背景装饰 */}
       <div className="absolute inset-0 pointer-events-none select-none opacity-[0.03] overflow-hidden flex items-center justify-center">
         <div className="text-[30vw] font-bold text-red-500 rotate-[-15deg] blur-sm">

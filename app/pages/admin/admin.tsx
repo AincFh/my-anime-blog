@@ -1,15 +1,16 @@
-import { Link, Outlet, useLocation, redirect } from "react-router";
-import type { Route } from "./+types/admin";
+import { Link, Outlet, useLocation, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { useState, useEffect } from "react";
 import { Menu, X, Home, FileText, MessageSquare, Image as ImageIcon, Settings, LogOut, ChevronRight, BarChart3, Users, Trophy, ShoppingBag, Crown, ShieldAlert, Zap, Globe, Eye, Heart } from "lucide-react";
 import { AdminMusicPlayer } from "~/components/admin/AdminMusicPlayer";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { motion, AnimatePresence } from "framer-motion";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const { anime_db, CACHE_KV } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace };
+  const { anime_db, CACHE_KV } = env;
   const token = getSessionToken(request);
-  const { valid, user } = await verifySession(token, anime_db, CACHE_KV as any, request);
+  const { valid, user } = await verifySession(token, anime_db, CACHE_KV ?? null, request);
 
   if (!valid || user?.role !== 'admin') {
     return redirect("/panel/login");
@@ -42,7 +43,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // 5. 系统配置
     (async () => {
       try {
-        const row = await anime_db.prepare("SELECT value FROM settings WHERE key = 'system_settings'").first() as any;
+        const row = await anime_db.prepare("SELECT value FROM settings WHERE key = 'system_settings'").first() as { value: string } | null;
         return row?.value ? JSON.parse(row.value) : {};
       } catch (e) {
         console.error("Failed to parse system settings:", e);
@@ -51,9 +52,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     })()
   ]);
 
-  const stats = statsResult as any || { articles: 0, comments: 0, pv: 0, likes: 0 };
-  const settings = settingsResult as any || {};
-  const userCount = (userCountResult as any)?.count || 0;
+  const stats = (statsResult as { articles: number; comments: number; pv: number; likes: number }) || { articles: 0, comments: 0, pv: 0, likes: 0 };
+  const settings = settingsResult as Record<string, unknown> || {};
+  const userCount = (userCountResult as { count: number })?.count || 0;
 
   return {
     stats,
@@ -66,7 +67,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
-export default function Admin({ loaderData }: Route.ComponentProps) {
+export default function Admin() {
+  const loaderData = useLoaderData<typeof loader>();
   const location = useLocation();
   const isRoot = location.pathname === "/admin";
   const { stats, pendingComments, musicPlaylistId, godMode, userCount, onlineUsers, animes } = loaderData;
@@ -237,7 +239,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                       待审评论监控
                     </h2>
                     <div className="h-[350px] overflow-y-auto custom-scrollbar pr-2 space-y-4 relative z-10">
-                      {pendingComments.length > 0 ? pendingComments.map((comment: any, idx: number) => (
+                      {pendingComments.length > 0 ? pendingComments.map((comment: Record<string, unknown>, idx: number) => (
                         <div key={idx} className="p-5 bg-white/5 border border-white/10 rounded-2xl flex flex-col gap-2 hover:bg-white/10 transition-all border-l-4 border-l-violet-500/50">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-bold text-violet-300">{comment.author_name}</span>
@@ -264,7 +266,7 @@ export default function Admin({ loaderData }: Route.ComponentProps) {
                       最近追番快报
                     </h2>
                     <div className="space-y-4 relative z-10">
-                      {(animes || []).slice(0, 3).map((anime: any) => (
+                      {(animes || []).slice(0, 3).map((anime: Record<string, unknown>) => (
                         <div key={anime.id} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group/item">
                           <div className="w-12 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10 shadow-xl group-hover/item:scale-105 transition-transform">
                             <img src={anime.cover_url} alt={anime.title} className="w-full h-full object-cover" />

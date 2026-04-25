@@ -44,7 +44,7 @@ function getResetTime(type: 'daily' | 'weekly' | 'monthly'): number {
  * 获取用户当前的全部任务状态
  * 优化：批量查询替代 N+1 循环
  */
-export async function getUserMissions(db: Database, userId: number): Promise<any[]> {
+export async function getUserMissions(db: Database, userId: number): Promise<(Mission & { progress: number; status: string })[]> {
     const now = Math.floor(Date.now() / 1000);
 
     // 1. 获取所有激活的任务定义（单次查询）
@@ -68,7 +68,7 @@ export async function getUserMissions(db: Database, userId: number): Promise<any
     }
 
     // 3. 构造结果，处理过期和缺失的进度记录
-    const results: any[] = [];
+    const results: (Mission & { progress: number; status: string })[] = [];
     const expiredMissions: string[] = [];
     const newMissionInserts: { missionId: string; resetAt: number }[] = [];
 
@@ -76,7 +76,7 @@ export async function getUserMissions(db: Database, userId: number): Promise<any
         let userMission = userMissionMap.get(mission.id);
 
         if (!userMission || userMission.reset_at <= now) {
-            const resetAt = getResetTime(mission.type as any);
+            const resetAt = getResetTime(mission.type);
             if (userMission) {
                 expiredMissions.push(mission.id);
             } else {
@@ -102,7 +102,7 @@ export async function getUserMissions(db: Database, userId: number): Promise<any
     // 4. 批量更新过期任务的 reset_at（替代 N 次 UPDATE）
     if (expiredMissions.length > 0) {
         const expiredPlaceholders = expiredMissions.map(() => '?').join(',');
-        const expiredResetAt = getResetTime('daily' as any); // NOTE: all at same time
+        const expiredResetAt = getResetTime('daily'); // NOTE: all at same time
         await db.prepare(
             `UPDATE user_missions SET current_count = 0, status = 'in_progress', reset_at = ?, last_updated_at = ? WHERE user_id = ? AND mission_id IN (${expiredPlaceholders})`
         ).bind(now, now, userId, ...expiredMissions).run();
@@ -129,7 +129,7 @@ export async function getUserMissions(db: Database, userId: number): Promise<any
  * 更新任务进度
  */
 export async function updateMissionProgress(
-    db: any,
+    db: Database,
     userId: number,
     action: string,
     amount: number = 1
@@ -163,7 +163,7 @@ export async function updateMissionProgress(
         }
 
         if (!userMission) {
-            const resetAt = getResetTime(mission.type as any);
+            const resetAt = getResetTime(mission.type);
             await execute(
                 db,
                 'INSERT INTO user_missions (user_id, mission_id, current_count, status, reset_at) VALUES (?, ?, 0, "in_progress", ?)',

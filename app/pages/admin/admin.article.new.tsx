@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { Form, useNavigate, redirect } from "react-router";
-import type { Route } from "./+types/admin.article.new";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { redirect, Form, useLoaderData } from "react-router";
 import { NotionEditor } from "~/components/forms/NotionEditor";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSessionId } from "~/utils/auth";
-import { ArrowLeft, Save, Send, Maximize2, Minimize2, Bold, Italic, Link as LinkIcon, Code, Image as ImageIcon, Music, Type } from "lucide-react";
+import { ArrowLeft, Save, Send, Maximize2, Minimize2, Bold, Italic, Link as LinkIcon, Code, Image as ImageIcon, Music, Type, Upload, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "react-router";
-
 import { AIWritingAssistant } from "~/components/admin/AIWritingAssistant";
+import { toast } from "~/components/ui/Toast";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
     throw redirect("/panel/login");
   }
 
   // 生成 CSRF Token
-  const env = (context as any).cloudflare.env;
+  const env = context.cloudflare.env as { CSRF_SECRET?: string; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; anime_db?: import('~/services/db.server').Database };
   const secret = env.CSRF_SECRET;
   if (!secret) {
     throw new Error("CRITICAL: CSRF_SECRET is not set in environment.");
@@ -37,19 +37,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { csrfToken, article };
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
     throw redirect("/panel/login");
   }
-  const { anime_db } = context.cloudflare.env;
+  const env = context.cloudflare.env as { CSRF_SECRET?: string; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; anime_db?: import('~/services/db.server').Database };
+  const { anime_db } = env;
 
   try {
     const formData = await request.formData();
     const csrfToken = formData.get("_csrf") as string;
 
     // 验证 CSRF
-    const env = (context as any).cloudflare.env;
     const secret = env.CSRF_SECRET;
     if (!secret) {
       return { success: false, error: "CRITICAL: CSRF_SECRET is not set in environment." };
@@ -94,7 +94,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 }
 
-export default function NewArticle({ loaderData }: Route.ComponentProps) {
+export default function NewArticle() {
+    const loaderData = useLoaderData<typeof loader>();
   const article = loaderData?.article;
   const csrfToken = loaderData?.csrfToken || "";
 
@@ -102,6 +103,9 @@ export default function NewArticle({ loaderData }: Route.ComponentProps) {
   const [title, setTitle] = useState<string>(article?.title || "");
   const [zenMode, setZenMode] = useState(false);
   const [moodColor, setMoodColor] = useState<string>(article?.mood_color || "#818cf8");
+  const [coverImage, setCoverImage] = useState<string>(article?.cover_image || "");
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
 
   // 自动生成 slug
   const generateSlug = (title: string) => {
@@ -109,6 +113,66 @@ export default function NewArticle({ loaderData }: Route.ComponentProps) {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
+  };
+
+  // 封面上传
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("请选择图片文件");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("图片大小不能超过 5MB");
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json() as { success?: boolean; url?: string; error?: string };
+      if (data.success && data.url) {
+        setCoverImage(data.url);
+        toast.success("封面上传成功");
+      } else {
+        toast.error(data.error || "上传失败");
+      }
+    } catch {
+      toast.error("上传失败，请重试");
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  // AI 生成标签
+  const handleGenerateTags = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error("请先输入标题和内容");
+      return;
+    }
+    setIsGeneratingTags(true);
+    try {
+      const res = await fetch("/api/ai/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content }),
+      });
+      const data = await res.json() as { success?: boolean; tags?: string[]; error?: string };
+      if (data.success && data.tags?.length) {
+        toast.success(`生成 ${data.tags.length} 个标签`);
+        // 提示用户手动添加，这里不直接覆盖
+        toast.info(data.tags.join(", "));
+      } else {
+        toast.error(data.error || "生成失败");
+      }
+    } catch {
+      toast.error("生成失败，请重试");
+    } finally {
+      setIsGeneratingTags(false);
+    }
   };
 
   // Modern subtle mood colors
@@ -171,15 +235,9 @@ export default function NewArticle({ loaderData }: Route.ComponentProps) {
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
-              <Link to="/admin/articles">
-                <button className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shadow-sm bg-white/5 border border-white/10">
-                  <ArrowLeft size={18} />
-                </button>
-              </Link>
               <div>
                 <h1 className="text-3xl font-bold text-white tracking-tight font-orbitron">{article ? "编辑文章" : "新建文章"}</h1>
                 <p className="text-white/50 text-sm mt-1">{article ? "更新世界线的偏转率。" : "起草并发布你的下一篇作品。"}</p>
-              </div>
             </div>
 
             <div className="flex items-center gap-3 self-end sm:self-auto relative z-50">
@@ -188,6 +246,15 @@ export default function NewArticle({ loaderData }: Route.ComponentProps) {
                 onInsert={(text) => setContent(prev => prev + "\n" + text)}
                 onReplace={(text) => setContent(text)}
               />
+              <button
+                type="button"
+                onClick={handleGenerateTags}
+                disabled={isGeneratingTags || !title.trim()}
+                className="px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 hover:bg-indigo-500/30 rounded-full text-sm font-medium text-indigo-300 transition-colors flex items-center gap-2 disabled:opacity-40"
+              >
+                {isGeneratingTags ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                <span className="hidden sm:inline">AI 标签</span>
+              </button>
               <button
                 type="button"
                 className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-white/15 rounded-full text-sm font-medium text-white/70 transition-colors flex items-center gap-2"
@@ -283,18 +350,33 @@ export default function NewArticle({ loaderData }: Route.ComponentProps) {
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-white/80 mb-2">
-                  <ImageIcon size={16} className="text-white/40" /> 封面图链接
+                  <ImageIcon size={16} className="text-white/40" /> 封面图
                 </label>
-                <input
-                  type="url"
-                  name="cover_image"
-                  defaultValue={article?.cover_image || ""}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:border-violet-500/40 focus:ring-4 focus:ring-violet-500/10 transition-all text-sm mb-3"
-                  placeholder="https://content.com/image.jpg"
-                />
-                <div className="text-xs text-white/40 bg-white/5 p-3 rounded-xl border border-dashed border-white/10">
-                  高质量封面图可以提升读者参与度。必须使用绝对 URL。
-                </div>
+                {coverImage ? (
+                  <div className="relative rounded-xl overflow-hidden mb-2 group">
+                    <img src={coverImage} alt="封面预览" className="w-full h-32 object-cover rounded-xl" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <label className="px-3 py-1.5 bg-white/20 backdrop-blur rounded-lg text-white text-xs cursor-pointer hover:bg-white/30">
+                        {isUploadingCover ? <Loader2 size={14} className="animate-spin inline mr-1" /> : <><Upload size={14} className="inline mr-1" /> 重新上传</>}
+                        <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+                      </label>
+                      <button onClick={() => setCoverImage("")} className="px-3 py-1.5 bg-red-500/30 backdrop-blur rounded-lg text-white text-xs hover:bg-red-500/50">
+                        移除
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-24 rounded-xl border-2 border-dashed border-white/15 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                    {isUploadingCover ? (
+                      <Loader2 size={24} className="text-indigo-400 animate-spin mb-1" />
+                    ) : (
+                      <Upload size={24} className="text-white/30 mb-1" />
+                    )}
+                    <span className="text-xs text-white/40">{isUploadingCover ? "上传中..." : "点击上传封面图"}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+                  </label>
+                )}
+                <input type="hidden" name="cover_image" value={coverImage} />
               </div>
             </div>
 
@@ -308,6 +390,9 @@ export default function NewArticle({ loaderData }: Route.ComponentProps) {
             </div>
 
           </Form>
+          {/* Inner wrapper div needs closing */}
+        </div>
+        {/* Close the normal mode motion.div */}
         </motion.div>
       )}
     </AnimatePresence>

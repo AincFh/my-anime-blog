@@ -3,9 +3,10 @@
  * POST /api/auth/reset-password
  */
 
-import type { Route } from "./+types/api.auth.reset-password";
+import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
 import { hashPassword } from "~/services/auth.server";
+import { getLogger } from "~/utils/logger";
 
 const ResetPasswordSchema = z.object({
     email: z.string().email("无效的邮箱地址"),
@@ -18,8 +19,8 @@ const ResetPasswordSchema = z.object({
         .regex(/[0-9]/, "密码必须包含数字"),
 });
 
-export async function action({ request, context }: Route.ActionArgs) {
-    const env = (context as any).cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const env = context.cloudflare.env as { CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; anime_db?: import('~/services/db.server').Database };
     const { anime_db, CACHE_KV } = env;
 
     if (request.method !== "POST") {
@@ -94,7 +95,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const user = await anime_db
         .prepare("SELECT id FROM users WHERE email = ?")
         .bind(email)
-        .first();
+        .first() as { id: number } | null;
 
     if (!user) {
         // 为防止邮箱枚举攻击，不明确提示用户不存在
@@ -108,23 +109,22 @@ export async function action({ request, context }: Route.ActionArgs) {
     const hashedPassword = await hashPassword(password);
     await anime_db
         .prepare("UPDATE users SET password_hash = ? WHERE id = ?")
-        .bind(hashedPassword, (user as any).id)
+        .bind(hashedPassword, user.id)
         .run();
 
-    // 删除已使用的验证码
     await CACHE_KV.delete(codeKey);
 
     // 记录审计日志
     try {
         const { logAudit } = await import("~/services/security/audit-log.server");
         await logAudit(anime_db, {
-            userId: (user as any).id,
+            userId: user.id,
             action: "password_reset",
             metadata: { email },
             riskLevel: "medium",
         });
     } catch (e) {
-        console.error("审计日志记录失败:", e);
+        getLogger().error('Password reset audit log failed', { error: e instanceof Error ? e.message : String(e) });
     }
 
     return Response.json({

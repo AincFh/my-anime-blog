@@ -1,10 +1,14 @@
 ---
 alwaysApply: true
 globs: "**/*.ts"
-description: 认证和授权安全规范 - 会话管理、权限验证、JWT令牌最佳实践
+description: 认证和授权安全规范 — 不够安全就不要上线
 ---
 
 # 认证和授权安全规范
+
+> **核心理念：安全不是事后补丁，而是从一开始就设计进去的。像 Apple 对待用户隐私一样——默认安全、永不妥协。如果你自己都不信任这个认证系统，那就不要上线。**
+
+---
 
 ## 会话管理
 
@@ -31,11 +35,11 @@ async function createSession(env: Env, userId: number): Promise<string> {
     expiresAt: Date.now() + SESSION_TTL * 1000,
     permissions: await getUserPermissions(env, userId),
   };
-  
+
   await env.SESSIONS.put(sessionId, JSON.stringify(sessionData), {
     expirationTtl: SESSION_TTL,
   });
-  
+
   return sessionId;
 }
 ```
@@ -45,19 +49,19 @@ async function createSession(env: Env, userId: number): Promise<string> {
 ```typescript
 async function validateSession(env: Env, sessionId: string): Promise<SessionData | null> {
   const data = await env.SESSIONS.get(sessionId);
-  
+
   if (!data) {
     return null;
   }
-  
+
   const session: SessionData = JSON.parse(data);
-  
+
   // 检查是否过期
   if (session.expiresAt < Date.now()) {
     await env.SESSIONS.delete(sessionId);
     return null;
   }
-  
+
   return session;
 }
 ```
@@ -82,6 +86,8 @@ function createSessionCookie(sessionId: string): Response {
 }
 ```
 
+---
+
 ## 权限验证
 
 ### 权限检查装饰器模式
@@ -95,15 +101,15 @@ async function requirePermission(
   requiredPermission: Permission
 ): Promise<SessionData> {
   const session = await validateSession(env, sessionId);
-  
+
   if (!session) {
     throw new UnauthorizedError('请先登录');
   }
-  
+
   if (!session.permissions.includes(requiredPermission)) {
     throw new ForbiddenError('无此操作权限');
   }
-  
+
   return session;
 }
 ```
@@ -115,14 +121,16 @@ async function requirePermission(
 export async function loader({ request, params, env }: LoaderFunctionArgs) {
   const cookieHeader = request.headers.get('Cookie');
   const sessionId = parseCookies(cookieHeader).session;
-  
+
   const session = await requirePermission(env, sessionId, 'article:read');
-  
+
   // 执行业务逻辑
   const articles = await getArticles(env);
   return Response.json({ articles });
 }
 ```
+
+---
 
 ## API 认证
 
@@ -133,9 +141,9 @@ async function validateBearerToken(authHeader: string | null): Promise<string | 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
-  
+
   const token = authHeader.substring(7);
-  
+
   // 验证令牌格式和签名
   return await verifyToken(token);
 }
@@ -148,18 +156,20 @@ export async function action({ request, env }: ActionFunctionArgs) {
   // 验证认证
   const authHeader = request.headers.get('Authorization');
   const userId = await validateBearerToken(authHeader);
-  
+
   if (!userId) {
     return Response.json(
       { success: false, message: '未授权访问' },
       { status: 401 }
     );
   }
-  
+
   // 执行业务逻辑
   // ...
 }
 ```
+
+---
 
 ## 密码安全
 
@@ -203,6 +213,8 @@ function validatePassword(password: string): boolean {
 }
 ```
 
+---
+
 ## 敏感操作二次验证
 
 ### 高风险操作保护
@@ -220,14 +232,16 @@ const SENSITIVE_OPERATIONS: SensitiveOperation[] = [
 
 async function requireRecentAuth(env: Env, sessionId: string, maxAge: number = 5 * 60 * 1000): Promise<boolean> {
   const session = await validateSession(env, sessionId);
-  
+
   if (!session) return false;
-  
+
   // 检查最后认证时间
   const lastAuth = session.lastAuthAt || session.createdAt;
   return (Date.now() - lastAuth) < maxAge;
 }
 ```
+
+---
 
 ## 审计日志
 
@@ -248,7 +262,7 @@ async function logAuthEvent(
     timestamp: new Date().toISOString(),
     ...metadata,
   };
-  
+
   // 异步记录，不阻塞主流程
   env.AUDIT_KV.put(`auth:${Date.now()}:${crypto.randomUUID()}`, JSON.stringify(logEntry), {
     expirationTtl: 90 * 24 * 60 * 60, // 保留90天
@@ -256,13 +270,21 @@ async function logAuthEvent(
 }
 ```
 
-## 安全检查清单
+---
 
-- [ ] 所有会话存储在 Cloudflare KV
-- [ ] 使用 HttpOnly + Secure + SameSite Cookie
-- [ ] 密码使用 bcrypt 哈希存储
-- [ ] 实施权限检查
-- [ ] 记录认证审计日志
-- [ ] 高风险操作需要二次验证
-- [ ] 定期清理过期会话
-- [ ] 防止暴力破解（速率限制）
+## 认证安全自检清单
+
+- [ ] 所有会话存储在 Cloudflare KV 了吗？
+- [ ] 使用了 HttpOnly + Secure + SameSite Cookie 吗？
+- [ ] 密码使用 bcrypt 哈希存储了吗？
+- [ ] 实施了权限检查吗？
+- [ ] 记录了认证审计日志吗？
+- [ ] 高风险操作需要二次验证吗？
+- [ ] 定期清理了过期会话吗？
+- [ ] 防止了暴力破解（速率限制）吗？
+
+### 自我审视
+- [ ] 我自己信任这个认证系统吗？
+- [ ] 如果这个系统存储了我的密码，我会放心吗？
+- [ ] 如果这是一个付费产品的登录系统，我自己会愿意使用吗？
+- [ ] 如果答案有任何犹豫，上线之前把问题修掉。

@@ -1,11 +1,38 @@
 import { motion } from "framer-motion";
 import { Sparkles, Gem } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface ParticleStyle {
+    width: string;
+    height: string;
+    left: string;
+    top: string;
+    animationDuration: string;
+    animationDelay: string;
+}
+
+function generateParticles(count: number, useRandom: boolean): ParticleStyle[] {
+    return Array.from({ length: count }, () => ({
+        width: useRandom ? `${Math.random() * 20 + 10}px` : "15px",
+        height: useRandom ? `${Math.random() * 20 + 10}px` : "15px",
+        left: useRandom ? `${Math.random() * 100}%` : "50%",
+        top: useRandom ? `${Math.random() * 100}%` : "50%",
+        animationDuration: `${Math.random() * 5 + 5}s`,
+        animationDelay: `${Math.random() * 2}s`,
+    }));
+}
 
 interface GachaEntryCardProps {
     onOpen: () => void;
 }
 
 export function GachaEntryCard({ onOpen }: GachaEntryCardProps) {
+    const [particles, setParticles] = useState<ParticleStyle[]>(() => generateParticles(5, false));
+
+    useEffect(() => {
+        setParticles(generateParticles(5, true));
+    }, []);
+
     return (
         <motion.div
             className="group relative rounded-2xl p-6 overflow-hidden cursor-pointer h-full min-h-[200px] flex flex-col justify-between"
@@ -26,18 +53,11 @@ export function GachaEntryCard({ onOpen }: GachaEntryCardProps) {
 
             {/* 浮动粒子效果 (CSS 动画) */}
             <div className="absolute inset-0 overflow-hidden">
-                {[...Array(5)].map((_, i) => (
+                {particles.map((style, i) => (
                     <div
                         key={i}
                         className="absolute bg-white/20 rounded-full blur-sm animate-float"
-                        style={{
-                            width: Math.random() * 20 + 10 + 'px',
-                            height: Math.random() * 20 + 10 + 'px',
-                            left: Math.random() * 100 + '%',
-                            top: Math.random() * 100 + '%',
-                            animationDuration: Math.random() * 5 + 5 + 's',
-                            animationDelay: Math.random() * 2 + 's'
-                        }}
+                        style={style}
                     />
                 ))}
             </div>

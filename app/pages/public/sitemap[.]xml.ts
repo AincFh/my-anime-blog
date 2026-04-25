@@ -1,6 +1,6 @@
-import type { Route } from "./+types/sitemap[.]xml";
+import type { LoaderFunctionArgs } from "react-router";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { getDBSafe } = await import("~/utils/db");
     const anime_db = getDBSafe(context);
     // 动态获取当前域名，支持多环境
@@ -8,7 +8,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const baseUrl = `${url.protocol}//${url.host}`;
 
     // 1. 获取所有公开文章
-    let articles: any[] = [];
+    let articles: { slug: string; updated_at: number }[] = [];
     if (anime_db) {
         try {
             const result = await anime_db

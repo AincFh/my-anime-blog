@@ -1,9 +1,13 @@
 ---
 alwaysApply: true
-description: 项目目录结构规范 - 组件分层、路由组织、服务层分离最佳实践
+description: 项目目录结构规范 — 组件分层、路由组织、服务层分离最佳实践
 ---
 
 # 项目目录结构规范
+
+> **核心理念：目录结构不只是文件的存放位置，更是代码意图的视觉地图。好的目录结构让接手者一眼就能理解项目的全貌，像读一本书的目录一样清晰。**
+
+---
 
 ## 顶层目录结构
 
@@ -16,25 +20,25 @@ my-anime-blog/
 │   ├── pages/                # 页面组件（路由）
 │   ├── services/             # 业务逻辑层
 │   ├── repositories/         # 数据访问层
-│   ├── types/                # TypeScript 类型定义
-│   ├── utils/                # 工具函数
-│   ├── contexts/             # React Context
-│   ├── styles/               # 样式文件
-│   ├── public/               # 公共组件
-│   ├── app.css               # 全局样式
-│   ├── root.tsx              # 根组件
-│   └── routes.ts             # 路由配置
+│   ├── types/               # TypeScript 类型定义
+│   ├── utils/               # 工具函数
+│   ├── contexts/            # React Context
+│   ├── styles/              # 样式文件
+│   ├── public/              # 公共组件
+│   ├── app.css              # 全局样式
+│   ├── root.tsx             # 根组件
+│   └── routes.ts            # 路由配置
 ├── database/                 # 数据库相关
-│   ├── schema.sql            # 核心数据表
-│   ├── schema_*.sql          # 功能模块数据表
-│   └── migration_*.sql       # 迁移文件
+│   ├── schema.sql           # 核心数据表
+│   ├── schema_*.sql         # 功能模块数据表
+│   └── migration_*.sql      # 迁移文件
 ├── public/                   # 静态资源
 ├── workers/                  # Cloudflare Worker 入口
 ├── .cursor/                  # Cursor 配置
-│   ├── rules/                # AI 规则
-│   ├── skills/               # AI 技能
-│   ├── agents/               # 子智能体
-│   └── commands/             # 自定义命令
+│   ├── rules/               # AI 规则
+│   ├── skills/              # AI 技能
+│   ├── agents/              # 子智能体
+│   └── commands/            # 自定义命令
 ├── wrangler.jsonc            # Cloudflare 配置
 ├── package.json
 ├── tsconfig.json
@@ -42,7 +46,11 @@ my-anime-blog/
 └── README.md
 ```
 
+---
+
 ## 组件目录结构（原子设计）
+
+> **核心理念：组件的分类不是按"谁用了什么技术"，而是按"这个组件负责什么"。每个组件的职责边界要清晰，组件内部要完整。**
 
 ### 分层规范
 
@@ -54,8 +62,10 @@ app/components/
 │   ├── Card.tsx
 │   ├── Badge.tsx
 │   ├── Modal.tsx
-│   └── Skeleton.tsx
-├── common/                    # 通用组件
+│   ├── Skeleton.tsx
+│   ├── Toast.tsx
+│   └── Avatar.tsx
+├── common/                    # 通用组件（跨多个页面使用）
 │   ├── Header.tsx
 │   ├── Footer.tsx
 │   ├── Sidebar.tsx
@@ -71,18 +81,70 @@ app/components/
 ├── media/                     # 媒体组件
 │   ├── ImageGallery.tsx
 │   ├── VideoPlayer.tsx
-│   └── MusicPlayer.tsx
-├── gamification/             # 游戏化组件
+│   ├── MusicPlayer.tsx
+│   └── Live2D.tsx
+├── gamification/              # 游戏化组件
 │   ├── GachaMachine.tsx
 │   ├── AchievementBadge.tsx
 │   └── LevelProgress.tsx
-├── dashboard/                # 仪表盘组件
+├── dashboard/                 # 仪表盘组件
 │   ├── StatsCard.tsx
 │   └── ActivityFeed.tsx
-└── special/                   # 特殊效果组件
-    ├── ParticleEffect.tsx
-    └── GlassMorphism.tsx
+├── article/                   # 文章相关组件（按功能领域组织）
+│   ├── ArticleCard.tsx
+│   ├── TableOfContents.tsx
+│   └── MarkdownRenderer.tsx
+├── user/                      # 用户相关组件
+│   ├── NotificationPanel.tsx
+│   ├── LiquidProgress.tsx
+│   └── UserControlCenter.tsx
+├── admin/                     # 管理后台组件
+│   ├── AIWritingAssistant.tsx
+│   ├── EnhancedAnalyticsDashboard.tsx
+│   └── MemoPad.tsx
+├── animations/                # 动画效果组件
+│   ├── PageTransition.tsx
+│   ├── GlitchText.tsx
+│   ├── FluidTrail.tsx
+│   └── DynamicBackground.tsx
+├── charts/                    # 图表组件
+│   ├── BarChart.tsx
+│   ├── DonutChart.tsx
+│   └── RadarChart.tsx
+├── navigation/                # 导航组件
+│   ├── DockNavigation.tsx
+│   └── FloatingNav.tsx
+├── special/                   # 特殊效果组件
+│   ├── ParticleEffect.tsx
+│   ├── TheatricalMode.tsx
+│   └── ParallaxBackground.tsx
+├── membership/                 # 会员相关组件
+│   ├── MembershipTierCard.tsx
+│   └── PrivilegeComparisonTable.tsx
+├── payment/                   # 支付相关组件
+│   └── MockPaymentModal.tsx
+└── system/                    # 系统级组件
+    ├── OmniCommand.tsx
+    ├── InstantSearch.tsx
+    └── GlassPerformance.tsx
 ```
+
+### 组件设计原则
+
+**单一职责：**
+- 每个组件只做一件事，并且把这件事做到极致
+- 一个组件不要同时做"展示+逻辑+样式"三件事
+- 如果一个组件超过 300 行，考虑拆分
+
+**可复用性：**
+- 通用 UI 组件（Button、Input、Card）不依赖业务数据
+- 业务组件可以依赖通用 UI 组件
+- 页面组件组合所有子组件
+
+**自检问题：**
+- 这个组件，我能在其他项目里直接用吗？
+- 这个组件的 props，我能闭着眼睛写出来吗？
+- 如果我要改这个组件的功能，修改点集中吗？
 
 ### 组件命名规范
 
@@ -101,41 +163,58 @@ interface ArticleCardProps {
 }
 ```
 
+---
+
 ## 服务层结构
+
+> **核心理念：服务层是业务的指挥官，不干具体的体力活。把脏活累活（数据库操作）交给 Repository，把业务决策留给自己。**
 
 ### 目录组织
 
 ```
 app/services/
-├── auth.server.ts             # 认证服务
-├── db.server.ts               # 数据库连接
-├── membership/                # 会员服务模块
+├── auth.server.ts              # 认证服务（登录/注册/会话）
+├── db.server.ts                # 数据库连接和辅助函数
+├── crypto.server.ts            # 加密工具
+├── r2.server.ts               # R2 对象存储
+├── ai.server.ts               # Workers AI 封装
+├── ai-config.server.ts         # AI 配置管理
+├── email.server.ts             # 邮件服务
+├── changelog.server.ts         # 更新日志
+├── announcement.server.ts       # 公告服务
+├── timeline.server.ts          # 时间线服务
+├── site-content.server.ts      # 站点内容
+├── notion-sync.server.ts       # Notion 同步
+├── maintenance/                # 维护相关
+│   └── archive.server.ts      # 归档服务
+├── security/                   # 安全服务
+│   └── totp.server.ts        # TOTP 两步验证
+├── membership/                 # 会员服务模块
 │   ├── index.ts
 │   ├── subscription.server.ts
 │   ├── mission.server.ts
-│   └── star-dust.server.ts    # 虚拟货币
-├── user/                      # 用户服务模块
+│   ├── tier.server.ts
+│   └── coins.server.ts
+├── payment/                    # 支付服务模块
 │   ├── index.ts
-│   ├── profile.server.ts
+│   └── gateway.server.ts      # 支付网关
+├── user/                       # 用户服务模块
+│   ├── index.ts
 │   └── preferences.server.ts
-├── article/                   # 文章服务模块
+├── article/                    # 文章服务模块
 │   ├── index.ts
 │   ├── create.server.ts
 │   ├── read.server.ts
 │   └── update.server.ts
-├── cloudflare/                # Cloudflare 服务
-│   ├── cache.server.ts
-│   ├── r2.server.ts
-│   └── kv.server.ts
-└── security/                  # 安全服务
-    ├── audit.server.ts
-    └── rate-limit.server.ts
+└── cloudflare/                 # Cloudflare 服务
+    ├── cache.server.ts
+    └── kv.server.ts
 ```
 
 ### 服务层职责
 
 ```typescript
-// ✅ 正确 - 服务层只处理业务逻辑
+// ✅ 正确 - 服务层只处理业务逻辑，委托给 Repository
 // app/services/article/create.server.ts
 import { validateArticleData } from '~/utils/validation';
 import { articleRepository } from '~/repositories/article.repository';
@@ -143,19 +222,19 @@ import { articleRepository } from '~/repositories/article.repository';
 export async function createArticle(data: ArticleInput, env: Env) {
   // 1. 业务验证
   const validated = validateArticleData(data);
-  
+
   // 2. 权限检查
   const session = await getSession(env);
   if (!session) {
     throw new UnauthorizedError('请先登录');
   }
-  
-  // 3. 调用数据访问层
+
+  // 3. 调用数据访问层（Repository）
   const article = await articleRepository.create(env.DB, validated);
-  
-  // 4. 触发副作用（通知、缓存等）
+
+  // 4. 触发副作用（通知、缓存失效等）
   await invalidateArticleCache(env, article.slug);
-  
+
   return article;
 }
 
@@ -164,21 +243,29 @@ export async function createArticle(data: ArticleInput, env: Env) {
   await env.DB
     .prepare('INSERT INTO articles (title) VALUES (?)')
     .bind(data.title)
-    .run(); // 不要这样做！
+    .run();
+  // 不要这样做！把脏活交给 Repository。
 }
+
+// 自检：这段服务代码，我自己能闭着眼睛理解它的业务意图吗？
 ```
 
+---
+
 ## 数据访问层（Repository）
+
+> **核心理念：Repository 是数据库的守门人。所有 SQL 语句集中在这里，任何地方想访问数据，都必须经过这里——这样数据库的任何变化，都只有一个修改点。**
 
 ### 目录组织
 
 ```
 app/repositories/
-├── index.ts                   # 统一导出
-├── base.repository.ts         # 基础仓储类
-├── article.repository.ts      # 文章仓储
-├── user.repository.ts         # 用户仓储
-└── category.repository.ts     # 分类仓储
+├── index.ts                    # 统一导出
+├── base.repository.ts          # 基础仓储类
+├── article.repository.ts       # 文章仓储
+├── user.repository.ts          # 用户仓储
+├── session.repository.ts       # 会话仓储
+└── category.repository.ts      # 分类仓储
 ```
 
 ### Repository 实现规范
@@ -202,21 +289,21 @@ export const articleRepository = {
     const result = await stmt.first<ArticleRow>();
     return result ? mapToArticle(result) : null;
   },
-  
+
   async findBySlug(db: D1Database, slug: string): Promise<Article | null> {
     const stmt = db.prepare('SELECT * FROM articles WHERE slug = ?').bind(slug);
     const result = await stmt.first<ArticleRow>();
     return result ? mapToArticle(result) : null;
   },
-  
+
   async create(db: D1Database, data: CreateArticleInput): Promise<Article> {
     const stmt = db.prepare(`
       INSERT INTO articles (title, slug, content, author_id)
       VALUES (?, ?, ?, ?)
     `).bind(data.title, data.slug, data.content, data.authorId);
-    
+
     const result = await stmt.run();
-    
+
     return {
       id: result.meta.last_row_id,
       ...data,
@@ -224,61 +311,147 @@ export const articleRepository = {
     };
   },
 };
+
+// 自检：所有 SQL 语句都在这里吗？有没有散落在 Service 层里？
 ```
+
+---
 
 ## 工具函数目录
 
 ```
 app/utils/
-├── format.ts                  # 格式化工具
-├── validation.ts              # 验证工具
-├── date.ts                    # 日期处理
-├── string.ts                  # 字符串处理
-├── array.ts                   # 数组处理
-├── api-response.ts            # API 响应格式
-├── logger.ts                  # 日志工具
-├── i18n.tsx                   # 国际化
-└── constants.ts               # 常量定义
+├── format.ts                   # 格式化工具
+├── validation.ts               # 验证工具（zod schemas）
+├── date.ts                     # 日期处理
+├── string.ts                   # 字符串处理
+├── array.ts                    # 数组处理
+├── api-response.ts             # API 响应格式
+├── logger.ts                   # 日志工具
+├── error.ts                    # 统一错误定义
+├── auth.ts                     # 认证工具
+├── security.ts                 # 安全工具
+├── permission-helpers.ts       # 权限辅助
+├── categoryColor.ts            # 分类颜色
+├── placeholder_covers.ts       # 占位图
+├── ai-shared.ts                # AI 共享工具
+├── i18n.tsx                    # 国际化
+├── constants.ts                # 常量定义
+└── *.test.ts                  # 单元测试
 ```
+
+---
 
 ## 类型定义目录
 
 ```
 app/types/
-├── index.ts                   # 统一导出
-├── env.ts                     # 环境变量类型
-├── article.ts                 # 文章相关类型
-├── user.ts                    # 用户相关类型
-├── api.ts                     # API 响应类型
-├── component.ts               # 组件 Props 类型
-└── db.ts                      # 数据库相关类型
+├── index.ts                    # 统一导出
+├── env.ts                      # 环境变量类型
+├── article.ts                  # 文章相关类型
+├── user.ts                     # 用户相关类型
+├── announcement.ts             # 公告类型
+├── context.ts                  # Context 类型
+├── api.ts                      # API 响应类型
+├── component.ts                # 组件 Props 类型
+└── db.ts                       # 数据库相关类型
 ```
+
+---
 
 ## 页面组件目录
 
+> **核心理念：页面是舞台，组件是演员。页面只负责把演员摆到正确的位置，不负责演戏。**
+
 ```
 app/pages/
-├── public/                    # 公开页面
+├── public/                     # 公开页面（任何人可访问）
 │   ├── home.tsx
 │   ├── articles.tsx
 │   ├── articles.$slug.tsx
 │   ├── bangumi.tsx
 │   ├── archive.tsx
-│   └── gallery.tsx
-├── user/                      # 用户页面
+│   ├── gallery.tsx
+│   ├── rss.xml.tsx
+│   └── sitemap[.]xml.ts
+├── user/                       # 用户页面（需登录）
 │   ├── user.dashboard.tsx
 │   ├── user.profile.tsx
 │   ├── user.settings.tsx
-│   ├── shop.tsx
+│   ├── user.achievements.tsx
 │   ├── wallet.tsx
 │   └── _game.tsx
-└── admin/                     # 管理页面
-    ├── admin.anime.manage.tsx
-    ├── admin.users.tsx
-    ├── admin.tags.tsx
-    ├── admin.cleanup.tsx
-    └── admin.login.tsx
+├── admin/                      # 管理页面（需管理员权限）
+│   ├── admin.login.tsx
+│   ├── admin.anime.manage.tsx
+│   ├── admin.articles.tsx
+│   ├── admin.article.new.tsx
+│   ├── admin.users.tsx
+│   ├── admin.tags.tsx
+│   ├── admin.comments.tsx
+│   ├── admin.gallery.tsx
+│   ├── admin.membership.tsx
+│   ├── admin.missions.tsx
+│   ├── admin.shop.tsx
+│   ├── admin.cleanup.tsx
+│   └── admin.settings.tsx
+├── legal/                      # 法律页面（公开）
+│   ├── terms.tsx
+│   ├── privacy.tsx
+│   ├── disclaimer.tsx
+│   ├── legal.minors.tsx
+│   ├── legal.cookie.tsx
+│   ├── legal.sponsor.tsx
+│   └── legal.cookies.tsx
+├── error/                      # 错误页面
+│   └── 404.tsx
+└── claude.md                   # 内部文档
 ```
+
+### 页面设计原则
+
+```typescript
+// ✅ 好的页面 - 干净，只组合组件
+export async function loader({ env }: LoaderFunctionArgs) {
+  const articles = await articleService.getFeatured(env);
+  const user = await getOptionalUser(env);
+  return { articles, user };
+}
+
+export default function HomePage({ loaderData }: Route.ComponentProps) {
+  const { articles, user } = loaderData;
+  return (
+    <PublicLayout>
+      <HeroSection user={user} />
+      <ArticleGrid articles={articles} />
+      <OnThisDay />
+    </PublicLayout>
+  );
+}
+
+// ❌ 坏的页面 - 塞满了业务逻辑和样式
+export default function HomePage() {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/articles').then(r => r.json()).then(data => {
+      setArticles(data);
+      setLoading(false);
+    });
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-b from-gray-900 to-black min-h-screen">
+      {/* 200 行样式和逻辑... */}
+    </div>
+  );
+}
+
+// 自检：这个页面的代码，我自己能一眼看出它的结构吗？
+```
+
+---
 
 ## 文件命名规范总结
 
@@ -289,5 +462,17 @@ app/pages/
 | 服务层 | kebab-case.server.ts | `auth.server.ts` |
 | 仓储层 | kebab-case.repository.ts | `article.repository.ts` |
 | 类型定义 | kebab-case.ts | `article.ts` |
-| 测试文件 | *.test.ts | `article.test.ts` |
-| 常量 | UPPER_SNAKE_CASE.ts | `constants.ts` |
+| 单元测试 | *.test.ts | `article.test.ts` |
+| 常量 | kebab-case.ts | `constants.ts` |
+| API 端点 | api.*.ts | `api.articles.ts` |
+
+---
+
+## 目录结构自检清单
+
+- [ ] 新增一个页面，目录结构清晰吗？其他开发者能猜到该放在哪里吗？
+- [ ] 新增一个组件，它属于哪个分类？是 UI 原子还是业务组件？
+- [ ] 新增一个 Service，它委托给 Repository 了吗？有没有直接操作 DB？
+- [ ] 新增一个工具函数，它是真正的通用工具，还是只是页面逻辑的临时变量？
+- [ ] 目录层级超过 4 层了吗？（超过则考虑重组）
+- [ ] 某个目录下的文件超过 20 个了吗？（超过则考虑按功能拆分）

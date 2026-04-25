@@ -1,10 +1,14 @@
 ---
 alwaysApply: true
 globs: "**/*.{ts,tsx}"
-description: 错误处理最佳实践 - 错误类型定义、错误边界、日志规范
+description: 错误处理最佳实践 — 错误即帮助，而非冷漠的红色警告
 ---
 
 # 错误处理最佳实践
+
+> **核心理念：错误信息不是用来解释系统的，而是用来帮助用户的。像 Apple 的产品一样——出了问题，不是一串冷冰冰的错误代码，而是用人的语言，告诉你发生了什么、为什么、怎么修。**
+
+---
 
 ## 错误类型定义
 
@@ -91,6 +95,8 @@ export class ServiceUnavailableError extends AppError {
 }
 ```
 
+---
+
 ## 统一错误响应格式
 
 ### API 响应工具
@@ -145,7 +151,7 @@ export function errorResponse(
     };
   }
 
-  // 未知错误
+  // 未知错误 - 不暴露内部细节
   return {
     success: false,
     error: {
@@ -160,6 +166,8 @@ export function errorResponse(
 }
 ```
 
+---
+
 ## 路由错误处理
 
 ### Loader 错误处理
@@ -168,25 +176,25 @@ export function errorResponse(
 // ✅ 正确处理 Loader 错误
 export async function loader({ params, env }: LoaderFunctionArgs) {
   const slug = params.slug;
-  
+
   try {
     const article = await articleService.getBySlug(env, slug);
-    
+
     if (!article) {
       throw new NotFoundError('文章', slug);
     }
-    
+
     return successResponse({ article });
   } catch (error) {
     if (error instanceof AppError) {
       throw data(error.toJSON(), { status: error.statusCode });
     }
-    
+
     logger.error('加载文章失败', {
       slug,
       error: error instanceof Error ? error.message : String(error),
     });
-    
+
     throw data(
       { code: 'INTERNAL_ERROR', message: '加载文章失败' },
       { status: 500 }
@@ -201,35 +209,35 @@ export async function loader({ params, env }: LoaderFunctionArgs) {
 // ✅ Action 统一错误处理
 export async function action({ request, env }: ActionFunctionArgs) {
   const contentType = request.headers.get('Content-Type') ?? '';
-  
+
   if (!contentType.includes('application/json') && !contentType.includes('form')) {
     return errorResponse(
       new BadRequestError('无效的请求类型'),
       { requestId: getRequestId(request) }
     );
   }
-  
+
   try {
     const body = contentType.includes('application/json')
       ? await request.json()
       : Object.fromEntries(await request.formData());
-    
+
     const result = await articleService.create(env, body);
-    
+
     return successResponse(result, { requestId: getRequestId(request) });
   } catch (error) {
     if (error instanceof ValidationError) {
       return errorResponse(error, { requestId: getRequestId(request) });
     }
-    
+
     if (error instanceof UnauthorizedError) {
       return errorResponse(error, { requestId: getRequestId(request) });
     }
-    
+
     logger.error('创建文章失败', {
       error: error instanceof Error ? error.message : String(error),
     });
-    
+
     return errorResponse(
       new InternalError('创建文章失败'),
       { requestId: getRequestId(request) }
@@ -237,6 +245,8 @@ export async function action({ request, env }: ActionFunctionArgs) {
   }
 }
 ```
+
+---
 
 ## React 组件错误处理
 
@@ -278,15 +288,16 @@ export class ErrorBoundary extends Component<Props, State> {
       return this.props.fallback ?? (
         <div className="flex items-center justify-center min-h-[200px]">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-500">出错了</h2>
-            <p className="text-gray-400 mt-2">
+            {/* 像 Apple 一样，错误页面也要精心设计 */}
+            <h2 className="text-2xl font-bold text-white/80">出错了</h2>
+            <p className="text-white/50 mt-2">
               {this.state.error?.message ?? '发生了未知错误'}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"
+              className="mt-4 px-6 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
             >
-              刷新页面
+              重新加载
             </button>
           </div>
         </div>
@@ -300,40 +311,46 @@ export class ErrorBoundary extends Component<Props, State> {
 // 路由级别错误处理
 export function RouteErrorBoundary() {
   const error = useRouteError();
-  
+
   if (isRouteErrorResponse(error)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-6xl font-bold text-white/20">{error.status}</h1>
-          <p className="text-xl text-gray-400 mt-4">{error.statusText}</p>
-          <p className="text-gray-500 mt-2">{error.data?.message}</p>
+          <h1 className="text-8xl font-bold text-white/10">{error.status}</h1>
+          <p className="text-xl text-white/60 mt-4">{error.statusText}</p>
+          <p className="text-white/40 mt-2">{error.data?.message}</p>
+          {/* 404/500 页面也要有设计感，不是简单的状态码展示 */}
         </div>
       </div>
     );
   }
-  
+
   if (error instanceof Error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-red-500">发生错误</h1>
-          <p className="text-gray-400 mt-4">{error.message}</p>
-          <pre className="mt-4 p-4 bg-white/5 rounded-lg text-left text-sm overflow-auto">
-            {error.stack}
-          </pre>
+          <h1 className="text-4xl font-bold text-white/80">发生错误</h1>
+          <p className="text-white/50 mt-4">{error.message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-400">发生了未知错误</p>
+      <p className="text-white/50">发生了未知错误</p>
     </div>
   );
 }
 ```
+
+---
 
 ## 异步错误处理
 
@@ -372,6 +389,36 @@ export const safeGetArticle = asyncHandler(
 );
 ```
 
+---
+
+## 错误信息设计原则
+
+### 好的错误信息
+
+错误信息应该像朋友说话，而不是机器报错。
+
+```
+❌ "提交失败"
+✅ "保存失败 — 文件大小超过 10MB，请压缩后重试"
+
+❌ "网络错误"
+✅ "无法连接服务器 — 请检查网络连接后重试"
+
+❌ "权限不足"
+✅ "无权访问该功能 — 请联系管理员开通权限"
+
+❌ "500 Internal Server Error"
+✅ "服务器开小差了，请稍后重试"
+```
+
+### 错误设计三要素
+
+1. **发生了什么** — 简短描述问题
+2. **为什么发生** — 如果用户能理解的话（可选）
+3. **怎么修复** — 具体步骤（如果能提供的话）
+
+---
+
 ## 日志记录规范
 
 ### 统一日志工具
@@ -409,7 +456,7 @@ class Logger {
 
   private sanitize(data: Record<string, unknown>): Record<string, unknown> {
     const sanitized: Record<string, unknown> = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       if (SENSITIVE_KEYS.has(key.toLowerCase())) {
         sanitized[key] = '[REDACTED]';
@@ -419,7 +466,7 @@ class Logger {
         sanitized[key] = value;
       }
     }
-    
+
     return sanitized;
   }
 
@@ -430,18 +477,18 @@ class Logger {
       context: context ? this.sanitize(context) : undefined,
       timestamp: new Date().toISOString(),
     };
-    
+
     this.logs.push(entry);
-    
+
     if (this.logs.length > this.maxLogs) {
       this.logs.shift();
     }
-    
+
     const prefix = `[${entry.timestamp}] [${level.toUpperCase()}]`;
     const logMessage = context
       ? `${prefix} ${message} ${JSON.stringify(entry.context)}`
       : `${prefix} ${message}`;
-    
+
     switch (level) {
       case 'debug':
       case 'info':
@@ -477,13 +524,31 @@ class Logger {
 export const logger = Logger.getInstance();
 ```
 
-## 错误处理检查清单
+---
 
-- [ ] 所有 async 函数都有 try-catch
-- [ ] 错误返回统一的 JSON 格式
-- [ ] 敏感信息在日志中脱敏
-- [ ] 错误有适当的 HTTP 状态码
-- [ ] 用户看到友好的错误消息
-- [ ] 内部错误详情不暴露给用户
-- [ ] ErrorBoundary 捕获组件错误
-- [ ] 关键错误有审计日志记录
+## 错误处理自检清单
+
+### 错误信息质量
+- [ ] 错误信息是用"人话"写的，还是"机器话"？
+- [ ] 错误信息告诉了用户"怎么修"吗？
+- [ ] 错误信息对用户友好吗？（不需要技术背景也能理解）
+- [ ] 错误页面和其他页面一样有设计感吗？
+
+### 技术实现
+- [ ] 所有 async 函数都有 try-catch 吗？
+- [ ] 错误返回统一的 JSON 格式吗？
+- [ ] 敏感信息在日志中脱敏了吗？
+- [ ] 错误有适当的 HTTP 状态码吗？
+- [ ] 内部错误详情没有暴露给用户吗？
+
+### 用户体验
+- [ ] ErrorBoundary 捕获了组件错误吗？
+- [ ] 关键错误有审计日志记录吗？
+- [ ] 错误页面有"重新加载"或"返回首页"的按钮吗？
+- [ ] 错误状态和正常状态一样有视觉设计吗？
+
+### 自我审视
+- [ ] 如果我自己遇到这个错误，我知道该怎么做吗？
+- [ ] 这个错误提示，会让我感到沮丧还是被帮助？
+- [ ] 如果我妈看到这个错误提示，她知道该怎么办吗？
+- [ ] 这个错误处理，我自己满意吗？如果不满意，重做。

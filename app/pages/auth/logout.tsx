@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
-import type { Route } from "./+types/logout";
+import type { LoaderFunctionArgs } from "react-router";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
     const headers = new Headers();
     headers.append(
         "Set-Cookie",

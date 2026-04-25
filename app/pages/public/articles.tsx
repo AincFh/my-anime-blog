@@ -6,7 +6,7 @@ import { Link, useLoaderData, useSearchParams, useSubmit, Form, useNavigation } 
 import { motion } from "framer-motion";
 import { Calendar, Eye, Heart, ArrowRight, Search, Loader2, MessageSquare, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Route } from "./+types/articles";
+import type { LoaderFunctionArgs } from "react-router";
 import { getCategoryColor } from "~/utils/categoryColor";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { getPlaceholderCover } from "~/utils/placeholder_covers";
@@ -47,7 +47,7 @@ const getDescription = (content: string): string => {
     return cleaned.slice(0, 120) + (cleaned.length > 120 ? '...' : '');
 };
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { getDB } = await import("~/utils/db");
     const db = getDB(context);
 
@@ -66,7 +66,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
             FROM articles a
             WHERE a.status = 'published'
         `;
-        const params: any[] = [];
+        const params: string[] = [];
 
         // 搜索支持（使用 FTS 或 LIKE）
         if (q) {
@@ -108,7 +108,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         const categoriesResult = await db
             .prepare("SELECT DISTINCT category FROM articles WHERE status = 'published' AND category IS NOT NULL AND category != '' AND category != 'null' AND category != 'undefined'")
             .all();
-        categories = ['all', ...(categoriesResult.results || []).map((c: any) => c.category).filter(Boolean)];
+        categories = ['all', ...(categoriesResult.results || []).map((c: Record<string, unknown>) => c.category as string).filter(Boolean)];
 
     } catch (error) {
         console.error("Failed to fetch articles:", error);
@@ -122,7 +122,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     };
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error?: unknown }) {
   let message = "文章列表加载失败";
   let details = "无法显示文章列表，请稍后重试";
   let stack: string | undefined;

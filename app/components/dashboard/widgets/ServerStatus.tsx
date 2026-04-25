@@ -7,12 +7,16 @@ export function ServerStatus() {
     const [users, setUsers] = useState(128);
     const [ping, setPing] = useState(24);
 
+    // Stable initial heights for SSR/client hydration match - animated bars get randomized via useEffect
+    const [waveHeights, setWaveHeights] = useState([25, 50, 75, 40]);
+
     // Simulate live data updates
     useEffect(() => {
         const interval = setInterval(() => {
             setLoad(prev => Math.min(100, Math.max(0, prev + (Math.random() * 10 - 5))));
             setUsers(prev => Math.max(100, prev + Math.floor(Math.random() * 5 - 2)));
             setPing(prev => Math.max(10, Math.min(100, prev + Math.floor(Math.random() * 10 - 5))));
+            setWaveHeights([Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100]);
         }, 2000);
         return () => clearInterval(interval);
     }, []);
@@ -77,11 +81,11 @@ export function ServerStatus() {
                         </div>
                     </div>
                     <div className="flex gap-0.5 items-end h-6">
-                        {[1, 2, 3, 4].map(i => (
+                        {waveHeights.map((height, i) => (
                             <motion.div
                                 key={i}
                                 className="w-1 bg-green-500/50"
-                                animate={{ height: Math.random() * 100 + "%" }}
+                                animate={{ height: `${height}%` }}
                                 transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse", delay: i * 0.1 }}
                             />
                         ))}

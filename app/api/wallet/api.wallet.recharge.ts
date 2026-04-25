@@ -3,15 +3,17 @@
  * 支持充值虚拟货币（星尘），不支持退款
  */
 
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { generateSecurePayUrl } from '~/services/payment/signature.server';
-import { RECHARGE_PACKAGES } from '~/config/game';
+import { RECHARGE_PACKAGES } from "~/services/membership/game-config";
 
 // 获取充值档位和用户余额
-export async function loader({ request, context }: { request: Request; context: any }) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { getSessionToken, verifySession } = await import('~/services/auth.server');
     const { getUserCoins } = await import('~/services/membership/coins.server');
 
-    const { anime_db } = context.cloudflare.env;
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+    const { anime_db } = env;
 
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
@@ -30,12 +32,13 @@ export async function loader({ request, context }: { request: Request; context: 
 }
 
 // 创建充值订单
-export async function action({ request, context }: { request: Request; context: any }) {
+export async function action({ request, context }: ActionFunctionArgs) {
     const { getSessionToken, verifySession } = await import('~/services/auth.server');
     const { createPaymentOrder } = await import('~/services/payment/gateway.server');
     const { logAudit } = await import('~/services/security/audit-log.server');
 
-    const { anime_db } = context.cloudflare.env;
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+    const { anime_db } = env;
 
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
@@ -79,7 +82,8 @@ export async function action({ request, context }: { request: Request; context: 
         metadata: { packageId, coins: totalCoins, price: pkg.price },
     });
 
-    const secretKey = (context.cloudflare.env as any).PAYMENT_SECRET_KEY;
+    const env2 = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; PAYMENT_SECRET_KEY?: string };
+    const secretKey = env2.PAYMENT_SECRET_KEY;
     if (!secretKey) {
         return Response.json({ success: false, error: "系统安全配置错误: 缺少支付密钥" }, { status: 500 });
     }

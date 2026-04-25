@@ -5,27 +5,26 @@ import type { ActionFunctionArgs } from "react-router";
  * 功能：检查并解锁用户成就
  */
 export async function action({ request, context }: ActionFunctionArgs) {
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
   
   // 验证用户会话
-  const { getSessionId, verifySession } = await import("~/utils/auth");
+  const { getSessionId } = await import("~/utils/auth");
+  const { verifySession } = await import("~/services/auth.server");
   const sessionId = getSessionId(request);
-  
+
   if (!sessionId) {
     return Response.json({ success: false, error: "请先登录" }, { status: 401 });
   }
-  
-  const session = await verifySession(sessionId, anime_db);
-  if (!session.valid || !session.user) {
+
+  const result = await verifySession(sessionId, anime_db);
+  if (!result.valid || !result.user) {
     return Response.json({ success: false, error: "会话已过期" }, { status: 401 });
   }
-  
+
   const formData = await request.formData();
   const achievementId = formData.get("achievement_id") as string;
-  
-  // 使用会话中的用户ID，不接受前端传入的user_id
-  // 防止越权：用户只能解锁自己的成就
-  const userId = session.user.id;
+
+  const userId = result.user.id;
 
   if (!achievementId) {
     return Response.json({ success: false, error: "参数缺失" }, { status: 400 });

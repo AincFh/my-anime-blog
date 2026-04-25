@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Calendar, CreditCard, RefreshCw, XCircle, CheckCircle, History, Sparkles, Star, Zap, Moon, Orbit } from "lucide-react";
 import { useState } from "react";
-import { useLoaderData, useFetcher, Link } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { MembershipTierCard, MembershipTierList } from "~/components/membership/MembershipTierCard";
 import { useUser } from "~/hooks/useUser";
@@ -45,8 +45,8 @@ interface LoaderData {
   }>;
 }
 
-export async function loader({ request, context }: { request: Request; context: any }) {
-  const { anime_db } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
   // 获取所有会员等级
   const tiers = await membershipService.getAllTiers(anime_db);

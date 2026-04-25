@@ -1,4 +1,4 @@
-import { searchAnime } from "~/services/bangumi.server";
+import { searchAnime } from "~/services/bangumi";
 
 /**
  * Bangumi 搜索 API

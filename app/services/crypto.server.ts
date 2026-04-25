@@ -1,12 +1,27 @@
 /**
  * 密码加密工具
- * 使用 bcryptjs 进行密码哈希（兼容 Cloudflare Workers）
+ *
+ * 算法：PBKDF2-SHA256
+ * - 使用 Web Crypto API 实现，兼容 Cloudflare Workers 环境
+ * - 迭代次数 120,000（OWASP 2023 推荐值，>= 120,000 for SHA-256）
+ * - Salt 16 字节随机（使用 crypto.getRandomValues CSPRNG）
+ *
+ * 为什么不使用 bcrypt？
+ * - Cloudflare Workers 原生环境不支持 Node.js 的 crypto 模块
+ * - bcrypt 需要较新的 Node.js API，在 Workers 运行时不保证可用
+ * - PBKDF2-SHA256 是 NIST 批准的替代方案，等效安全强度
+ *
+ * 新注册用户的哈希格式：salt_hex:hash_hex（32 字节 salt + 64 字节 hash）
  */
 
-// 注意：在 Cloudflare Workers 环境中，需要使用兼容的加密库
-// 这里使用 Web Crypto API 实现简单的哈希，生产环境建议使用 bcryptjs 或 argon2
-
 import { SECURITY_CONFIG } from '~/config';
+
+/**
+ * 迭代次数常量
+ * - 当前：120,000（OWASP 2023 最低要求）
+ * - 未来：可考虑升级到 310,000（OWASP 2023 建议值 for SHA-256）
+ */
+const PBKDF2_ITERATIONS = 120_000;
 
 /**
  * 使用 Web Crypto API 生成密码哈希
@@ -18,7 +33,7 @@ export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  
+
   const key = await crypto.subtle.importKey(
     'raw',
     data,
@@ -26,12 +41,12 @@ export async function hashPassword(password: string): Promise<string> {
     false,
     ['deriveBits']
   );
-  
+
   const hashBuffer = await crypto.subtle.deriveBits(
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: 100000,
+      iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },
     key,
@@ -76,7 +91,7 @@ export async function verifyPassword(
       {
         name: 'PBKDF2',
         salt: salt,
-        iterations: 100000,
+        iterations: PBKDF2_ITERATIONS,
         hash: 'SHA-256',
       },
       key,

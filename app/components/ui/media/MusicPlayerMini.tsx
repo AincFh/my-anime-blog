@@ -153,7 +153,7 @@ export function MusicPlayerMini({
             </button>
 
             <div className="ml-4 opacity-0 group-hover/mini:opacity-100 transition-all duration-300 translate-x-[-10px] group-hover/mini:translate-x-0 pointer-events-none shrink-0">
-              <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/20 dark:border-white/10 px-4 py-2 rounded-2xl shadow-xl">
+              <div className="bg-white/60 dark:bg-[rgba(37,40,54,0.92)] dark:backdrop-blur-xl border border-white/20 dark:border-white/10 px-4 py-2 rounded-2xl shadow-xl">
                 <p className="text-xs font-bold text-slate-800 dark:text-white truncate max-w-[120px]">{currentSong?.title || "No Track"}</p>
                 <p className="text-[10px] text-slate-500 dark:text-white/40 truncate">{currentSong?.author || "Artist"}</p>
               </div>
@@ -166,7 +166,7 @@ export function MusicPlayerMini({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl transition-all duration-700 w-[320px]"
+            className="bg-white/70 dark:bg-[rgba(37,40,54,0.96)] dark:backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl transition-all duration-700 w-[320px]"
           >
             <div className="px-6 py-5 flex items-center justify-between border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-2">

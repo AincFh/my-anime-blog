@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/code-highlight.css";
+@import "./styles/legal.css";
 
 /* Limit Break 模式样式 */
 .limit-break {
@@ -48,8 +49,13 @@
 }
 
 /* Markdown 预览样式 */
+/* ============================================
+   Markdown 内容样式 — 双主题支持
+   ============================================ */
+
+/* 默认（Light 模式）：深色文字在浅色背景上 */
 .markdown-content {
-  @apply text-slate-200;
+  color: #1e293b; /* slate-800 equivalent */
 }
 
 .markdown-content img {
@@ -61,15 +67,21 @@
 }
 
 .markdown-content pre {
-  @apply bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 overflow-x-auto my-8 border border-slate-700/50;
+  @apply rounded-xl overflow-x-auto my-8 border;
+  background: rgba(30, 41, 59, 0.05);
+  border-color: rgba(30, 41, 59, 0.1);
+  padding: 1.5rem;
 }
 
 .markdown-content code {
-  @apply bg-slate-800/50 px-1.5 py-0.5 rounded text-sm font-mono text-orange-300;
+  @apply rounded px-1.5 py-0.5 text-sm font-mono;
+  background: rgba(30, 41, 59, 0.08);
+  color: #c2410c; /* orange-700 */
 }
 
 .markdown-content pre code {
-  @apply bg-transparent p-0 text-slate-200;
+  @apply bg-transparent p-0;
+  color: inherit;
 }
 
 .markdown-content h1,
@@ -78,11 +90,13 @@
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-  @apply font-bold text-white mt-10 mb-6 leading-tight;
+  @apply font-bold mt-10 mb-6 leading-tight;
+  color: #0f172a;
 }
 
 .markdown-content h1 {
-  @apply text-4xl border-b border-slate-700/50 pb-4;
+  @apply text-4xl pb-4;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.15);
 }
 
 .markdown-content h2 {
@@ -94,12 +108,14 @@
 }
 
 .markdown-content p {
-  @apply mb-6 leading-loose text-lg text-slate-300/90;
+  @apply mb-6 leading-loose text-lg;
+  color: #334155; /* slate-700 */
 }
 
 .markdown-content ul,
 .markdown-content ol {
-  @apply mb-6 pl-6 space-y-2 text-slate-300;
+  @apply mb-6 pl-6 space-y-2;
+  color: #334155;
 }
 
 .markdown-content li {
@@ -107,12 +123,69 @@
 }
 
 .markdown-content blockquote {
-  @apply border-l-4 pl-6 italic my-8 text-slate-400 bg-slate-800/30 py-4 rounded-r-lg;
+  @apply border-l-4 italic my-8 py-4 rounded-r-lg;
   border-color: #FF9F43;
+  background: rgba(255, 159, 67, 0.05);
+  color: #475569;
 }
 
 .markdown-content a {
-  @apply text-primary-start hover:text-primary-end underline decoration-2 underline-offset-4 transition-colors;
+  @apply underline decoration-2 underline-offset-4 transition-colors;
+  color: #FF9F43;
+}
+
+.markdown-content a:hover {
+  color: #FF6B6B;
+}
+
+/* 暗色模式 Markdown 内容 */
+.dark .markdown-content {
+  color: #e2e8f0; /* slate-200 */
+}
+
+.dark .markdown-content pre {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(51, 65, 85, 0.5);
+}
+
+.dark .markdown-content code {
+  background: rgba(30, 41, 59, 0.8);
+  color: #fb923c; /* orange-400 */
+}
+
+.dark .markdown-content h1,
+.dark .markdown-content h2,
+.dark .markdown-content h3,
+.dark .markdown-content h4,
+.dark .markdown-content h5,
+.dark .markdown-content h6 {
+  color: #f8fafc; /* slate-50 */
+}
+
+.dark .markdown-content h1 {
+  border-bottom-color: rgba(51, 65, 85, 0.5);
+}
+
+.dark .markdown-content p {
+  color: #cbd5e1; /* slate-300 */
+}
+
+.dark .markdown-content ul,
+.dark .markdown-content ol {
+  color: #cbd5e1;
+}
+
+.dark .markdown-content blockquote {
+  background: rgba(30, 41, 59, 0.3);
+  color: #94a3b8; /* slate-400 */
+}
+
+.dark .markdown-content a {
+  color: #fb923c;
+}
+
+.dark .markdown-content a:hover {
+  color: #fed7aa;
 }
 
 /* Spoiler Styles */
@@ -150,7 +223,7 @@
   --font-display: "Orbitron", sans-serif;
   --font-soft: "Comfortaa", cursive;
 
-  /* Colors - Public (A.T. Field) */
+  /* Brand accent colors */
   --color-neon-pink: #ec4899;
   --color-cyber-purple: #8b5cf6;
 
@@ -160,11 +233,20 @@
   --color-glass-bg: var(--glass-bg);
   --color-glass-border: var(--glass-border);
 
-  /* Primary Colors - Tailwind v4 格式 */
+  /* Surface layers — available as bg-surface-0 through bg-surface-3 */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  /* Border tokens */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  /* Primary Colors */
   --color-primary-start: #FF9F43;
   --color-primary-end: #FF6B6B;
-
-  /* 同时定义下划线版本以兼容 */
   --color-primary_start: #FF9F43;
   --color-primary_end: #FF6B6B;
 
@@ -185,9 +267,20 @@
 
 
 :root {
-  /* Light Mode (The Void - Light) */
-  --bg-primary: #FAFAFA;
-  --text-primary: #1a1a1a;
+  /* Light Mode (The Void - Light) — warm, clean, refined */
+  --bg-primary: #fafafa;
+  --text-primary: #111111;
+
+  /* Surface depth layers */
+  --surface-0: #ffffff;
+  --surface-1: #f5f5f7;
+  --surface-2: #f0f0f2;
+  --surface-3: #eaeaec;
+
+  /* Borders — consistent across light/dark */
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-default: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
 
   /* A.T. Field Colors */
   --color-at-orange: #FF9F43;
@@ -200,71 +293,815 @@
   --glass-glow: rgba(255, 159, 67, 0.15);
 
   --card-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 245, 235, 0.6));
+
+  /* Dynamic background system — Light 配色（温暖晨曦） */
+  --dynamic-bg-gradient: linear-gradient(135deg, #fef3e2 0%, #fce7f3 25%, #f0f9ff 50%, #f5f3ff 75%, #fff7ed 100%);
+  --dynamic-orb-1: rgba(255, 159, 67, 0.4);
+  --dynamic-orb-2: rgba(168, 85, 247, 0.3);
+  --dynamic-orb-3: rgba(236, 72, 153, 0.25);
+
+  /* Bokeh — Light 配色 */
+  --bokeh-orb-1: rgba(255, 159, 67, 0.4);
+  --bokeh-orb-2: rgba(255, 107, 107, 0.4);
+  --bokeh-orb-3: rgba(251, 191, 36, 0.4);
+
+  /* Ring / focus accent */
+  --ring-color: rgba(255, 159, 67, 0.4);
+  --ring-offset: rgba(255, 255, 255, 0.8);
 }
 
 .dark {
-  /* Dark Mode - 优化版：深邃但不压抑 */
-  --bg-primary: #0f172a;
-  --text-primary: #f8fafc;
+  /* ============================================
+     Dark Mode - Medium depth (not too dark)
+     Inspired by macOS/iOS dark mode: slate-800 ~ slate-850
+     Surface hierarchy: background → elevated → overlay
+     ============================================ */
 
-  /* 次要文字颜色 - 提高对比度 */
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  /* Base background — medium depth, like macOS dark mode */
+  --bg-primary: #1c1f2b;
+  --text-primary: #f1f5f9;
 
-  /* Glass Surface - Dark：添加温暖的橙色调 */
-  --glass-bg: rgba(15, 23, 42, 0.85);
-  --glass-border: rgba(255, 159, 67, 0.2);
-  --glass-glow: rgba(255, 159, 67, 0.1);
+  /* Text hierarchy */
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
 
-  /* 卡片背景保持暖色调 */
-  --card-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.9));
+  /* Surface depth layers */
+  --surface-0: #1c1f2b;   /* Base background */
+  --surface-1: #252836;   /* Elevated cards, sidebars */
+  --surface-2: #2e3245;   /* Dropdowns, popovers */
+  --surface-3: #363b52;   /* Modals, overlays */
+
+  /* Glass Surface */
+  --glass-bg: rgba(30, 33, 50, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-glow: rgba(255, 159, 67, 0.06);
+
+  /* Card background — subtle gradient for depth */
+  --card-bg: linear-gradient(135deg, #252836 0%, #1e2130 100%);
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Dynamic background system — medium deep with subtle color */
+  --dynamic-bg-gradient: linear-gradient(135deg,
+      #1c1f2b 0%,
+      #1e2236 25%,
+      #1a1e2e 50%,
+      #1d2135 75%,
+      #1c1f2b 100%);
+  --dynamic-orb-1: rgba(99, 102, 241, 0.20);
+  --dynamic-orb-2: rgba(139, 92, 246, 0.14);
+  --dynamic-orb-3: rgba(59, 130, 246, 0.12);
+
+  /* Bokeh — subtle */
+  --bokeh-orb-1: rgba(99, 102, 241, 0.18);
+  --bokeh-orb-2: rgba(139, 92, 246, 0.12);
+  --bokeh-orb-3: rgba(59, 130, 246, 0.10);
+
+  /* Ring / focus accent */
+  --ring-color: rgba(255, 159, 67, 0.4);
+  --ring-offset: rgba(0, 0, 0, 0.4);
 }
 
-/* 深色模式下的文字颜色覆盖 - 确保高对比度 */
+/* ============================================
+   Dark Mode - Semantic Surface Tokens
+   Provides consistent depth hierarchy across all components
+   ============================================ */
+
+.dark .bg-surface-0,
+.dark .dark\:bg-surface-0 { background-color: var(--surface-0) !important; }
+.dark .bg-surface-1,
+.dark .dark\:bg-surface-1 { background-color: var(--surface-1) !important; }
+.dark .bg-surface-2,
+.dark .dark\:bg-surface-2 { background-color: var(--surface-2) !important; }
+.dark .bg-surface-3,
+.dark .dark\:bg-surface-3 { background-color: var(--surface-3) !important; }
+
+/* Subtle border overrides for dark mode */
+.dark .border-border-subtle,
+.dark .dark\:border-border-subtle { border-color: var(--border-subtle) !important; }
+.dark .border-border-default,
+.dark .dark\:border-border-default { border-color: var(--border-default) !important; }
+.dark .border-border-strong,
+.dark .dark\:border-border-strong { border-color: var(--border-strong) !important; }
+
+/* ============================================
+   Dark Mode - Component Refinements
+   ============================================ */
+
+/* Dark mode: elevated cards */
+.dark .glass-card {
+  background: linear-gradient(135deg,
+      rgba(37, 40, 54, 0.96),
+      rgba(30, 33, 48, 0.94)) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.dark .glass-card:hover {
+  border-color: var(--border-default) !important;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 12px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 159, 67, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Dark mode: glass panels */
+.dark .glass-panel {
+  background: linear-gradient(135deg,
+      rgba(30, 33, 50, 0.90),
+      rgba(25, 28, 42, 0.88)) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+/* ============================================
+   iOS 26 Liquid Glass Navigation
+   Advanced glassmorphism with dynamic light
+   ============================================ */
+
+/* Base liquid glass - shared properties */
+.nav-floating,
+.nav-mobile {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(60px) saturate(280%) !important;
+  -webkit-backdrop-filter: blur(60px) saturate(280%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.02) !important;
+  transition:
+    background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Primary light refraction layer - top edge shine */
+.nav-floating::before,
+.nav-mobile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0.35) 15%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(255, 255, 255, 0.15) 70%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(0.3px);
+}
+
+/* Secondary glow layer - ambient light effect */
+.nav-floating::after,
+.nav-mobile::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.2) 10%,
+    transparent 28%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: -2;
+  mask: linear-gradient(180deg, white 0%, transparent 26%);
+  -webkit-mask: linear-gradient(180deg, white 0%, transparent 26%);
+  filter: blur(2px);
+}
+
+/* Animated shimmer - liquid light flowing effect */
+@keyframes liquidPulse {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.nav-floating,
+.nav-mobile {
+  overflow: visible;
+}
+
+.nav-floating::before,
+.nav-mobile::before {
+  animation: liquidPulse 5s ease-in-out infinite;
+}
+
+/* ============================================
+   Dark Mode Liquid Glass with Soft Aurora
+   Subtle, comfortable colors for dark backgrounds
+   ============================================ */
+
+.dark .nav-floating,
+.dark.nav-floating,
+.dark .nav-mobile,
+.dark.nav-mobile {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .nav-floating::before,
+.dark.nav-floating::before,
+.dark .nav-mobile::before,
+.dark.nav-mobile::before {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.02) 70%,
+    rgba(255, 255, 255, 0.03) 100%
+  ) !important;
+  animation: liquidPulse 6s ease-in-out infinite;
+}
+
+.dark .nav-floating::after,
+.dark.nav-floating::after,
+.dark .nav-mobile::after,
+.dark.nav-mobile::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.04) 8%,
+    transparent 20%,
+    transparent 100%
+  ) !important;
+}
+
+/* ============================================
+   Navigation Item Interactions
+   Soft, warm glow effects for dark mode
+   ============================================ */
+
+/* Nav item base - glass interaction layer */
+.nav-floating a,
+.nav-mobile a {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover glow effect - warm amber/orange for dark mode */
+.dark .nav-floating a::before,
+.dark .nav-mobile a::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 60% 40% at 50% 50%,
+    rgba(255, 159, 67, 0.12),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dark .nav-floating a:hover::before,
+.dark .nav-mobile a:hover::before {
+  opacity: 1;
+}
+
+/* Light mode hover - subtle warm glow */
+.nav-floating a::before,
+.nav-mobile a::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 60% 40% at 50% 50%,
+    rgba(255, 159, 67, 0.08),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.nav-floating a:hover::before,
+.nav-mobile a:hover::before {
+  opacity: 1;
+}
+
+/* Active state - enhanced warm glow */
+.dark .nav-floating a.active::before,
+.dark .nav-mobile a.active::before {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(255, 159, 67, 0.15),
+    transparent 70%
+  );
+  opacity: 1;
+}
+
+/* ============================================
+   Navigation Text & Icon Colors
+   Comfortable contrast for dark mode
+   ============================================ */
+
+/* Light mode text */
+.nav-floating,
+.nav-mobile {
+  color: #475569 !important;
+}
+
+/* Dark mode text - softer, not harsh white */
+.dark .nav-floating,
+.dark .nav-mobile {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.dark .nav-floating a,
+.dark .nav-mobile a {
+  color: rgba(255, 255, 255, 0.55) !important;
+  transition: color 0.25s ease !important;
+}
+
+.dark .nav-floating a:hover,
+.dark .nav-mobile a:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dark .nav-floating a.active,
+.dark .nav-mobile a.active {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Icon colors - softer for dark mode */
+.dark .nav-floating svg,
+.dark .nav-mobile svg {
+  color: rgba(255, 255, 255, 0.4) !important;
+  transition: color 0.25s ease !important;
+}
+
+.dark .nav-floating a:hover svg,
+.dark .nav-mobile a:hover svg {
+  color: rgba(255, 159, 67, 0.85) !important; /* Warm amber */
+}
+
+.dark .nav-floating a.active svg,
+.dark .nav-mobile a.active svg {
+  color: rgba(255, 159, 67, 1) !important; /* Primary orange */
+}
+
+/* Divider */
+.dark .nav-floating .nav-divider,
+.dark .nav-mobile .nav-divider {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Login link */
+.dark .nav-floating .nav-login-link,
+.dark .nav-mobile .nav-login-link {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dark .nav-floating .nav-login-link:hover,
+.dark .nav-mobile .nav-login-link:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* ============================================
+   Active Indicator Enhancement
+   Warm glow matching the site's accent color
+   ============================================ */
+
+/* Glowing active dot */
+.nav-floating .active-dot,
+.nav-mobile .active-dot {
+  background: var(--primary-start) !important;
+  box-shadow:
+    0 0 6px rgba(255, 159, 67, 0.5),
+    0 0 12px rgba(255, 159, 67, 0.3) !important;
+}
+
+.dark .nav-floating .active-dot,
+.dark .nav-mobile .active-dot {
+  box-shadow:
+    0 0 8px rgba(255, 159, 67, 0.7),
+    0 0 16px rgba(255, 159, 67, 0.4) !important;
+}
+
+/* ============================================
+   Corner Nav - iOS Dynamic Island Style
+   和导航栏 DockNavigation 风格统一
+   ============================================ */
+
+.nav-island {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(60px) saturate(280%);
+  -webkit-backdrop-filter: blur(60px) saturate(280%);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: visible;
+}
+.nav-island::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    transparent 100%
+  );
+  animation: liquidPulse 6s ease-in-out infinite;
+}
+
+.nav-island::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  z-index: -1;
+}
+
+.dark .nav-island {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.dark .nav-island::before {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.01) 50%,
+    transparent 100%
+  );
+}
+
+.dark .nav-island::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+}
+
+/* Corner Nav Popup - Dynamic Island Popup */
+.nav-island-popup {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(60px) saturate(280%) !important;
+  -webkit-backdrop-filter: blur(60px) saturate(280%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark .nav-island-popup {
+  background: rgba(30, 30, 40, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   Light mode overrides for nav-island
+   ============================================ */
+
+.nav-island:not(.dark *) {
+  color: rgba(71, 85, 105, 0.9) !important;
+}
+
+.dark .nav-island {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+
+/* Dark mode: dialog/overlay backdrop — use surface-3 for maximum elevation */
+.dark [role="dialog"],
+.dark .dialog-backdrop,
+.dark .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dark mode: dropdown menus and popovers — use surface-2 */
+.dark [role="menu"],
+.dark [role="listbox"],
+.dark .dropdown-menu,
+.dark .popover {
+  background-color: var(--surface-2) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ============================================
+   Dark Mode - Text & Contrast Refinements
+   ============================================ */
+
+/* Headings — bright white for clear hierarchy */
 .dark h1,
 .dark h2,
 .dark h3,
 .dark h4,
 .dark h5,
 .dark h6 {
-  color: #f8fafc !important;
+  color: #f0f2f5 !important;
 }
 
+/* Primary text — clean, not harsh white */
 .dark p,
 .dark span,
 .dark div {
   color: inherit;
 }
 
-.dark .text-slate-600 {
-  color: #cbd5e1 !important;
-}
+/* Neutral grays mapped to warm slate scale for dark mode */
+.dark .text-slate-600 { color: #9ca3af !important; }
+.dark .text-slate-500 { color: #a1a7b3 !important; }
+.dark .text-slate-400 { color: #c4cad6 !important; }
+.dark .text-slate-300 { color: #d1d5db !important; }
+.dark .text-slate-200 { color: #e5e7eb !important; }
+.dark .text-slate-800 { color: #f1f5f9 !important; }
 
-.dark .text-slate-500 {
-  color: #cbd5e1 !important;
-}
+.dark .text-gray-500 { color: #9ca3af !important; }
+.dark .text-gray-400 { color: #c4cad6 !important; }
+.dark .text-gray-300 { color: #d1d5db !important; }
 
-.dark .text-slate-400 {
-  color: #e2e8f0 !important;
-}
+.dark .text-zinc-500 { color: #a1a7b3 !important; }
+.dark .text-zinc-400 { color: #c4cad6 !important; }
 
-.dark .text-slate-800 {
-  color: #f1f5f9 !important;
-}
+.dark .text-neutral-500 { color: #a1a7b3 !important; }
+.dark .text-neutral-400 { color: #c4cad6 !important; }
 
-.dark .text-gray-500 {
-  color: #94a3b8 !important;
-}
-
-.dark .text-gray-400 {
-  color: #9ca3af !important;
-}
+.dark .text-stone-500 { color: #a1a7b3 !important; }
+.dark .text-stone-400 { color: #c4cad6 !important; }
 
 /* ============================================
-   无障碍优化 - Accessibility Enhancement
+   Dark Mode - Comprehensive Text Color Overrides
+   Maps light-mode text colors to readable dark-mode counterparts
    ============================================ */
 
-/* 高对比度模式支持 */
+/* --- Slate scale --- */
+.dark .text-slate-950 { color: #f8fafc !important; }
+.dark .text-slate-900 { color: #f1f5f9 !important; }
+.dark .text-slate-800 { color: #e2e8f0 !important; }
+.dark .text-slate-700 { color: #cbd5e1 !important; }
+.dark .text-slate-600 { color: #94a3b8 !important; }
+.dark .text-slate-500 { color: #7c8ba3 !important; }
+.dark .text-slate-400 { color: #6b7785 !important; }
+.dark .text-slate-300 { color: #5c6573 !important; }
+.dark .text-slate-200 { color: #4a5360 !important; }
+.dark .text-slate-100 { color: #3a424e !important; }
+.dark .text-slate-50  { color: #2d333b !important; }
+
+/* --- Gray scale --- */
+.dark .text-gray-950 { color: #f8fafc !important; }
+.dark .text-gray-900 { color: #f1f5f9 !important; }
+.dark .text-gray-800 { color: #e2e8f0 !important; }
+.dark .text-gray-700 { color: #cbd5e1 !important; }
+.dark .text-gray-600 { color: #94a3b8 !important; }
+.dark .text-gray-500 { color: #7c8ba3 !important; }
+.dark .text-gray-400 { color: #6b7785 !important; }
+.dark .text-gray-300 { color: #5c6573 !important; }
+.dark .text-gray-200 { color: #4a5360 !important; }
+.dark .text-gray-100 { color: #3a424e !important; }
+.dark .text-gray-50  { color: #2d333b !important; }
+
+/* --- Zinc scale --- */
+.dark .text-zinc-900 { color: #f1f5f9 !important; }
+.dark .text-zinc-800 { color: #e2e8f0 !important; }
+.dark .text-zinc-700 { color: #cbd5e1 !important; }
+.dark .text-zinc-600 { color: #94a3b8 !important; }
+.dark .text-zinc-500 { color: #7c8ba3 !important; }
+.dark .text-zinc-400 { color: #6b7785 !important; }
+.dark .text-zinc-300 { color: #5c6573 !important; }
+.dark .text-zinc-200 { color: #4a5360 !important; }
+.dark .text-zinc-100 { color: #3a424e !important; }
+.dark .text-zinc-50  { color: #2d333b !important; }
+
+/* --- Neutral scale --- */
+.dark .text-neutral-900 { color: #f1f5f9 !important; }
+.dark .text-neutral-800 { color: #e2e8f0 !important; }
+.dark .text-neutral-700 { color: #cbd5e1 !important; }
+.dark .text-neutral-600 { color: #94a3b8 !important; }
+.dark .text-neutral-500 { color: #7c8ba3 !important; }
+.dark .text-neutral-400 { color: #6b7785 !important; }
+.dark .text-neutral-300 { color: #5c6573 !important; }
+.dark .text-neutral-200 { color: #4a5360 !important; }
+.dark .text-neutral-100 { color: #3a424e !important; }
+.dark .text-neutral-50  { color: #2d333b !important; }
+
+/* --- Stone scale --- */
+.dark .text-stone-900 { color: #f1f5f9 !important; }
+.dark .text-stone-800 { color: #e2e8f0 !important; }
+.dark .text-stone-700 { color: #cbd5e1 !important; }
+.dark .text-stone-600 { color: #94a3b8 !important; }
+.dark .text-stone-500 { color: #7c8ba3 !important; }
+.dark .text-stone-400 { color: #6b7785 !important; }
+.dark .text-stone-300 { color: #5c6573 !important; }
+.dark .text-stone-200 { color: #4a5360 !important; }
+.dark .text-stone-100 { color: #3a424e !important; }
+.dark .text-stone-50  { color: #2d333b !important; }
+
+/* --- Red scale --- */
+.dark .text-red-600 { color: #f87171 !important; }
+.dark .text-red-500 { color: #fca5a5 !important; }
+.dark .text-red-400 { color: #fda4af !important; }
+.dark .text-red-300 { color: #fecaca !important; }
+.dark .text-red-200 { color: #fee2e2 !important; }
+
+/* --- Orange scale --- */
+.dark .text-orange-600 { color: #fb923c !important; }
+.dark .text-orange-500 { color: #fdba74 !important; }
+.dark .text-orange-400 { color: #fdbf6e !important; }
+.dark .text-orange-300 { color: #fdc99a !important; }
+.dark .text-orange-200 { color: #ffe4c4 !important; }
+
+/* --- Amber scale --- */
+.dark .text-amber-600 { color: #fbbf24 !important; }
+.dark .text-amber-500 { color: #fcd34d !important; }
+.dark .text-amber-400 { color: #fde68a !important; }
+.dark .text-amber-300 { color: #fef08a !important; }
+.dark .text-amber-200 { color: #fef3c7 !important; }
+
+/* --- Yellow scale --- */
+.dark .text-yellow-600 { color: #facc15 !important; }
+.dark .text-yellow-500 { color: #fde047 !important; }
+.dark .text-yellow-400 { color: #fef08a !important; }
+.dark .text-yellow-300 { color: #fef9c3 !important; }
+.dark .text-yellow-200 { color: #fefce8 !important; }
+
+/* --- Lime/green scale --- */
+.dark .text-lime-500 { color: #86efac !important; }
+.dark .text-lime-400 { color: #a3e635 !important; }
+.dark .text-green-600 { color: #4ade80 !important; }
+.dark .text-green-500 { color: #86efac !important; }
+.dark .text-green-400 { color: #4ade80 !important; }
+.dark .text-green-300 { color: #86efac !important; }
+.dark .text-green-200 { color: #bbf7d0 !important; }
+
+/* --- Emerald scale --- */
+.dark .text-emerald-600 { color: #34d399 !important; }
+.dark .text-emerald-500 { color: #6ee7b7 !important; }
+.dark .text-emerald-400 { color: #34d399 !important; }
+.dark .text-emerald-300 { color: #6ee7b7 !important; }
+.dark .text-emerald-200 { color: #a7f3d0 !important; }
+
+/* --- Teal scale --- */
+.dark .text-teal-500 { color: #5eead4 !important; }
+.dark .text-teal-400 { color: #2dd4bf !important; }
+.dark .text-teal-300 { color: #5eead4 !important; }
+
+/* --- Cyan scale --- */
+.dark .text-cyan-500 { color: #67e8f9 !important; }
+.dark .text-cyan-400 { color: #22d3ee !important; }
+.dark .text-cyan-300 { color: #67e8f9 !important; }
+
+/* --- Sky/Blue scale --- */
+.dark .text-sky-600 { color: #38bdf8 !important; }
+.dark .text-sky-500 { color: #7dd3fc !important; }
+.dark .text-sky-400 { color: #38bdf8 !important; }
+.dark .text-sky-300 { color: #7dd3fc !important; }
+.dark .text-blue-600 { color: #60a5fa !important; }
+.dark .text-blue-500 { color: #93c5fd !important; }
+.dark .text-blue-400 { color: #60a5fa !important; }
+.dark .text-blue-300 { color: #93c5fd !important; }
+.dark .text-blue-200 { color: #bfdbfe !important; }
+.dark .text-blue-100 { color: #dbeafe !important; }
+
+/* --- Indigo scale --- */
+.dark .text-indigo-600 { color: #818cf8 !important; }
+.dark .text-indigo-500 { color: #a5b4fc !important; }
+.dark .text-indigo-400 { color: #818cf8 !important; }
+.dark .text-indigo-300 { color: #a5b4fc !important; }
+.dark .text-indigo-200 { color: #c7d2fe !important; }
+
+/* --- Violet/Purple scale --- */
+.dark .text-violet-500 { color: #a78bfa !important; }
+.dark .text-violet-400 { color: #8b5cf6 !important; }
+.dark .text-violet-300 { color: #a78bfa !important; }
+.dark .text-purple-600 { color: #a78bfa !important; }
+.dark .text-purple-500 { color: #c4b5fd !important; }
+.dark .text-purple-400 { color: #a78bfa !important; }
+.dark .text-purple-300 { color: #c4b5fd !important; }
+.dark .text-purple-200 { color: #ddd6fe !important; }
+.dark .text-purple-100 { color: #ede9fe !important; }
+
+/* --- Pink scale --- */
+.dark .text-pink-600 { color: #f472b6 !important; }
+.dark .text-pink-500 { color: #f9a8d4 !important; }
+.dark .text-pink-400 { color: #f472b6 !important; }
+.dark .text-pink-300 { color: #f9a8d4 !important; }
+.dark .text-pink-200 { color: #fbcfe8 !important; }
+
+/* --- Rose scale --- */
+.dark .text-rose-600 { color: #fb7185 !important; }
+.dark .text-rose-500 { color: #fda4af !important; }
+.dark .text-rose-400 { color: #fb7185 !important; }
+.dark .text-rose-300 { color: #fda4af !important; }
+.dark .text-rose-200 { color: #fecdd3 !important; }
+
+/* ============================================
+   Dark Mode - Background Color Overrides
+   Adjusts bg color scales to work on dark surfaces
+   ============================================ */
+
+/* Neutral bg scales — shift to surface colors */
+.dark .bg-slate-50  { background-color: #1e2130 !important; }
+.dark .bg-slate-100 { background-color: #252836 !important; }
+.dark .bg-slate-200 { background-color: #2e3245 !important; }
+.dark .bg-slate-300 { background-color: #363b52 !important; }
+.dark .bg-slate-800 { background-color: #111318 !important; }
+.dark .bg-slate-900 { background-color: #0a0c10 !important; }
+
+.dark .bg-gray-50  { background-color: #1e2130 !important; }
+.dark .bg-gray-100 { background-color: #252836 !important; }
+.dark .bg-gray-200 { background-color: #2e3245 !important; }
+.dark .bg-gray-800 { background-color: #111318 !important; }
+
+/* Colored backgrounds — reduce opacity in dark mode for readability */
+.dark .bg-slate-50\/50  { background-color: rgba(30, 33, 48, 0.5) !important; }
+.dark .bg-slate-100\/50 { background-color: rgba(37, 40, 54, 0.5) !important; }
+.dark .bg-white\/5      { background-color: rgba(255, 255, 255, 0.05) !important; }
+.dark .bg-white\/10     { background-color: rgba(255, 255, 255, 0.10) !important; }
+.dark .bg-white\/20     { background-color: rgba(255, 255, 255, 0.15) !important; }
+.dark .bg-white\/30     { background-color: rgba(255, 255, 255, 0.20) !important; }
+.dark .bg-white\/40     { background-color: rgba(255, 255, 255, 0.25) !important; }
+.dark .bg-white\/60     { background-color: rgba(255, 255, 255, 0.35) !important; }
+.dark .bg-white\/70     { background-color: rgba(255, 255, 255, 0.45) !important; }
+.dark .bg-white\/80     { background-color: rgba(255, 255, 255, 0.55) !important; }
+.dark .bg-white\/90     { background-color: rgba(255, 255, 255, 0.65) !important; }
+
+/* Colored bg with opacity — reduce saturation for dark mode */
+.dark .bg-blue-500\/20   { background-color: rgba(96, 165, 250, 0.15) !important; }
+.dark .bg-green-500\/20  { background-color: rgba(74, 222, 128, 0.15) !important; }
+.dark .bg-red-500\/20    { background-color: rgba(248, 113, 113, 0.15) !important; }
+.dark .bg-red-900\/20    { background-color: rgba(127, 29, 29, 0.25) !important; }
+.dark .bg-amber-500\/20  { background-color: rgba(251, 191, 36, 0.15) !important; }
+.dark .bg-yellow-500\/20  { background-color: rgba(234, 179, 8, 0.15) !important; }
+.dark .bg-purple-500\/20  { background-color: rgba(167, 139, 250, 0.15) !important; }
+.dark .bg-rose-500\/20    { background-color: rgba(251, 113, 133, 0.15) !important; }
+.dark .bg-pink-500\/20    { background-color: rgba(244, 114, 182, 0.15) !important; }
+.dark .bg-pink-500\/30    { background-color: rgba(244, 114, 182, 0.22) !important; }
+
+/* ============================================
+   Dark Mode - Border Color Overrides
+   ============================================ */
+
+.dark .border-slate-200 { border-color: rgba(255, 255, 255, 0.08) !important; }
+.dark .border-slate-300 { border-color: rgba(255, 255, 255, 0.12) !important; }
+.dark .border-slate-700 { border-color: rgba(255, 255, 255, 0.10) !important; }
+.dark .border-gray-200  { border-color: rgba(255, 255, 255, 0.08) !important; }
+.dark .border-gray-700  { border-color: rgba(255, 255, 255, 0.10) !important; }
+.dark .border-white\/10 { border-color: rgba(255, 255, 255, 0.10) !important; }
+.dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.16) !important; }
+.dark .border-white\/30 { border-color: rgba(255, 255, 255, 0.20) !important; }
+
+/* ============================================
+   High Contrast Mode Support
+   ============================================ */
+
 @media (prefers-contrast: high) {
   :root {
     --glass-bg: rgba(255, 255, 255, 0.95);
@@ -272,7 +1109,7 @@
   }
 
   .dark {
-    --glass-bg: rgba(15, 23, 42, 0.98);
+    --glass-bg: rgba(28, 31, 43, 0.98);
     --glass-border: rgba(255, 255, 255, 0.4);
   }
 
@@ -281,64 +1118,11 @@
     background: var(--glass-bg) !important;
     border-color: var(--glass-border) !important;
   }
-
-  /* 提升文字对比度 */
-  .text-slate-500,
-  .text-slate-400,
-  .text-gray-500,
-  .text-gray-400 {
-    color: #1e293b !important;
-    /* slate-800 */
-  }
-
-  .dark .text-slate-500,
-  .dark .text-slate-400,
-  .dark .text-gray-500,
-  .dark .text-gray-400 {
-    color: #e2e8f0 !important;
-    /* slate-200 */
-  }
 }
 
 /* ============================================
-   暗色模式深度优化 - Dark Mode Enhancement
+   @layer base — global element styles
    ============================================ */
-
-/* 暗色模式下的玻璃卡片 - 添加橙色微光 */
-.dark .glass-card {
-  background: linear-gradient(135deg,
-      rgba(30, 41, 59, 0.92),
-      rgba(255, 159, 67, 0.03)) !important;
-  border-color: rgba(255, 159, 67, 0.15) !important;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(255, 159, 67, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-}
-
-.dark .glass-card:hover {
-  border-color: rgba(255, 159, 67, 0.35) !important;
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(255, 159, 67, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* 暗色模式下的玻璃面板 */
-.dark .glass-panel {
-  background: linear-gradient(135deg,
-      rgba(15, 23, 42, 0.9),
-      rgba(255, 159, 67, 0.02)) !important;
-  border-color: rgba(255, 159, 67, 0.12) !important;
-}
-
-/* 暗色模式下的导航栏增强 */
-.dark nav .bg-slate-900\/60,
-.dark .dark\:bg-slate-900\/60 {
-  background: linear-gradient(135deg,
-      rgba(15, 23, 42, 0.75),
-      rgba(255, 159, 67, 0.02)) !important;
-}
 
 @layer base {
 
@@ -355,7 +1139,7 @@
     scroll-behavior: smooth;
   }
 
-  /* 美化滚动条 - 极细、半透明、圆角 */
+  /* 滚动条样式 — 亮/暗模式通用中性色 */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -366,19 +1150,32 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 159, 67, 0.3);
+    background: rgba(100, 116, 139, 0.3);
     border-radius: 3px;
     transition: background 0.2s;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 159, 67, 0.5);
+    background: rgba(100, 116, 139, 0.5);
   }
 
-  /* Firefox 滚动条样式 */
+  /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 159, 67, 0.3) transparent;
+    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+  }
+
+  /* 深色模式滚动条 — 白色系更醒目 */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .dark * {
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
   }
 
   /* Custom Cursor Hide Default - 仅对非辅助技术用户 */
@@ -426,21 +1223,22 @@
 
 /* Glassmorphism Utilities - Optimized for performance */
 .glass-panel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 245, 235, 0.8));
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.72),
+      rgba(250, 250, 250, 0.85)) !important;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 32px 0 rgba(255, 159, 67, 0.15);
+  border: 1px solid var(--border-default);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.06);
   will-change: transform;
-  /* 性能优化 */
 
-  /* Fallback for low-end devices */
   @supports not (backdrop-filter: blur(20px)) {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95) !important;
   }
 
-  /* 移动端降级：使用半透明纯色 */
   @media (max-width: 640px) {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95) !important;
     backdrop-filter: none;
   }
 }
@@ -459,21 +1257,21 @@
   @apply rounded-3xl transition-all duration-300 relative overflow-hidden;
   background: var(--card-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 var(--glass-glow);
+  border: 1px solid var(--border-default);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.06);
   will-change: transform;
 
-  /* Mobile optimization */
   @media (max-width: 640px) {
     @apply rounded-2xl;
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
-    background: var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: var(--surface-1);
     backdrop-filter: none;
   }
 
-  /* Fallback */
   @supports not (backdrop-filter: blur(20px)) {
-    background: var(--bg-primary);
+    background: var(--surface-1);
   }
 }
 
@@ -488,15 +1286,16 @@
 }
 
 .glass-card:hover {
-  @apply -translate-y-2;
-  border-color: var(--color-at-orange);
-  box-shadow: 0 0 20px rgba(255, 159, 67, 0.3), inset 0 0 10px rgba(255, 159, 67, 0.1);
-  transform: translateY(-5px);
+  @apply -translate-y-1;
+  border-color: rgba(255, 159, 67, 0.3) !important;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 159, 67, 0.1);
 
-  /* Mobile optimization */
   @media (max-width: 640px) {
-    @apply -translate-y-1;
-    box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.1);
+    @apply translate-y-0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -628,10 +1427,13 @@
     min-width: 44px;
   }
 
-  /* 禁用 hover 效果 */
+  /* Disable hover effect on touch devices */
   .glass-card:hover {
     transform: none;
-    box-shadow: 0 8px 32px 0 rgba(255, 159, 67, 0.15);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 4px 16px rgba(0, 0, 0, 0.06);
+    border-color: var(--border-default) !important;
   }
 
   /* 隐藏自定义鼠标 */
@@ -840,22 +1642,17 @@
 /* Firefox 特定优化 */
 @-moz-document url-prefix() {
 
-  /* Firefox 滚动条样式 */
-  * {
-    scrollbar-width: thin;
-  }
-
   /* Firefox backdrop-filter 降级 */
   @supports not (backdrop-filter: blur(20px)) {
 
     .glass-panel,
     .glass-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--surface-1);
     }
 
     .dark .glass-panel,
     .dark .glass-card {
-      background: rgba(15, 23, 42, 0.95);
+      background: #252836;
     }
   }
 }
@@ -1125,16 +1922,16 @@
    Project: MAGI - Visual Upgrade
    ============================================ */
 
-/* 动态网格背景 */
+/* Dynamic grid background — medium depth dark */
 .animated-mesh-gradient {
-  background-color: #0f172a;
+  background-color: #1c1f2b;
   background-image:
-    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(339, 49%, 30%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(253, 16%, 7%, 1) 0, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(230, 20%, 10%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(230, 25%, 16%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(260, 25%, 18%, 1) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(230, 22%, 14%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(260, 20%, 14%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(230, 18%, 10%, 1) 0, transparent 50%);
   background-size: 200% 200%;
   animation: mesh-flow 20s ease infinite;
 }

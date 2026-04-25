@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { GlassCard } from "../../components/layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { useState, useMemo } from "react";
 import { Filter, SortDesc, Calendar, Star, X, Play, Tv } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import type { Route } from "./+types/bangumi";
+import type { LoaderFunctionArgs } from "react-router";
+import { useLoaderData } from "react-router";
 
 /** 番剧数据结构 */
 export interface Anime {
@@ -31,8 +32,9 @@ export interface AnimeCardItemProps {
     onClick: () => void;
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const { anime_db, CACHE_KV } = context.cloudflare.env;
+export async function loader({ context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace };
+  const { anime_db, CACHE_KV } = env;
 
   try {
     const animesResult = await anime_db
@@ -158,7 +160,8 @@ function AnimeCardItem({ anime, index, config, onClick }: AnimeCardItemProps) {
   );
 }
 
-export default function Bangumi({ loaderData }: Route.ComponentProps) {
+export default function Bangumi() {
+    const loaderData = useLoaderData<typeof loader>();
   const { animes } = loaderData || { animes: [] };
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"default" | "rating" | "date">("default");
@@ -415,7 +418,7 @@ export default function Bangumi({ loaderData }: Route.ComponentProps) {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error?: unknown }) {
   let message = "番剧页面加载失败";
   let details = "无法显示番剧列表，请稍后重试";
   let stack: string | undefined;

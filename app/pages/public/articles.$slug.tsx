@@ -6,7 +6,7 @@ import { Link, useLoaderData } from "react-router";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Calendar, Eye, Heart, ArrowLeft, Share2, Tag, Clock, ArrowRight, BookOpen, Bookmark } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Route } from "./+types/articles.$slug";
+import type { LoaderFunctionArgs } from "react-router";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { getPlaceholderCover } from "~/utils/placeholder_covers";
 import { CommentsSection } from "~/components/ui/interactive/CommentsSection";
@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 import { cn } from "~/utils/cn";
+import { onLike } from "~/components/ui/system/AchievementSystem";
 
 interface Article {
     id: number;
@@ -29,7 +30,7 @@ interface Article {
     updated_at: number | null;
 }
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: LoaderFunctionArgs) {
     const { getNotionArticleContent } = await import("~/services/notion.server.ts");
     const { getDB } = await import("~/utils/db");
     const db = getDB(context);
@@ -99,7 +100,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     return { article, relatedArticles: relatedArticles.results || [], comments: comments.results || [], isNotion };
 }
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ data }: { data: { article?: Article } | undefined }) {
     const article = data?.article as Article | undefined;
     if (!article) return [{ title: "文章未找到 - A.T. Field" }];
 
@@ -224,8 +225,10 @@ export default function ArticleDetailPage() {
     };
 
     const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+        const newLiked = !isLiked;
+        setIsLiked(newLiked);
+        setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
+        if (newLiked) onLike();
         fetch('/api/article/like', {
             method: 'POST',
             body: new URLSearchParams({ articleId: article.id.toString() })
@@ -237,7 +240,6 @@ export default function ArticleDetailPage() {
             {/* 灵动岛导航 */}
             <FloatingSubNav
                 title={article.title}
-                backUrl="/articles"
                 rightContent={
                     <>
                         <button
@@ -524,10 +526,6 @@ export default function ArticleDetailPage() {
             {/* 底部 */}
             <footer className="border-t py-8" style={{ borderColor: 'var(--glass-border)' }}>
                 <div className="max-w-[800px] mx-auto px-6 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                    <Link to="/articles" className="inline-flex items-center gap-2 font-semibold hover:opacity-70 transition-all" style={{ color: 'var(--color-primary-start)' }}>
-                        <ArrowLeft className="w-4 h-4" />
-                        返回文章专栏
-                    </Link>
                     <span className="mx-4">·</span>
                     <span>© 2024 A.T. Field · Ainc</span>
                 </div>

@@ -5,6 +5,7 @@
 
 import { execute, executeBatch, queryFirst } from '../db.server';
 import { type Database } from '../db.server';
+import { getLogger } from '~/utils/logger';
 
 // ... (retain existing code) ...
 
@@ -92,7 +93,7 @@ export async function archiveAuditLogs(
 
         return { success: true, archivedCount: count };
     } catch (error) {
-        console.error('Archive audit logs error:', error);
+        getLogger().error('Archive audit logs failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, archivedCount: 0, error: String(error) };
     }
 }
@@ -135,7 +136,7 @@ export async function archiveLoginHistory(
 
         return { success: true, archivedCount: count };
     } catch (error) {
-        console.error('Archive login history error:', error);
+        getLogger().error('Archive login history failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, archivedCount: 0, error: String(error) };
     }
 }
@@ -178,7 +179,7 @@ export async function archiveCoinTransactions(
 
         return { success: true, archivedCount: count };
     } catch (error) {
-        console.error('Archive coin transactions error:', error);
+        getLogger().error('Archive coin transactions failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, archivedCount: 0, error: String(error) };
     }
 }

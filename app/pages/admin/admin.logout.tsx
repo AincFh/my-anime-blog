@@ -1,10 +1,10 @@
 import { redirect } from "react-router";
-import type { Route } from "./+types/admin.logout";
+import type { LoaderFunctionArgs } from "react-router";
 
 /**
  * 退出登录
  */
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   // 清除会话Cookie
   const headers = new Headers();
   headers.append(

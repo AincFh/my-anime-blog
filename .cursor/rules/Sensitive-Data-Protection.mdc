@@ -1,10 +1,14 @@
 ---
 alwaysApply: true
 globs: "**/*.{ts,tsx,json,jsonc}"
-description: 敏感信息保护规范 - 密钥管理、日志脱敏、环境变量、代码审查
+description: 敏感信息保护规范 — 信任一旦丢失，就再也找不回来
 ---
 
 # 敏感信息保护规范
+
+> **核心理念：用户的信任是产品最宝贵的资产。像 Apple 保护用户数据一样保护每一份敏感信息——信任一旦丢失，就再也找不回来了。**
+
+---
 
 ## 密钥和凭据管理
 
@@ -31,12 +35,14 @@ console.debug('Secret:', sensitiveValue);
 export async function handler(request: Request, env: Env): Promise<Response> {
   const apiKey = env.API_KEY;
   const dbPassword = env.DB_PASSWORD;
-  
+
   if (!apiKey || !dbPassword) {
     throw new Error('缺少必要的环境变量');
   }
 }
 ```
+
+---
 
 ## Cloudflare Secrets
 
@@ -72,6 +78,8 @@ RATE_LIMIT_SECRET=dev_rate_limit_key
 *.local
 ```
 
+---
+
 ## 日志脱敏
 
 ### 必须脱敏的信息
@@ -97,7 +105,7 @@ const SENSITIVE_FIELDS = new Set([
 
 function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown> {
   const sanitized = { ...data };
-  
+
   for (const key of Object.keys(sanitized)) {
     if (SENSITIVE_FIELDS.has(key.toLowerCase())) {
       sanitized[key] = '[REDACTED]';
@@ -105,7 +113,7 @@ function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown>
       sanitized[key] = sanitizeLogData(sanitized[key] as Record<string, unknown>);
     }
   }
-  
+
   return sanitized;
 }
 ```
@@ -114,13 +122,13 @@ function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown>
 
 ```typescript
 // ❌ 危险 - 记录敏感信息
-logger.info('用户登录成功', { 
-  userId: user.id, 
-  password: user.password // 禁止！ 
+logger.info('用户登录成功', {
+  userId: user.id,
+  password: user.password // 禁止！
 });
 
 // ✅ 安全 - 脱敏后记录
-logger.info('用户登录成功', sanitizeLogData({ 
+logger.info('用户登录成功', sanitizeLogData({
   userId: user.id,
   email: user.email,  // 根据业务判断是否需要脱敏
   ip: clientIp,
@@ -135,7 +143,7 @@ logger.info('用户登录成功', sanitizeLogData({
 function sanitizeHeaders(headers: Headers): Record<string, string> {
   const sanitized: Record<string, string> = {};
   const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key'];
-  
+
   for (const [key, value] of headers.entries()) {
     if (sensitiveHeaders.includes(key.toLowerCase())) {
       sanitized[key] = '[REDACTED]';
@@ -143,10 +151,12 @@ function sanitizeHeaders(headers: Headers): Record<string, string> {
       sanitized[key] = value;
     }
   }
-  
+
   return sanitized;
 }
 ```
+
+---
 
 ## 配置管理
 
@@ -175,18 +185,20 @@ function sanitizeHeaders(headers: Headers): Record<string, string> {
 interface Env {
   // 公共变量
   ENVIRONMENT: 'development' | 'staging' | 'production';
-  
+
   // 敏感变量 - 使用 secret 存储
   API_KEY: string;
   JWT_SECRET: string;
   DB_PASSWORD: string;
-  
+
   // 绑定
   DB: D1Database;
   SESSIONS: KVNamespace;
   R2_BUCKET: R2Bucket;
 }
 ```
+
+---
 
 ## API 响应安全
 
@@ -233,18 +245,20 @@ catch (e) {
 
 // ✅ 安全 - 通用错误消息
 catch (e) {
-  logger.error('处理请求时发生错误', sanitizeLogData({ 
+  logger.error('处理请求时发生错误', sanitizeLogData({
     path: request.url,
     method: request.method,
     errorType: typeof e,
   }));
-  
+
   Response.json({
     success: false,
     message: '服务器内部错误，请稍后重试',
   }, { status: 500 });
 }
 ```
+
+---
 
 ## 数据库查询脱敏
 
@@ -262,12 +276,20 @@ logger.debug('执行用户查询', {
 });
 ```
 
-## 代码审查检查清单
+---
 
-- [ ] 无硬编码的 API 密钥或密码
-- [ ] 日志记录已脱敏
-- [ ] API 响应不包含敏感字段
-- [ ] 错误消息不暴露内部结构
-- [ ] .gitignore 包含敏感文件
-- [ ] 使用 Cloudflare Secrets 而非 vars
-- [ ] 敏感数据使用 [REDACTED] 占位
+## 敏感信息保护自检清单
+
+- [ ] 无硬编码的 API 密钥或密码吗？
+- [ ] 日志记录已脱敏吗？
+- [ ] API 响应不包含敏感字段吗？
+- [ ] 错误消息不暴露内部结构吗？
+- [ ] .gitignore 包含敏感文件吗？
+- [ ] 使用了 Cloudflare Secrets 而非 vars 吗？
+- [ ] 敏感数据使用 [REDACTED] 占位了吗？
+
+### 自我审视
+- [ ] 我自己愿意让所有人看到这些日志吗？
+- [ ] 如果这些 API 响应被公开，我会紧张吗？
+- [ ] 如果这是一个银行系统，这些处理方式够安全吗？
+- [ ] 我愿意把这个代码开源吗？（如果答案是否定的，说明还有敏感信息泄露）

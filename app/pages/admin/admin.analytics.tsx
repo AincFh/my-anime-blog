@@ -1,15 +1,14 @@
 import { motion } from "framer-motion";
-import type { Route } from "./+types/admin.analytics";
-import { redirect } from "react-router";
+import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { getSessionId } from "~/utils/auth";
 import { BarChart3, Eye, FileText, MessageSquare, Users, TrendingUp, Heart, Clock } from "lucide-react";
 
 // ==================== 数据加载 ====================
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) throw redirect("/panel/login");
 
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
   // 文章浏览量 TOP 10
   let topArticles: { title: string; views: number; likes: number }[] = [];
@@ -25,10 +24,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const articlesResult = await anime_db
       .prepare("SELECT title, views, likes FROM articles ORDER BY views DESC LIMIT 10")
       .all();
-    topArticles = (articlesResult.results || []).map((r: any) => ({
-      title: r.title,
-      views: r.views || 0,
-      likes: r.likes || 0,
+    topArticles = (articlesResult.results || []).map((r: Record<string, unknown>) => ({
+      title: r.title as string,
+      views: r.views as number,
+      likes: r.likes as number,
     }));
 
     // 内容概览
@@ -37,10 +36,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .first();
     if (contentResult) {
       contentStats = {
-        articles: (contentResult as any).count || 0,
-        totalViews: (contentResult as any).totalViews || 0,
-        totalLikes: (contentResult as any).totalLikes || 0,
-        avgViews: Math.round((contentResult as any).avgViews || 0),
+        articles: (contentResult as Record<string, unknown>).count as number || 0,
+        totalViews: (contentResult as Record<string, unknown>).totalViews as number || 0,
+        totalLikes: (contentResult as Record<string, unknown>).totalLikes as number || 0,
+        avgViews: Math.round((contentResult as Record<string, unknown>).avgViews as number || 0),
       };
     }
 
@@ -49,18 +48,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const pendingComments = await anime_db.prepare("SELECT COUNT(*) as c FROM comments WHERE status = 'pending'").first();
     const spamComments = await anime_db.prepare("SELECT COUNT(*) as c FROM comments WHERE is_spam = 1").first();
     commentStats = {
-      total: (totalComments as any)?.c || 0,
-      pending: (pendingComments as any)?.c || 0,
-      spam: (spamComments as any)?.c || 0,
-      approved: ((totalComments as any)?.c || 0) - ((pendingComments as any)?.c || 0) - ((spamComments as any)?.c || 0),
+      total: (totalComments as Record<string, unknown>)?.c as number || 0,
+      pending: (pendingComments as Record<string, unknown>)?.c as number || 0,
+      spam: (spamComments as Record<string, unknown>)?.c as number || 0,
+      approved: ((totalComments as Record<string, unknown>)?.c as number || 0) - ((pendingComments as Record<string, unknown>)?.c as number || 0) - ((spamComments as Record<string, unknown>)?.c as number || 0),
     };
 
     // 用户统计
     const totalUsers = await anime_db.prepare("SELECT COUNT(*) as c FROM users").first();
     const recentUsers = await anime_db.prepare("SELECT COUNT(*) as c FROM users WHERE created_at > ?").bind(Math.floor(Date.now() / 1000) - 7 * 86400).first();
     userStats = {
-      total: (totalUsers as any)?.c || 0,
-      recentSignups: (recentUsers as any)?.c || 0,
+      total: (totalUsers as Record<string, unknown>)?.c as number || 0,
+      recentSignups: (recentUsers as Record<string, unknown>)?.c as number || 0,
     };
   } catch (e) {
     console.error("Analytics data fetch failed:", e);
@@ -70,7 +69,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 // ==================== 组件 ====================
-export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
+export default function AdminAnalytics() {
+  const loaderData = useLoaderData<typeof loader>();
   const { topArticles, commentStats, userStats, contentStats } = loaderData;
 
   const maxViews = topArticles.length > 0 ? Math.max(...topArticles.map(a => a.views)) : 1;

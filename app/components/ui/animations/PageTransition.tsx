@@ -1,33 +1,33 @@
 /**
- * 🍎 Apple HIG 页面过渡系统
+ * Apple HIG 页面过渡系统
  * AnimatePresence 接管所有路由生命周期，实现零裁切感的 Hero Transition
  */
 
 import { motion, AnimatePresence, type Transition, type Variants } from "framer-motion";
 
-// 全局页面过渡变体
+// 全局页面过渡变体 - 优化: 减少闪烁,更流畅
 export const pageTransition: Transition = {
   type: "spring",
-  stiffness: 300,
-  damping: 30,
+  stiffness: 350,
+  damping: 35,
 };
 
 export const pageVariants: Variants = {
   initial: {
     opacity: 0,
-    y: 20,
   },
   enter: {
     opacity: 1,
-    y: 0,
-    transition: pageTransition,
+    transition: {
+      ...pageTransition,
+      duration: undefined,
+    },
   },
   exit: {
     opacity: 0,
-    y: -20,
     transition: {
-      duration: 0.2,
-      ease: "easeInOut",
+      duration: 0.15,
+      ease: [0.4, 0, 1, 1], // 快速退出
     },
   },
 };
@@ -224,11 +224,12 @@ export const staggerItemVariants: Variants = {
 };
 
 // 键盘坠落式弹跳动画（用于骨架屏加载）
+// Note: Using a stable initial rotation value to avoid SSR/client hydration mismatch from Math.random()
 export const dropBounceVariants: Variants = {
   initial: {
     opacity: 0,
     y: -100,
-    rotate: Math.random() * 20 - 10, // 随机旋转角度
+    rotate: -7, // Stable initial rotation, not Math.random()
   },
   enter: {
     opacity: 1,

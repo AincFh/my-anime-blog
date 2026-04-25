@@ -3,7 +3,7 @@
  * 用于扫描和管理 R2 中的孤儿文件
  */
 
-export interface R2FileInfo {
+import { getLogger } from '~/utils/logger';export interface R2FileInfo {
   key: string;
   size: number; // bytes
   uploadedAt: string;
@@ -17,7 +17,7 @@ export interface R2FileInfo {
  */
 export async function listR2Files(bucket: R2Bucket | null): Promise<R2FileInfo[]> {
   if (!bucket) {
-    console.warn("R2 bucket not available");
+    getLogger().warn('R2 bucket not available');
     return [];
   }
 
@@ -45,7 +45,7 @@ export async function listR2Files(bucket: R2Bucket | null): Promise<R2FileInfo[]
 
     return files;
   } catch (error) {
-    console.error("Failed to list R2 files:", error);
+    getLogger().error('List R2 files failed', { error: error instanceof Error ? error.message : String(error) });
     return [];
   }
 }
@@ -106,7 +106,7 @@ export async function getUsedImageKeys(db: D1Database): Promise<Set<string>> {
       }
     }
   } catch (error) {
-    console.error("Failed to get used image keys:", error);
+    getLogger().error('Get used image keys failed', { error: error instanceof Error ? error.message : String(error) });
   }
 
   return usedKeys;
@@ -173,7 +173,7 @@ export async function deleteR2Files(
       await bucket.delete(key);
       deletedCount++;
     } catch (error) {
-      console.error(`Failed to delete ${key}:`, error);
+      getLogger().error('Delete R2 file failed', { key, error: error instanceof Error ? error.message : String(error) });
       errors.push(`Failed to delete ${key}: ${String(error)}`);
     }
   }

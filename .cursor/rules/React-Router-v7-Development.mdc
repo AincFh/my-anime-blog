@@ -1,43 +1,48 @@
 ---
 alwaysApply: true
 globs: "**/*.{ts,tsx}"
-description: React Router v7 开发规范 - Loader、Action、SSR、组件模式最佳实践
+description: React Router v7 开发规范 — 只交付流畅如水的用户体验
 ---
 
 # React Router v7 开发规范
+
+> **核心理念：路由是用户旅程的地图。每一页的加载、切换、提交，都应该是流畅的——没有闪烁，没有等待，没有困惑。如果用户在使用过程中感受到了任何"卡"，那就是我们没有做好。**
+
+---
 
 ## 数据获取规则
 
 ### 1. Loader 函数（必须优先使用）
 
 ```typescript
-// ✅ 正确 - 使用 Loader 获取数据
+// ✅ 正确 - 使用 Loader 获取数据，服务端预取
 import { data } from 'react-router';
 
 export async function loader({ request, params, env }: LoaderFunctionArgs) {
   const slug = params.slug;
-  
+
   const article = await env.DB
     .prepare('SELECT * FROM articles WHERE slug = ?')
     .bind(slug)
     .first();
-  
+
   if (!article) {
     throw data('文章不存在', { status: 404 });
   }
-  
+
   return Response.json({ article });
 }
 
 // ❌ 禁止 - 在客户端使用 useEffect 获取数据
 function ArticlePage() {
   const [article, setArticle] = useState(null);
-  
+
   useEffect(() => {
     fetch(`/api/article/${slug}`).then(res => res.json());
   }, [slug]);
-  
-  // ...
+
+  // 这样做：数据在服务端获取，页面加载时即有数据
+  // 而不是先显示空白再加载，再闪烁更新
 }
 ```
 
@@ -47,7 +52,7 @@ function ArticlePage() {
 export async function action({ request, env }: ActionFunctionArgs) {
   const formData = await request.formData();
   const title = formData.get('title') as string;
-  
+
   // 验证数据
   const result = createArticleSchema.safeParse({ title });
   if (!result.success) {
@@ -56,13 +61,13 @@ export async function action({ request, env }: ActionFunctionArgs) {
       { status: 400 }
     );
   }
-  
+
   // 执行业务逻辑
   await env.DB
     .prepare('INSERT INTO articles (title) VALUES (?)')
     .bind(result.data.title)
     .run();
-  
+
   return Response.json({ success: true });
 }
 ```
@@ -75,7 +80,7 @@ import { useFetcher } from 'react-router';
 function LikeButton({ articleId }: { articleId: number }) {
   const fetcher = useFetcher();
   const isLiking = fetcher.state !== 'idle';
-  
+
   return (
     <fetcher.Form method="post" action={`/api/article/${articleId}/like`}>
       <button type="submit" disabled={isLiking}>
@@ -84,14 +89,20 @@ function LikeButton({ articleId }: { articleId: number }) {
     </fetcher.Form>
   );
 }
+
+// 自问：这个交互需要改变 URL 吗？
+// 不需要 → useFetcher
+// 需要（用户会导航到新页面）→ Form + Action
 ```
+
+---
 
 ## 组件架构
 
 ### 1. 服务端组件优先
 
 ```typescript
-// ✅ 默认使用服务端组件
+// ✅ 默认使用服务端组件，数据在服务端获取
 import type { LoaderFunctionArgs } from 'react-router';
 
 export async function loader({ env }: LoaderFunctionArgs) {
@@ -99,10 +110,10 @@ export async function loader({ env }: LoaderFunctionArgs) {
   return { articles };
 }
 
-// 服务端组件 - 直接访问 loader 数据
+// 服务端组件 - 直接访问 loader 数据，无需 loading 状态
 export default function HomePage({ loaderData }: Route.ComponentProps) {
   const { articles } = loaderData;
-  
+
   return (
     <main>
       {articles.map(article => (
@@ -127,7 +138,7 @@ interface Props {
 
 export function Counter({ initialCount }: Props) {
   const [count, setCount] = useState(initialCount);
-  
+
   return (
     <button onClick={() => setCount(c => c + 1)}>
       点击次数: {count}
@@ -145,12 +156,14 @@ app/
 │   │   ├── Button.tsx
 │   │   ├── Input.tsx
 │   │   └── Card.tsx
-│   ├── features/              # 功能组件
+│   ├── features/              # 功能组件（跨页面使用）
 │   │   ├── ArticleCard.tsx
 │   │   └── UserProfile.tsx
 │   └── layouts/               # 布局组件
 │       └── MainLayout.tsx
 ```
+
+---
 
 ## 错误处理
 
@@ -161,20 +174,25 @@ import { isRouteErrorResponse, useRouteError } from 'react-router';
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  
+
   if (isRouteErrorResponse(error)) {
     return (
-      <div className="error-page">
-        <h1>{error.status}</h1>
-        <p>{error.statusText}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-6xl font-bold text-white/20">{error.status}</h1>
+          <p className="text-xl text-gray-400 mt-4">{error.statusText}</p>
+          {/* 友善的错误提示，不是冷冰冰的状态码 */}
+        </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="error-page">
-      <h1>出错了</h1>
-      <p>{error instanceof Error ? error.message : '未知错误'}</p>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-red-500">发生错误</h1>
+        <p className="text-gray-400 mt-4">{error instanceof Error ? error.message : '未知错误'}</p>
+      </div>
     </div>
   );
 }
@@ -183,18 +201,21 @@ export function ErrorBoundary() {
 ### 2. 路由级别错误处理
 
 ```typescript
-// app/routes/articles.$slug.tsx
+// app/pages/articles.$slug.tsx
 export function ErrorBoundary() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-red-500">404</h1>
+        <h1 className="text-4xl font-bold text-white/20">404</h1>
         <p className="text-gray-400 mt-2">文章不存在或已被删除</p>
+        {/* 404 页面也要精心设计，不要只是一行文字 */}
       </div>
     </div>
   );
 }
 ```
+
+---
 
 ## 路由结构规范
 
@@ -203,18 +224,20 @@ export function ErrorBoundary() {
 ```typescript
 // 路由命名规范
 app/
-├── routes/
+├── pages/
 │   ├── _index.tsx                    # 首页 /
 │   ├── articles._index.tsx           # 文章列表 /articles
 │   ├── articles.$slug.tsx            # 文章详情 /articles/:slug
 │   ├── articles.new.tsx             # 创建文章 /articles/new
 │   ├── articles.$slug.edit.tsx       # 编辑文章 /articles/:slug/edit
 │   ├── api.articles.tsx             # 文章 API
-│   ├── api.articles.$id.tsx         # 单篇文章 API
+│   ├── api.articles.$id.tsx        # 单篇文章 API
 │   └── _dashboard.tsx                # 仪表盘布局
 │       ├── _dashboard.index.tsx     # 仪表盘首页
 │       └── _dashboard.settings.tsx  # 仪表盘设置
 ```
+
+---
 
 ## 加载状态
 
@@ -227,16 +250,17 @@ import { Await, useLoaderData } from 'react-router';
 export async function loader({ env }: LoaderFunctionArgs) {
   const articles = getArticles(env);
   const popularTags = getPopularTags(env);
-  
+
   return { articles, popularTags };
 }
 
 export default function ArticlesPage() {
   const { articles, popularTags } = useLoaderData<typeof loader>();
-  
+
   return (
     <div className="grid grid-cols-3 gap-6">
       <div className="col-span-2">
+        {/* 骨架屏比 Spinner 更优雅 */}
         <Suspense fallback={<ArticleListSkeleton />}>
           <Await resolve={articles}>
             {(data) => <ArticleList articles={data} />}
@@ -255,6 +279,8 @@ export default function ArticlesPage() {
 }
 ```
 
+---
+
 ## 类型安全
 
 ### 使用 TypeScript 严格模式
@@ -264,7 +290,7 @@ export default function ArticlesPage() {
 export async function loader({ params }: LoaderFunctionArgs) {
   // 明确 params.slug 类型
   const slug = params.slug as string;
-  
+
   // 使用 zod 验证参数
   const result = slugSchema.safeParse(slug);
   if (!result.success) {
@@ -272,6 +298,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }
 }
 ```
+
+---
 
 ## 性能优化
 
@@ -286,3 +314,33 @@ export async function loader({ params }: LoaderFunctionArgs) {
 3. **缓存策略**
    - 使用 `Cache-Control` 头控制缓存
    - 利用 React Router 的缓存机制
+
+---
+
+## React Router v7 自检清单
+
+### 加载体验
+- [ ] 页面切换有流畅的过渡动画吗？
+- [ ] 加载时用户看到的是骨架屏还是空白？
+- [ ] 重复点击按钮有没有防重复提交？
+- [ ] 长时间操作（> 3s）有没有进度提示？
+
+### 数据流
+- [ ] 数据都在 Loader 里获取吗？有没有 useEffect 获取数据的？
+- [ ] 表单提交用 Action 吗？有没有直接 fetch 的？
+- [ ] 非导航交互用 useFetcher 吗？
+
+### 错误处理
+- [ ] 404 页面精心设计了吗？还是只有一个状态码？
+- [ ] 网络错误有友善的重试提示吗？
+- [ ] 表单验证错误显示在输入框旁边吗？
+
+### 性能
+- [ ] SSR 了吗？首屏内容是服务端返回的吗？
+- [ ] 客户端 JS 包体积控制住了吗？
+- [ ] 图片有懒加载吗？
+
+### 自我审视
+- [ ] 用户从一个页面跳转到另一个页面，体验流畅吗？
+- [ ] 整个用户旅程中，有没有让我自己感到"卡"的地方？
+- [ ] 如果这是我每天用的应用，这个路由体验我满意吗？

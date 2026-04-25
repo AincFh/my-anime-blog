@@ -4,16 +4,16 @@
  * GET  /api/notion/sync - 手动触发同步
  * GET  /api/notion/sync-status - 获取同步状态和历史
  */
-import type { Route } from "./+types/api.notion.sync";
+import type { LoaderFunctionArgs } from "react-router";
 import { getSessionId } from "~/utils/auth";
 import { syncNotionArticles, getSyncHistory } from "~/services/notion-sync.server";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const url = new URL(request.url);
     const action = url.searchParams.get("action") || "status";
 
     // 管理权限验证
-    const env = (context as any).cloudflare?.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
     const db = env?.anime_db;
 
     const sessionId = getSessionId(request);

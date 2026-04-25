@@ -5,7 +5,7 @@ import type { ActionFunctionArgs } from "react-router";
  * 功能：验证当前密码并更新为新密码
  */
 export async function action({ request, context }: ActionFunctionArgs) {
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
   // 1. 鉴权：仅管理员可用
   const { requireAdmin } = await import("~/utils/auth");
@@ -17,10 +17,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
 
   // 2. CSRF 校验
-  const env = (context as any).cloudflare.env;
+  const env2 = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CSRF_SECRET?: string };
   const { validateCSRFToken } = await import("~/services/security/csrf.server");
   const csrfToken = formData.get("_csrf") as string;
-  const secret = env.CSRF_SECRET;
+  const secret = env2.CSRF_SECRET;
   if (!secret) {
     return Response.json({ success: false, error: "系统安全配置错误: 缺少 CSRF 密钥" }, { status: 500 });
   }
@@ -78,7 +78,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
       message: "密码修改成功，请重新登录"
     });
   } catch (error) {
-    console.error("Failed to change password:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('[Admin] Password change failed:', errMsg);
     return Response.json({ success: false, error: "修改密码失败" }, { status: 500 });
   }
 }

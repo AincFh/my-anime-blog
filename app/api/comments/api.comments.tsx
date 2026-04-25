@@ -1,4 +1,4 @@
-import type { Route } from "./+types/api.comments";
+import type { ActionFunctionArgs } from "react-router";
 import { sanitizeComment, jsonWithSecurity, verifySameOrigin } from "~/utils/security";
 import { getSessionId, verifySession } from "~/utils/auth";
 import { updateMissionProgress } from "~/services/membership/mission.server";
@@ -16,13 +16,13 @@ const CommentSchema = z.object({
  * 评论API
  * 加固：防止 Turnstile 绕过与会话一致性锁定 / 同源死锁防御CSRF
  */
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
     // 0. CSRF 物理风控拦截
     if (!verifySameOrigin(request)) {
         return Response.json({ error: "非法的跨站请求" }, { status: 403 });
     }
 
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
     const { anime_db } = env;
     const formData = await request.formData();
 

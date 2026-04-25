@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router";
-import { GlassCard } from "../layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 
 interface AnimeCardProps {

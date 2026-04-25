@@ -2,6 +2,7 @@
  * 扭蛋机 API
  * 服务器端验证金币，防止客户端篡改
  */
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 const GACHA_COST = 100;
 
@@ -45,7 +46,7 @@ function rollGacha(): GachaItem {
     return itemsOfRarity[Math.floor(Math.random() * itemsOfRarity.length)];
 }
 
-export async function action({ request, context }: { request: Request; context: any }) {
+export async function action({ request, context }: ActionFunctionArgs) {
     const { anime_db } = context.cloudflare.env;
 
     // 动态导入服务器模块
@@ -122,7 +123,7 @@ export async function action({ request, context }: { request: Request; context: 
 }
 
 // 获取当前余额
-export async function loader({ request, context }: { request: Request; context: any }) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { anime_db } = context.cloudflare.env;
 
     // 动态导入服务器模块

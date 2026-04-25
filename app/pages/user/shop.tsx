@@ -1,17 +1,17 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, CreditCard, Crown, Star, Shield, Zap, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { useLoaderData, useFetcher, useSearchParams, Form } from "react-router";
+import { useLoaderData, useFetcher, useSearchParams, Form, type LoaderFunctionArgs } from "react-router";
 import { NavMenu } from "~/components/dashboard/game/NavMenu";
 import { StatusHUD } from "~/components/dashboard/game/StatusHUD";
-import { ClientOnly } from "~/components/common/ClientOnly";
+import { ClientOnly } from "~/components/ui/common/ClientOnly";
 import { MockPaymentModal } from "~/components/payment/MockPaymentModal";
 import { useUser } from "~/hooks/useUser";
 import { getSessionToken, verifySession } from "~/services/auth.server";
 import { getUserCoins } from "~/services/membership/coins.server";
 import { membershipService } from "~/services/membership/membership.server";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
-import { RECHARGE_PACKAGES } from "~/config/game";
+import { RECHARGE_PACKAGES } from "~/services/membership/game-config";
 import { confirmModal } from "~/components/ui/Modal";
 import { toast } from "~/components/ui/Toast";
 import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
@@ -22,14 +22,14 @@ function isMissingShopSchemaError(e: unknown): boolean {
 }
 
 // Loader: Fetch Shop Data
-export async function loader({ request, context }: { request: Request; context: any }) {
-    const { anime_db } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);
 
-    let shopItems: any[] = [];
-    let tiers: any[] = [];
+    let shopItems: Record<string, unknown>[] = [];
+    let tiers: Record<string, unknown>[] = [];
     let schemaIncomplete = false;
 
     try {
@@ -137,13 +137,14 @@ export default function ShopPage() {
         maxExp: (user?.level || 1) * 100,
     };
 
-    const [activeTab, setActiveTab] = useState<"goods" | "recharge" | "membership">(() => {
+    const [selectedItem, setSelectedItem] = useState<Record<string, unknown> | null>(null);
+    type TabId = "goods" | "recharge" | "membership";
+    const [activeTab, setActiveTab] = useState<TabId>(() => {
         const tabParam = searchParams.get("tab");
         if (tabParam === "recharge" || tabParam === "membership") return tabParam;
         return "goods";
     });
     const [filterCategory, setFilterCategory] = useState("all");
-    const [selectedItem, setSelectedItem] = useState<any>(null);
 
     const CATEGORY_MAP: Record<string, string> = {
         all: "全部",
@@ -158,7 +159,7 @@ export default function ShopPage() {
 
     const filteredItems = filterCategory === "all"
         ? loaderData.shopItems
-        : loaderData.shopItems.filter((item: any) => item.type === filterCategory);
+        : loaderData.shopItems.filter((item: Record<string, unknown>) => item.type === filterCategory);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
     const [payUrl, setPayUrl] = useState("");
@@ -166,10 +167,10 @@ export default function ShopPage() {
     const [orderAmount, setOrderAmount] = useState(0);
     const [orderProductName, setOrderProductName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const lastFetcherData = useRef<any>(null);
+    const lastFetcherData = useRef<Record<string, unknown> | null>(null);
 
     // Handle Payment/Purchase
-    const handlePurchase = (item: any, type: "goods" | "recharge" | "membership") => {
+    const handlePurchase = (item: Record<string, unknown>, type: "goods" | "recharge" | "membership") => {
         // Check if user is logged in
         if (!loaderData.loggedIn) {
             confirmModal({
@@ -257,7 +258,6 @@ export default function ShopPage() {
             {/* 灵动岛导航 */}
             <FloatingSubNav
                 title="星尘集市"
-                backUrl="/user/dashboard"
                 rightContent={
                     <button className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-all active:scale-95">
                         <ShoppingBag className="w-5 h-5" />
@@ -290,7 +290,7 @@ export default function ShopPage() {
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
+                                    onClick={() => setActiveTab(tab.id as TabId)}
                                     className={`
                                         relative px-6 py-2 rounded-full text-[14px] font-bold transition-all duration-300
                                         ${activeTab === tab.id
@@ -375,7 +375,7 @@ export default function ShopPage() {
                                     </div>
 
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                        {filteredItems.map((item: any, index: number) => (
+                                        {filteredItems.map((item: Record<string, unknown>, index: number) => (
                                             <motion.div
                                                 key={item.id}
                                                 layout
@@ -451,7 +451,7 @@ export default function ShopPage() {
                                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                                 >
-                                    {loaderData.rechargePackages.map((pkg: any, index: number) => (
+                                    {loaderData.rechargePackages.map((pkg: Record<string, unknown>, index: number) => (
                                         <div key={pkg.id} className="group bg-white/15 border border-white/20 hover:border-white/30 backdrop-blur-xl rounded-2xl p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(255,255,255,0.05)] hover:-translate-y-2 flex flex-col items-center text-center relative overflow-hidden">
                                             {/* Ambient Glow */}
                                             <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -503,8 +503,8 @@ export default function ShopPage() {
                                     {/* 会员等级卡片网格 */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {loaderData.tiers
-                                            .sort((a: any, b: any) => (a.tier_level ?? a.sort_order ?? 0) - (b.tier_level ?? b.sort_order ?? 0))
-                                            .map((tier: any) => {
+                                            .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.tier_level ?? a.sort_order ?? 0) - (b.tier_level ?? b.sort_order ?? 0))
+                                            .map((tier: Record<string, unknown>) => {
                                                 const tierLevel = tier.tier_level ?? tier.sort_order ?? 0;
                                                 const tierName = tier.tier_name ?? tier.display_name ?? tier.name ?? "";
                                                 const tierNameEn = tier.tier_name_en ?? "";
@@ -810,7 +810,7 @@ export default function ShopPage() {
     );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error?: unknown }) {
   let message = "商店加载失败";
   let details = "无法显示商店内容，请稍后重试";
   let stack: string | undefined;

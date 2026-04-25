@@ -3,7 +3,7 @@
  * 语义搜索，理解用户意图并匹配相关文章
  */
 
-import type { Route } from "./+types/api.ai.search";
+import type { LoaderFunctionArgs } from "react-router";
 import {
     callDeepseek,
     trackAIUsage,
@@ -41,12 +41,12 @@ interface Article {
     tags: string | null;
 }
 
-export async function action({ request, context }: Route.ActionArgs): Promise<Response> {
+export async function action({ request, context }: LoaderFunctionArgs): Promise<Response> {
     if (request.method !== "POST") {
         return Response.json({ success: false, error: "Method not allowed" }, { status: 405 });
     }
 
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; AI?: import('@cloudflare/workers-types').Ai; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; DEEPSEEK_API_KEY?: string; ANTHROPIC_API_KEY?: string };
     const db = env.anime_db;
     const kv = env.CACHE_KV || null;
 

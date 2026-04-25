@@ -28,11 +28,11 @@ function getTypeName(type: string): string {
     return names[type] || type;
 }
 
-export async function loader({ request, context }: { request: Request; context: any }) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { getSessionToken, verifySession } = await import('~/services/auth.server');
     const { getUserCoins, getCoinTransactionHistory } = await import('~/services/membership/coins.server');
 
-    const { anime_db } = context.cloudflare.env;
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
     const token = getSessionToken(request);
     const { valid, user } = await verifySession(token, anime_db);

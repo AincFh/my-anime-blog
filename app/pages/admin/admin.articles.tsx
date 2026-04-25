@@ -1,18 +1,17 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useFetcher, redirect } from "react-router";
-import type { Route } from "./+types/admin.articles";
+import { Link, useFetcher, redirect, useLoaderData, useActionData, type LoaderFunctionArgs, type ActionFunctionArgs } from "react-router";
 import { getSessionId } from "~/utils/auth";
 import { Edit3, Trash2, Eye, Calendar, Plus, FileText, Search, Filter, CheckCircle2, Circle, ShieldAlert, Heart, Loader2, RefreshCw, ExternalLink, Cloud, Server } from "lucide-react";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { confirmModal } from "~/components/ui/Modal";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
   if (!sessionId) {
     throw redirect("/panel/login");
   }
 
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
   const { verifySession } = await import("~/utils/auth");
   const session = await verifySession(sessionId, anime_db);
 
@@ -35,7 +34,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       `)
       .all();
 
-    const articles = (results || []).map((article: any) => ({
+    const articles = (results || []).map((article: Record<string, unknown>) => ({
       ...article,
       createdAt: new Date(article.created_at * 1000).toISOString().split('T')[0],
       updatedAt: new Date(article.updated_at * 1000).toISOString().split('T')[0],
@@ -51,9 +50,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const { requireAdmin } = await import("~/utils/auth");
-  const { anime_db } = (context as any).cloudflare.env;
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
 
   const session = await requireAdmin(request, anime_db);
   if (!session) throw redirect("/panel/login");
@@ -71,8 +70,8 @@ export async function action({ request, context }: Route.ActionArgs) {
         UPDATE articles SET views = ?, likes = ? WHERE id = ?
       `).bind(views, likes, articleId).run();
       return { success: true, message: "流量数据已强行修正" };
-    } catch (e: any) {
-      return { success: false, error: e.message };
+    } catch (e: unknown) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) };
     }
   }
 
@@ -103,13 +102,15 @@ export async function action({ request, context }: Route.ActionArgs) {
   return { success: false, error: "未知指令" };
 }
 
-export default function ArticlesManager({ loaderData, actionData }: Route.ComponentProps) {
-  const { articles } = loaderData;
+export default function ArticlesManager() {
+    const loaderData = useLoaderData<typeof loader>();
+    const actionData = useActionData<typeof action>();
+    const { articles } = loaderData;
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [correctionTarget, setCorrectionTarget] = useState<any | null>(null);
+  const [correctionTarget, setCorrectionTarget] = useState<Record<string, unknown> | null>(null);
   const fetcher = useFetcher();
   
   // 同步状态
@@ -152,16 +153,17 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
         setSyncStatus('error');
         setSyncMessage(data.message || '同步失败');
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e.message : '同步失败';
       setSyncStatus('error');
-      setSyncMessage(e.message || '同步失败');
+      setSyncMessage(err);
     }
     
     setTimeout(() => setSyncStatus('idle'), 5000);
   };
 
   const filteredArticles = useMemo(() => {
-    return articles.filter((article: any) => {
+    return articles.filter((article: Record<string, unknown>) => {
       const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.slug.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === "all" || article.status === statusFilter;
@@ -180,7 +182,7 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
     if (selectedIds.length === filteredArticles.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredArticles.map((a: any) => a.id));
+      setSelectedIds(filteredArticles.map((a: Record<string, unknown>) => a.id as number));
     }
   };
 
@@ -311,7 +313,7 @@ export default function ArticlesManager({ loaderData, actionData }: Route.Compon
           initial="hidden" animate="show"
           variants={{ show: { transition: { staggerChildren: 0.05 } } }}
         >
-          {filteredArticles.map((article: any) => (
+          {filteredArticles.map((article: Record<string, unknown>) => (
             <motion.div
               key={article.id}
               variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}

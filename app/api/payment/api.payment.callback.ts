@@ -1,7 +1,7 @@
 /**
  * 支付回调 API
  * 处理支付成功后的回调通知
- * 
+ *
  * 安全机制：
  * 1. 签名验证 - 防止伪造回调
  * 2. IP 白名单 - 限制回调来源
@@ -9,6 +9,8 @@
  * 4. 金额校验 - 防止篡改
  * 5. 状态机校验 - 防止重复处理
  */
+
+import type { ActionFunctionArgs } from "react-router";
 
 // 订单状态机定义
 const ORDER_STATE_MACHINE: Record<string, string[]> = {
@@ -24,7 +26,7 @@ function canTransition(from: string, to: string): boolean {
     return ORDER_STATE_MACHINE[from]?.includes(to) ?? false;
 }
 
-export async function action({ request, context }: { request: Request; context: any }) {
+export async function action({ request, context }: ActionFunctionArgs) {
     // 动态导入服务端模块
     const { getOrder, updateOrderStatus, acquirePaymentLock, releasePaymentLock, getOrderByTradeNo } = await import('~/services/payment/gateway.server');
     const { createSubscription } = await import('~/services/membership/subscription.server');
@@ -34,7 +36,7 @@ export async function action({ request, context }: { request: Request; context: 
     const { verifyCallbackSignature, isCallbackIPAllowed } = await import('~/services/payment/signature.server');
     const { PAYMENT_CONFIG } = await import('~/config');
 
-    const env = context.cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; PAYMENT_SECRET?: string; PAYMENT_CALLBACK_IPS?: string[]; ENVIRONMENT?: string };
     const { anime_db, CACHE_KV, PAYMENT_SECRET, PAYMENT_CALLBACK_IPS, ENVIRONMENT } = env;
     const isDevelopment = ENVIRONMENT !== 'production';
 

@@ -2,7 +2,7 @@
  * 用户已购商品 API
  */
 
-export async function loader({ request, context }: { request: Request; context: any }) {
+export async function loader({ request, context }: { request: Request; context: { cloudflare: { env: { anime_db: import('~/services/db.server').Database } } } }) {
     const { getSessionToken, verifySession } = await import('~/services/auth.server');
 
     const { anime_db } = context.cloudflare.env;
@@ -31,7 +31,7 @@ export async function loader({ request, context }: { request: Request; context: 
         .bind(user.id)
         .all();
 
-    const items = (purchases.results || []) as any[];
+    const items = (purchases.results || []) as Record<string, unknown>[];
 
     const grouped = {
         avatar_frame: items.filter(i => i.item_type === 'avatar_frame'),

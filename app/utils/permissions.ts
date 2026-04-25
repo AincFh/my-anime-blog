@@ -5,7 +5,7 @@
 
 import { queryFirst, queryAll, type Database } from '../services/db.server';
 import { getUserMembershipTier, parsePrivileges, type TierPrivileges } from '../services/membership/tier.server';
-import { AppError } from './error';
+import { AppError } from '~/errors';
 
 /** 权限上下文 */
 export interface PermissionContext {

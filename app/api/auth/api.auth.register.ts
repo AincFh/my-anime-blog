@@ -3,53 +3,53 @@
  * POST /api/auth/register
  */
 
-import type { Route } from "./+types/api.auth.register";
+import type { ActionFunctionArgs } from "react-router";
+import { z } from "zod";
 import { registerUser, loginUser } from "~/services/auth.server";
+import { getLogger } from "~/utils/logger";
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const env = (context as any).cloudflare.env;
+const RegisterSchema = z.object({
+    email: z.string().email("无效的邮箱地址"),
+    password: z.string()
+        .min(8, "密码至少8个字符")
+        .max(128, "密码最多128个字符"),
+    code: z.string().length(6, "验证码必须为6位"),
+    username: z.string().max(50, "用户名最多50个字符").optional(),
+});
+
+export async function action({ request, context }: ActionFunctionArgs) {
+  const env = context.cloudflare.env as { CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; anime_db?: import('~/services/db.server').Database };
   const anime_db = env?.anime_db;
-  const CACHE_KV = env?.CACHE_KV;
+  const CACHE_KV = env?.CACHE_KV ?? null;
 
   if (request.method !== "POST") {
     return Response.json({ success: false, error: "Method not allowed" }, { status: 405 });
   }
 
-  // 本地开发模式
   if (!anime_db) {
     return Response.json({ success: false, error: "数据库未配置" }, { status: 500 });
   }
 
   try {
     const formData = await request.formData();
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const code = formData.get("code") as string;
-    const username = (formData.get("username") as string) || undefined;
+    const raw = {
+      email: (formData.get("email") as string)?.trim(),
+      password: (formData.get("password") as string)?.trim(),
+      code: (formData.get("code") as string)?.trim(),
+      username: (formData.get("username") as string)?.trim() || undefined,
+    };
 
-    // 验证输入
-    if (!email || !password) {
+    const parsed = RegisterSchema.safeParse(raw);
+    if (!parsed.success) {
+      const firstError = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
       return Response.json(
-        { success: false, error: "请填写完整信息" },
+        { success: false, error: firstError || "输入格式错误" },
         { status: 400 }
       );
     }
 
-    if (password.length < 8) {
-      return Response.json(
-        { success: false, error: "密码强度不够，至少8位字符" },
-        { status: 400 }
-      );
-    }
+    const { email, password, code, username } = parsed.data;
 
-    if (!code || code.length !== 6) {
-      return Response.json(
-        { success: false, error: "请输入6位验证码" },
-        { status: 400 }
-      );
-    }
-
-    // 注册用户（封堵 P1 后门风险，强制向内核传递邮件验证码）
     const result = await registerUser(
       email,
       password,
@@ -86,7 +86,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       }
     );
   } catch (error) {
-    console.error("Register error:", error);
+    getLogger().error('Register failed', { error: error instanceof Error ? error.message : String(error) });
     return Response.json(
       { success: false, error: "服务器错误" },
       { status: 500 }

@@ -65,6 +65,8 @@ export function NotionEditor({ value, onChange, placeholder }: NotionEditorProps
   }, [insertText]);
 
   // 处理文件上传
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleFileUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
@@ -74,15 +76,37 @@ export function NotionEditor({ value, onChange, placeholder }: NotionEditorProps
       return;
     }
 
-    // TODO: 实际上传到R2
-    // 这里先使用base64作为占位符
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      // 插入Markdown图片语法
-      insertText(`![${file.name}](${base64})\n`);
-    };
-    reader.readAsDataURL(file);
+    // 超过 5MB 拒绝
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("图片大小不能超过 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json() as { success?: boolean; url?: string; error?: string };
+
+      if (result.success && result.url) {
+        // 插入 Markdown 图片语法
+        insertText(`![${file.name}](${result.url})\n`);
+        toast.success("图片上传成功");
+      } else {
+        toast.error(result.error || "图片上传失败");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("图片上传失败，请重试");
+    } finally {
+      setIsUploading(false);
+    }
   }, [insertText]);
 
   // 拖拽处理
@@ -155,6 +179,9 @@ export function NotionEditor({ value, onChange, placeholder }: NotionEditorProps
         />
         <div className="flex-1" />
         <span className="text-xs text-slate-500">Markdown 实时预览</span>
+        {isUploading && (
+          <span className="text-xs text-amber-400 animate-pulse ml-2">上传中...</span>
+        )}
       </div>
 
       {/* 隐藏的文件输入 */}

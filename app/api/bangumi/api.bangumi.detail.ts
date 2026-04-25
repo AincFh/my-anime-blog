@@ -1,4 +1,4 @@
-import { getAnimeDetail, getAnimeCharacters, getAnimeStaff, extractInfoFromInfobox } from "~/services/bangumi.server";
+import { getAnimeDetail, getAnimeCharacters, getAnimeStaff, extractInfoFromInfobox } from "~/services/bangumi";
 
 /**
  * Bangumi 详情 API

@@ -9,6 +9,8 @@ export interface UploadResult {
   error?: string;
 }
 
+import { getLogger } from '~/utils/logger';
+
 /**
  * 上传文件到 R2
  * @param bucket R2 Bucket 绑定
@@ -68,7 +70,7 @@ export async function uploadToR2(
 
     return { success: true, url };
   } catch (error) {
-    console.error('R2 upload error:', error);
+    getLogger().error('R2 upload failed', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: '文件上传失败，请稍后重试' };
   }
 }
@@ -133,7 +135,7 @@ export async function deleteFromR2(
     await bucket.delete(path);
     return { success: true };
   } catch (error) {
-    console.error('R2 delete error:', error);
+    getLogger().error('R2 delete failed', { error: error instanceof Error ? error.message : String(error) });
     // 不暴露具体的云存储错误信息，使用通用错误消息
     return { success: false, error: '文件删除失败，请稍后重试' };
   }

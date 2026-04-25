@@ -6,6 +6,7 @@
 import { getSubscriptionsNeedingNotification, markNotificationSent } from './subscription.server';
 import { getTierById } from './tier.server';
 import { type Database } from '../db.server';
+import { getLogger } from '~/utils/logger';
 
 export interface NotificationResult {
     success: boolean;
@@ -103,7 +104,7 @@ Project Blue Sky
         }
         return { success: true };
     } catch (error) {
-        console.error('Send renewal reminder error:', error);
+        getLogger().error('Send renewal reminder failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: String(error) };
     }
 }
@@ -146,7 +147,7 @@ Project Blue Sky
         }
         return { success: true };
     } catch (error) {
-        console.error('Send expired notice error:', error);
+        getLogger().error('Send expired notice failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: String(error) };
     }
 }

@@ -1,7 +1,7 @@
-import type { Route } from "./+types/api.animes";
+import type { LoaderFunctionArgs } from "react-router";
 
-export async function loader({ context }: Route.LoaderArgs) {
-    const env = (context as any).cloudflare.env;
+export async function loader({ context }: LoaderFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
     const { anime_db } = env;
 
     try {
@@ -28,26 +28,27 @@ export async function loader({ context }: Route.LoaderArgs) {
     }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-    const env = (context as any).cloudflare.env;
+export async function action({ request, context }: LoaderFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
     const { anime_db } = env;
 
     // 验证管理员权限
-    const { getSessionId, verifySession } = await import("~/utils/auth");
-    const sessionId = getSessionId(request);
-    
-    if (!sessionId) {
-        return Response.json({ error: "请先登录" }, { status: 401 });
-    }
-    
-    const session = await verifySession(sessionId, anime_db);
-    if (!session.valid || !session.user) {
-        return Response.json({ error: "会话已过期" }, { status: 401 });
-    }
-    
-    if (session.user.role !== "admin") {
-        return Response.json({ error: "需要管理员权限" }, { status: 403 });
-    }
+  const { getSessionId } = await import("~/utils/auth");
+  const { verifySession } = await import("~/services/auth.server");
+  const sessionId = getSessionId(request);
+
+  if (!sessionId) {
+    return Response.json({ error: "请先登录" }, { status: 401 });
+  }
+
+  const result = await verifySession(sessionId, anime_db);
+  if (!result.valid || !result.user) {
+    return Response.json({ error: "会话已过期" }, { status: 401 });
+  }
+
+  if (result.user.role !== "admin") {
+    return Response.json({ error: "需要管理员权限" }, { status: 403 });
+  }
 
     try {
         const formData = await request.formData();

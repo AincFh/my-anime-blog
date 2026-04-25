@@ -8,9 +8,12 @@ import {
   useLocation,
   Link,
   useRouteLoaderData,
+  useLoaderData,
+  type LoaderFunctionArgs,
+  type LinkDescriptor,
 } from "react-router";
 import { AlertTriangle } from "lucide-react";
-import { GlassCard } from "./components/layout/GlassCard";
+import { GlassCard } from "./components/ui/layout/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { getSessionToken, verifySession } from "~/services/auth.server";
@@ -19,7 +22,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { ThemeProviderWrapper } from "./components/ThemeProviderWrapper";
+import { ThemeProviderWrapper } from "~/components/ui/system/ThemeProviderWrapper";
 import { AppError } from "~/errors";
 import { ToastContainer } from "./components/ui/Toast";
 import { ModalContainer } from "./components/ui/Modal";
@@ -35,20 +38,18 @@ const CustomCursor = lazy(() => import("~/components/ui/animations/CustomCursor"
 const MusicPlayer = lazy(() => import("~/components/ui/media/MusicPlayer").then(m => ({ default: m.MusicPlayer })));
 const Live2D = lazy(() => import("~/components/ui/media/Live2D").then(m => ({ default: m.Live2D })));
 const OmniCommand = lazy(() => import("~/components/ui/system/OmniCommand").then(m => ({ default: m.OmniCommand })));
+const AIChatBot = lazy(() => import("~/components/ai/AIChatBot").then(m => ({ default: m.default })));
 const AchievementSystem = lazy(() => import("~/components/ui/system/AchievementSystem").then(m => ({ default: m.AchievementSystem })));
-const TheatricalMode = null; // lazy(() => import("./components/special/TheatricalMode").then(m => ({ default: m.TheatricalMode })));
+const TheatricalMode = null;
 const AmbientSound = lazy(() => import("~/components/ui/media/AmbientSound").then(m => ({ default: m.AmbientSound })));
 const KonamiCode = lazy(() => import("~/components/ui/animations/KonamiCode").then(m => ({ default: m.KonamiCode })));
 const TitleChanger = lazy(() => import("./components/ui/special/TitleChanger").then(m => ({ default: m.TitleChanger })));
-const HiddenPixelButton = lazy(() => import("./components/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
+const HiddenPixelButton = lazy(() => import("~/components/ui/interactive/HiddenPixelButton").then(m => ({ default: m.HiddenPixelButton })));
 const IdleTimeEasterEgg = lazy(() => import("./components/interactive/EasterEggs").then(m => ({ default: m.IdleTimeEasterEgg })));
-// const AIChatBot = lazy(() => import("~/components/ai/AIChatBot").then(m => ({ default: m.AIChatBot })));
 
-// 移动端专属
 const MusicPlayerMobile = lazy(() => import("~/components/ui/media/MusicPlayerMobile").then(m => ({ default: m.MusicPlayerMobile })));
 
-// 通用（桌面+移动都需要）
-const CopyAttribution = lazy(() => import("./components/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
+const CopyAttribution = lazy(() => import("~/components/ui/common/CopyAttribution").then(m => ({ default: m.CopyAttribution })));
 
 // ==================== 延迟加载封装 ====================
 /**
@@ -89,7 +90,7 @@ function DelayedSuspense({
   return <Suspense fallback={null}>{children}</Suspense>;
 }
 
-export const links: Route.LinksFunction = () => [
+export const links: () => LinkDescriptor[] = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -142,15 +143,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 import { createDynamicThemeSessionResolver } from "./sessions.theme.server";
+import { getAnnouncements } from "~/services/announcement";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as {
+    ENVIRONMENT?: string;
+    SESSION_SECRET?: string;
+    anime_db?: import('~/services/db.server').Database;
+    NOTION_TOKEN?: string;
+    NOTION_ANNOUNCEMENT_DATABASE_ID?: string;
+    CACHE_KV?: import('@cloudflare/workers-types').KVNamespace;
+  };
   const isProd = env.ENVIRONMENT === "production";
   const secret = env.SESSION_SECRET;
-  if (isProd && !secret) {
-    throw new Error("CRITICAL: SESSION_SECRET environment variable is not set in production. Theme switching will not work without it.");
+  // 生产环境必须设置 SESSION_SECRET，否则主题切换等功能不可用
+  if (!secret) {
+    if (isProd) {
+      console.warn("[Root Loader] WARNING: SESSION_SECRET not set in production. Theme switching will use default. Set it via: wrangler secret put SESSION_SECRET");
+    }
+    // 不抛错，降级到占位符，让页面至少能渲染
   }
-  // 仅在未设置时使用占位符（非生产环境允许）
   const resolvedSecret = secret || "dev-only-secret-do-not-use-in-prod";
 
   const themeSessionResolver = createDynamicThemeSessionResolver(resolvedSecret, isProd);
@@ -189,22 +201,49 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // ignore
   }
 
+  // 并行拉取：Notion 首页横幅公告（三重过滤：已发布 + 首页展示 + 时间窗）
+  const [bannerResult, popupResult] = await Promise.all([
+    getAnnouncements(
+      env.NOTION_TOKEN,
+      env.NOTION_ANNOUNCEMENT_DATABASE_ID,
+      env.CACHE_KV,
+      { featuredOnly: true, displayMode: "顶部横幅" }
+    ),
+    getAnnouncements(
+      env.NOTION_TOKEN,
+      env.NOTION_ANNOUNCEMENT_DATABASE_ID,
+      env.CACHE_KV,
+      { featuredOnly: true, displayMode: "首页弹窗" }
+    ),
+  ]);
+
+  const bannerAnnouncements = bannerResult.success ? bannerResult.data : [];
+  const popupAnnouncements = popupResult.success ? popupResult.data : [];
+
   return {
     theme: getTheme(),
     musicPlaylistId,
-    userPrefs
+    userPrefs,
+    bannerAnnouncements,
+    popupAnnouncements,
   };
 }
 
-export default function App({ loaderData }: Route.ComponentProps) {
+export default function App() {
+  const loaderData = useLoaderData<typeof loader>();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/panel");
   const isAuth = location.pathname.startsWith("/login") || location.pathname.startsWith("/register") || location.pathname.startsWith("/forgot-password");
-  const { theme, musicPlaylistId, userPrefs } = loaderData;
+  const { theme, musicPlaylistId, userPrefs, bannerAnnouncements, popupAnnouncements } = loaderData;
   const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // 提取用户首选的前台强调整色 (Accent Color) = `#3b82f6` -> `var(--color-blue-500)`
@@ -266,7 +305,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <Outlet />
           ) : (
             <div className="public-layout-wrapper">
-              <PublicLayout>
+              <PublicLayout
+                bannerAnnouncements={bannerAnnouncements}
+                popupAnnouncements={popupAnnouncements}
+              >
                 <Outlet />
               </PublicLayout>
             </div>
@@ -279,7 +321,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Suspense fallback={null}>
           <DelayedSuspense delayMs={1000}>
             <OmniCommand />
-            {/* <AIChatBot /> */}
             <AchievementSystem />
             <Live2D />
           </DelayedSuspense>
@@ -308,7 +349,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error?: unknown }) {
   let message = "系统发生错误";
   let details = "未知错误";
   let stack: string | undefined;

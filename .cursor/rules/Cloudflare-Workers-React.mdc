@@ -5,13 +5,18 @@ alwaysApply: true
 ---
 alwaysApply: true
 globs: "**/*.{ts,tsx,js,jsx}"
-description: Cloudflare Workers + React Router v7 全栈开发规范
+description: Cloudflare Workers + React Router v7 全栈开发规范 + Apple 风格 UI 设计规范
 ---
 
-# ☁️ Cloudflare Workers 开发规则
+# 开发规范
+
+## 技术规范
+
+### Cloudflare Workers 开发规则
+
 1. 所有服务端代码必须兼容Cloudflare Workers运行环境
-2. 禁止使用Node.js特有的API（如fs、path、process），必须使用Cloudflare的原生API
-3. 环境变量必须从`env`对象中获取，不要使用`process.env`
+2. 禁止使用Node.js特有的API（如fs、path、process），必须使用Cloudflare原生API
+3. 环境变量必须从`env`对象中获取，**禁止使用 process.env**
 4. 所有数据库操作必须使用D1的参数化查询，防止SQL注入
 5. KV操作必须设置合理的TTL，不要永久存储临时数据
 6. R2上传必须验证文件类型和大小，防止恶意文件上传
@@ -19,9 +24,10 @@ description: Cloudflare Workers + React Router v7 全栈开发规范
 8. 错误处理必须返回标准的JSON格式，包含`success`、`message`和`data`字段
 9. 不要在Worker中使用任何阻塞操作，所有IO必须异步
 
-# ⚛️ React Router v7 开发规则
-1. 这是React Router v7项目，使用App Router和SSR模式
-2. 数据获取优先使用Loader函数，不要在客户端组件中使用useEffect获取数据
+### React Router v7 开发规则
+
+1. 这是React Router v7项目，使用SSR模式
+2. 数据获取优先使用Loader函数，**禁止**在客户端组件中使用useEffect获取数据
 3. 表单提交优先使用Action函数和useFetcher
 4. 路由参数使用`params`对象获取，搜索参数使用`useSearchParams`
 5. 错误处理使用ErrorBoundary组件
@@ -30,29 +36,320 @@ description: Cloudflare Workers + React Router v7 全栈开发规范
 8. 服务端组件不能使用任何客户端钩子（如useState、useEffect）
 9. 优先使用基于URL的状态，而非全局客户端状态
 
-# 🎨 Tailwind CSS 与玻璃态UI规范
-1. 所有样式使用Tailwind CSS v4，禁止使用内联样式
-2. 统一使用玻璃态设计风格：
-   - 背景：`bg-white/10 backdrop-blur-lg`
-   - 边框：`border border-white/20`
-   - 阴影：`shadow-lg shadow-black/20`
-3. 所有颜色和尺寸必须使用项目中定义的标准Token
-4. 组件必须实现响应式设计，适配移动端、平板和桌面端
-5. 动画使用Tailwind的transition和animate类，保持流畅自然
+### 安全规则
 
-# 🛡️ 安全规则
 1. 所有用户输入必须使用zod进行严格验证
 2. 所有输出必须进行HTML转义，防止XSS攻击
-3. 密码必须使用bcrypt或Argon2进行哈希存储，禁止明文存储
+3. 密码必须使用bcrypt或Argon2进行哈希存储，**禁止明文存储**
 4. 会话ID必须是随机的、不可预测的，并且有过期时间
 5. 所有敏感操作必须进行CSRF保护
-6. 禁止在日志中记录敏感信息（密码、令牌、信用卡号）
+6. **禁止**在日志中记录敏感信息（密码、令牌、信用卡号）
 7. 所有API端点必须进行适当的权限检查
 8. 不要在前端代码中暴露任何后端实现细节
 
-# 📝 代码风格规范
+---
+
+# UI 设计规范
+
+> **核心理念：只交付自己愿意掏钱买的设计。如果你自己都不愿意用，就不要拿给用户。**
+
+## 设计参考
+
+所有 UI 设计必须参考 **Apple Human Interface Guidelines (HIG)** 的核心理念，融入项目独有的极光玻璃态（Aurora Glassmorphism）风格。
+
+参考链接：
+- Apple HIG: https://developer.apple.com/design/human-interface-guidelines
+- Apple SF Symbols: https://developer.apple.com/sf-symbols/
+
+---
+
+## UI 设计的核心问题
+
+在设计或评价任何 UI 之前，先问自己：
+
+1. **用户第一眼看到什么？** 内容是否突出，装饰是否干扰？
+2. **这个操作流畅吗？** 我自己点击的时候有没有卡顿、延迟或者不确定感？
+3. **错误信息友善吗？** 出了问题用户知道该怎么处理吗？
+4. **空状态漂亮吗？** 没有数据时，展示的是一个优雅的提示还是一个丑陋的空白？
+5. **这个界面我愿意每天用吗？** 如果答案是否定的，就重做。
+
+---
+
+## Apple HIG 四大设计原则
+
+### 1. 清晰（Clarity）
+
+内容是主角。界面上的每一个元素都应该有它存在的理由。
+
+**具体要求：**
+- 删除任何"可有可无"的装饰元素
+- 字体大小、行距、留白都要经过精心计算
+- 文字内容要清晰易读，信息层次分明
+- 关键操作要醒目，次要操作要低调
+- 功能入口要一目了然，不要让用户去找
+
+**反面典型：**
+- 背景图太花哨，内容看不清
+- 同时出现三个主要操作，不知道点哪个
+- 字号太小，读起来费劲
+- 用色过于花哨，喧宾夺主
+
+### 2. Deference（尊重）
+
+界面应当帮助用户理解内容，而不是分散注意力。
+
+**具体要求：**
+- 玻璃态背景服务于内容，不是为了炫技
+- 动画要有目的——帮助用户理解界面变化，而非单纯的装饰
+- 操作反馈要即时，用户点击后立即有响应
+- 滚动、切换等交互要自然流畅，不突兀
+
+### 3. 深度（Depth）
+
+利用层次和动效传达空间关系，让用户感知到界面的立体感。
+
+**具体要求：**
+- 使用阴影和模糊暗示层次关系
+- 模态框从底层浮起，有明显的空间感
+- 导航切换有平滑的过渡动画
+- 分页内容可以用渐进式展示
+
+### 4. 一致性（Consistency）
+
+整个应用使用统一的视觉语言。
+
+**具体要求：**
+- 相同的操作在不同场景下有相同的结果
+- 统一的图标风格（优先使用 Lucide Icons）
+- 统一的颜色系统（所有颜色来自 `app.css` 的 Token）
+- 统一的间距系统（使用 4px 倍数的间距）
+- 统一的圆角大小
+
+---
+
+## 极光玻璃态（Aurora Glassmorphism）
+
+这是我们独有的设计语言，融合 Apple 的极简与东方极光的梦幻感。
+
+### 核心样式
+
+```css
+/* 玻璃卡片 — 适用于内容容器 */
+background: rgba(255, 255, 255, 0.08);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 255, 255, 0.12);
+border-radius: 16px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+/* 玻璃按钮 */
+background: rgba(255, 255, 255, 0.1);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.15);
+border-radius: 12px;
+transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* 玻璃输入框 */
+background: rgba(255, 255, 255, 0.06);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 10px;
+```
+
+### 霓虹点缀（点缀而非铺张）
+
+```css
+/* 只用于需要突出的元素 — 按钮高亮、徽章、重要图标 */
+box-shadow: 0 0 20px rgba(120, 180, 255, 0.4),
+            0 0 40px rgba(120, 180, 255, 0.2);
+text-shadow: 0 0 10px currentColor;
+
+/* 极光渐变 — 用于页面顶部背景或特殊场景 */
+background: linear-gradient(
+  135deg,
+  rgba(120, 180, 255, 0.3) 0%,
+  rgba(180, 120, 255, 0.2) 50%,
+  rgba(255, 120, 180, 0.15) 100%
+);
+```
+
+### 动画规范
+
+**Apple 动画三原则：**
+
+1. **响应（Responsive）** — 点击立即有反馈（< 100ms）
+   - 按钮按下：scale(0.97)，背景加深
+   - 开关切换：平滑过渡，不跳跃
+
+2. **关联（Kinetic）** — 动画暗示物理世界的运动规律
+   - 页面切换：从右滑入，物理感减速
+   - 模态框弹出：scale 从 0.95 到 1，有弹性回弹
+   - 列表展开：高度渐变 + 子元素依次出现
+
+3. **清晰（Clear）** — 动画帮助理解，而非干扰注意力
+   - 使用 `cubic-bezier(0.25, 0.46, 0.45, 0.94)` 作为标准缓动曲线
+   - 简单交互的动画时长：150-300ms
+   - 复杂切换的动画时长：300-500ms
+   - 禁止使用过长的动画（> 1s），除非有明确目的
+
+**具体示例：**
+
+```typescript
+// ✅ 标准过渡动画
+transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+// ✅ 按钮悬停效果
+<button className="
+  hover:scale-[1.02] hover:bg-white/15
+  active:scale-[0.97]
+  transition-all duration-200
+">
+
+// ❌ 过度动画 — 看起来很"忙"
+transition: all 1s ease-in-out;  // 太慢
+animation: spin 0.5s linear infinite;  // 无意义的旋转
+
+// ❌ 花哨但没意义的效果
+box-shadow: 0 0 30px 10px rgba(255, 0, 0, 0.5);  // 闪瞎眼
+```
+
+---
+
+## 状态设计
+
+每一个状态都要经过精心设计——不只是"能跑"，而是要"好看好用"。
+
+### 加载状态
+
+```typescript
+// ✅ 有意义的骨架屏
+<Skeleton className="h-4 w-3/4 rounded-full" />
+<Skeleton className="h-4 w-1/2 rounded-full" />
+
+// ❌ 简陋的加载指示器
+<div>加载中...</div>
+<div className="animate-spin">⚙️</div>
+
+// 自检：我自己等这个加载，会焦虑吗？
+// 如果是长时间加载（比如 > 1s），需要进度提示或有趣的小动画
+```
+
+### 空数据状态
+
+```typescript
+// ✅ 优雅的空状态，有插图和引导文字
+<EmptyState
+  icon={<Icon name="inbox" size={48} />}
+  title="还没有任何文章"
+  description="创建你的第一篇文章，开始记录你的二次元之旅"
+  action={<Button>创建文章</Button>}
+/>
+
+// ❌ 直接一个空白页面或者死板的"暂无数据"
+<div>暂无数据</div>
+
+// 自检：如果我是新用户，看到这个空状态，会知道接下来该做什么吗？
+```
+
+### 错误状态
+
+```typescript
+// ✅ 友好的错误提示，告诉用户怎么做
+<ErrorState
+  icon={<Icon name="alert-circle" />}
+  title="加载失败了"
+  description="网络似乎不太稳定，请检查网络连接后重试"
+  action={<Button onClick={refetch}>重试</Button>}
+/>
+
+// ❌ 冷冰冰的错误信息
+<div>Error: Network Error</div>
+
+// 自检：如果是我妈看到错误提示，她知道该怎么办吗？
+```
+
+### 成功状态
+
+```typescript
+// ✅ 操作完成后有明确的成功反馈
+<SuccessToast message="文章发布成功" />
+
+// ✅ 数据变更后即时更新，不需要刷新
+// 自检：操作完成后，我需要手动刷新页面才能看到结果吗？如果是，重做。
+```
+
+---
+
+## 响应式设计
+
+所有组件必须适配移动端、平板和桌面端。
+
+**Apple 的自适应设计理念：**
+- 内容优先布局，内容决定容器大小，而非容器决定内容
+- 触摸目标至少 44x44 pt（移动端）
+- 文字大小最小 17pt（正文）、15pt（辅助文字）
+- 不要在小屏幕上隐藏关键功能
+
+**自检：**
+- [ ] 移动端上每个按钮都能顺利点击吗？
+- [ ] 表格在小屏幕上是否有合理的横向滚动或折叠？
+- [ ] 图片是否有 `srcset` 适配不同屏幕？
+- [ ] 我自己用手机打开这个页面，体验流畅吗？
+
+---
+
+## 样式规范
+
+1. **所有样式使用 Tailwind CSS v4，**禁止内联样式**和 `!important`
+2. 所有颜色和尺寸必须使用 `app.css` 中定义的标准 Token
+3. 组件必须实现响应式设计，适配移动端、平板和桌面端
+4. 动画使用 Tailwind 的 transition 和 animate 类，保持流畅自然
+
+---
+
+## 代码风格
+
 - 文件命名：工具和服务使用kebab-case.ts，React组件使用PascalCase.tsx
 - 变量命名：普通变量和函数使用camelCase，常量使用UPPER_SNAKE_CASE
-- 严格使用TypeScript，绝对禁止使用any类型
+- 严格使用TypeScript，**禁止使用any类型**
 - 所有接口必须在app/types/目录中定义
 - 代码必须包含清晰的注释，函数必须说明用途、参数和返回值
+
+---
+
+## UI 自检清单
+
+在提交任何 UI 代码之前，用这个清单自检：
+
+### 功能完整性
+- [ ] 加载状态（Skeleton / Spinner）是否设计好了？
+- [ ] 空数据状态是否优雅且有引导性？
+- [ ] 错误状态是否有友好的提示和重试操作？
+- [ ] 成功状态是否有明确的反馈？
+- [ ] 表单验证错误是否清晰指出问题所在？
+
+### 交互体验
+- [ ] 点击按钮有即时反馈吗？（< 100ms）
+- [ ] Hover / Focus / Active 状态都设计了吗？
+- [ ] 加载中的按钮是否防止了重复提交？
+- [ ] 表单提交后是否有 loading 状态？
+- [ ] 模态框打开/关闭有平滑动画吗？
+
+### 视觉一致性
+- [ ] 颜色全部来自 Token，没有随手写的 hex 值？
+- [ ] 间距使用了 4px 倍数系统？
+- [ ] 圆角大小统一（不要有的 8px 有的 24px）？
+- [ ] 文字大小有明确的层次（标题/正文/辅助）？
+- [ ] 图标风格统一（全部来自 Lucide Icons）？
+
+### 可访问性
+- [ ] 所有交互元素有合适的 focus 样式吗？
+- [ ] 颜色对比度符合 WCAG AA 标准吗？
+- [ ] 表单标签和输入框正确关联了吗？
+- [ ] 按钮有 aria-label 吗？
+
+### 自我审视
+- [ ] 如果这是我每天用的 App，这个界面我会满意吗？
+- [ ] 如果这是我付费买的功能，我会觉得值这个价吗？
+- [ ] 我愿意把这个界面截图发到社交媒体上吗？
+- [ ] 如果朋友问"这个怎么用"，我能指着界面直接说清楚吗？

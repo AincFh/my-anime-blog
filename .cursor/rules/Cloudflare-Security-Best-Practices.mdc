@@ -1,10 +1,14 @@
 ---
 alwaysApply: true
 globs: "**/*.ts"
-description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、配置安全
+description: Cloudflare Workers 安全最佳实践规范 — 安全是默认，不是选项
 ---
 
 # Cloudflare Workers 安全最佳实践
+
+> **核心理念：安全不是在上线前打补丁，而是从设计的第一行代码开始。就像 Apple 的安全工程团队——威胁建模先行，安全默认开启，永不妥协。**
+
+---
 
 ## 运行时环境安全
 
@@ -21,6 +25,8 @@ description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、
    - 设置合理的 `cpu_time` 限制防止资源耗尽攻击
    - 避免在Worker中执行复杂计算
 
+---
+
 ## 依赖安全管理
 
 1. **定期更新依赖**
@@ -35,11 +41,13 @@ description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、
    - 在 `package.json` 中使用精确版本号
    - 使用 `npm shrinkwrap` 锁定依赖树
 
+---
+
 ## 环境变量和密钥
 
 1. **使用 Cloudflare Secrets**
    - 所有敏感信息使用 `wrangler secret put` 存储
-   - 禁止将密钥硬编码或提交到版本控制
+   - **禁止**将密钥硬编码或提交到版本控制
 
 2. **本地开发环境**
    - 使用 `.dev.vars` 文件存储本地密钥
@@ -49,6 +57,8 @@ description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、
    - 生产环境和开发环境使用不同的密钥
    - 测试环境不应包含生产数据
 
+---
+
 ## 输入验证
 
 1. **请求体验证**
@@ -57,11 +67,13 @@ description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、
 
 2. **类型安全**
    - 使用 TypeScript 严格模式
-   - 禁止使用 `any` 类型处理外部输入
+   - **禁止**使用 `any` 类型处理外部输入
 
 3. **Content-Type 检查**
    - 验证请求的 `Content-Type` 头
    - 拒绝可疑的 MIME 类型
+
+---
 
 ## 输出安全
 
@@ -76,4 +88,21 @@ description: Cloudflare Workers 安全最佳实践规范 - 运行时、依赖、
 
 3. **响应格式**
    - 返回标准 JSON 格式
-   - 禁止在错误响应中暴露内部实现细节
+   - **禁止**在错误响应中暴露内部实现细节
+
+---
+
+## Cloudflare Workers 安全自检清单
+
+- [ ] `compatibility_date` 是最新日期吗？
+- [ ] 没有使用 `eval()` 或 `new Function()` 吗？
+- [ ] 所有密钥都存储在 Cloudflare Secrets 吗？
+- [ ] 所有输入都经过 zod 验证了吗？
+- [ ] 所有输出都不暴露内部结构吗？
+- [ ] 安全头都设置了吗？
+
+### 自我审视
+- [ ] 我自己信任这个 Worker 的安全性吗？
+- [ ] 如果这是处理支付的功能，这个安全级别够吗？
+- [ ] 我愿意把这个代码交给安全审计团队review吗？
+- [ ] 如果这是 Apple 的基础设施，我会怎么设计它的安全性？

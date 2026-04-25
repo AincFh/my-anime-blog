@@ -1,32 +1,22 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MoreHorizontal, Bookmark, Share2, Eye, Star, ShoppingCart, Settings, Wallet, Trophy } from 'lucide-react';
+import { Bookmark, Share2, Eye, Star, ShoppingCart, Settings, Wallet, Trophy } from 'lucide-react';
 import { cn } from '~/utils/cn';
 
 export interface FloatingSubNavProps {
   title: string;
-  leftIcon?: 'back';
+  leftIcon?: 'none';
   rightContent?: React.ReactNode;
-  backUrl?: string;
   transparent?: boolean;
 }
 
 export function FloatingSubNav({
   title,
-  leftIcon = 'back',
+  leftIcon = 'none',
   rightContent,
-  backUrl,
   transparent = false,
 }: FloatingSubNavProps) {
-
-  const handleBack = () => {
-    if (backUrl) {
-      window.location.href = backUrl;
-    } else {
-      window.history.back();
-    }
-  };
 
   return (
     <AnimatePresence>
@@ -58,28 +48,11 @@ export function FloatingSubNav({
           'transition-all duration-300',
           transparent
             ? 'bg-transparent'
-            : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-lg shadow-black/5'
+            : 'bg-white/80 dark:bg-[rgba(37,40,54,0.92)] dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-black/20'
         )}
       >
-        {/* 左侧 - 返回按钮 */}
-        <button
-          onClick={handleBack}
-          className={cn(
-            'flex items-center gap-2 px-3 py-2 rounded-full',
-            'text-[15px] font-semibold',
-            'transition-all duration-200 active:scale-95',
-            'hover:bg-black/5 dark:hover:bg-white/10',
-            !transparent && 'text-slate-700 dark:text-slate-200',
-            transparent && 'text-white/90'
-          )}
-        >
-          {leftIcon === 'back' && (
-            <>
-              <ArrowLeft className="w-5 h-5" />
-              <span className="hidden xs:inline">返回</span>
-            </>
-          )}
-        </button>
+        {/* 左侧占位 */}
+        <div className="w-[80px]" />
 
         {/* 中间 - 标题（移动端） */}
         <div className={cn(
@@ -119,7 +92,6 @@ export function ArticleSubNav({
   return (
     <FloatingSubNav
       title={title}
-      backUrl="/articles"
       rightContent={
         <>
           <button
@@ -166,7 +138,6 @@ export function BangumiSubNav({
   return (
     <FloatingSubNav
       title={title}
-      backUrl="/bangumi"
       rightContent={
         <div className="flex items-center gap-2">
           <select
@@ -201,7 +172,6 @@ export function UserSubNav({
   return (
     <FloatingSubNav
       title={title}
-      backUrl="/user/dashboard"
       rightContent={
         <div className="flex items-center gap-1">
           {showWallet && (
@@ -228,7 +198,6 @@ export function AchievementSubNav() {
   return (
     <FloatingSubNav
       title="成就殿堂"
-      backUrl="/user/dashboard"
       rightContent={
         <div className="flex items-center gap-1 text-amber-400">
           <Trophy className="w-5 h-5" />
@@ -243,7 +212,6 @@ export function ShopSubNav({ cartCount = 0 }: { cartCount?: number }) {
   return (
     <FloatingSubNav
       title="星尘集市"
-      backUrl="/user/dashboard"
       rightContent={
         <button className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all active:scale-95">
           <ShoppingCart className="w-5 h-5" />
@@ -263,7 +231,6 @@ export function WalletSubNav({ balance = 0 }: { balance?: number }) {
   return (
     <FloatingSubNav
       title="我的星尘"
-      backUrl="/user/dashboard"
       rightContent={
         <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all active:scale-95">
           <span>充值</span>

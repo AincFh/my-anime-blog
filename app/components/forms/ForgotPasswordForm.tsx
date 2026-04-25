@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
-import { Turnstile } from "./Turnstile";
+import { Turnstile } from "~/components/ui/forms/Turnstile";
 
 interface ForgotPasswordFormProps {
     onReset: (data: FormData) => Promise<void>;
@@ -22,6 +22,7 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
     const [countdown, setCountdown] = useState(0);
     const [turnstileToken, setTurnstileToken] = useState("");
     const [localError, setLocalError] = useState("");
+    const [isSendingCode, setIsSendingCode] = useState(false);
 
     const SITE_KEY = "1x00000000000000000000AA";
 
@@ -39,7 +40,9 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
         }
 
         setLocalError("");
+        setIsSendingCode(true);
         const success = await onSendCode(formData.email);
+        setIsSendingCode(false);
         if (success) {
             setStep("verify");
             setCountdown(60);
@@ -85,10 +88,10 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                         <button
                             type="button"
                             onClick={handleSendCode}
-                            disabled={isLoading || !formData.email}
+                            disabled={isSendingCode || !formData.email}
                             className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-3 bg-white/20 backdrop-blur-xl border border-white/10 text-white text-[13px] font-bold rounded-lg hover:bg-white/30 hover:border-white/20 active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={16} /> : "获取验证码"}
+                            {isSendingCode ? "发送中..." : "获取验证码"}
                         </button>
                     )}
                     {step !== "email" && countdown > 0 && (
@@ -165,8 +168,17 @@ export function ForgotPasswordForm({ onReset, onSendCode, isLoading, error }: Fo
                             disabled={isLoading}
                             className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-xl text-[16px] font-black tracking-wide text-white bg-gradient-to-r from-amber-400 to-amber-500 hover:shadow-lg hover:shadow-amber-400/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "重置密码"}
-                            {!isLoading && <ArrowRight size={20} />}
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={20} />
+                                    重置中...
+                                </>
+                            ) : (
+                                <>
+                                    重置密码
+                                    <ArrowRight size={20} />
+                                </>
+                            )}
                         </button>
                     </motion.div>
                 )}

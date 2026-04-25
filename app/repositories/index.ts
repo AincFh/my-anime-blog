@@ -2,6 +2,13 @@ export * from './user.repository';
 export * from './session.repository';
 export * from './article.repository';
 export * from './subscription.repository';
+export * from './notification.repository';
+export * from './mission.repository';
+export * from './coin.repository';
+export * from './shop.repository';
+export * from './comment.repository';
+export * from './gallery.repository';
+export * from './achievement.repository';
 
 // 定义 Repository 接口
 // T: 实体类型

@@ -1,9 +1,12 @@
 /**
  * 会员服务层
  * 支持新的会员等级体系（旅行者、月之子、星之守护者、银河领主）
+ * 底层数据来源：subscriptions 表（通过 tier.server.ts）
  */
 
-import { queryAll, queryFirst, execute, type Database } from '../db.server';
+import { queryAll, queryFirst, type Database } from '../db.server';
+import { getUserMembershipTier, getAllTiers as getAllTiersFromDb, type TierPrivileges } from './tier.server';
+import { getLogger } from '~/utils/logger';
 
 export interface MembershipTier {
   tier_id: number;
@@ -44,77 +47,54 @@ export interface TierPermissionsMap {
 class MembershipService {
   /**
    * 获取所有会员等级列表
+   * 数据来源：tier.server.ts → subscriptions 表
    */
   async getAllTiers(db: Database): Promise<MembershipTier[]> {
-    const rows = await queryAll<{
-      tier_id: number;
-      tier_name: string;
-      tier_name_en: string;
-      tier_level: number;
-      monthly_price_cents: number;
-      yearly_price_cents: number;
-      description: string | null;
-      features: string | null;
-      color_hex: string | null;
-      is_active: number;
-    }>(db, 'SELECT * FROM membership_tiers WHERE is_active = 1 ORDER BY sort_order ASC');
-
+    const rows = await getAllTiersFromDb(db);
     return rows.map(row => ({
-      tier_id: row.tier_id,
-      tier_name: row.tier_name,
-      tier_name_en: row.tier_name_en,
-      tier_level: row.tier_level,
-      monthly_price_cents: row.monthly_price_cents,
-      yearly_price_cents: row.yearly_price_cents,
+      tier_id: row.id,
+      tier_name: row.name,
+      tier_name_en: row.name,
+      tier_level: row.sort_order,
+      monthly_price_cents: row.price_monthly,
+      yearly_price_cents: row.price_yearly,
       description: row.description,
-      features: this.parseFeatures(row.features),
-      color_hex: row.color_hex,
+      features: row.privileges ? Object.keys(JSON.parse(row.privileges)) : [],
+      color_hex: row.badge_color,
       is_active: row.is_active === 1,
     }));
   }
 
   /**
-   * 解析 features JSON 字段
-   */
-  private parseFeatures(features: string | null): string[] {
-    if (!features) return [];
-    try {
-      const parsed = JSON.parse(features);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
    * 获取单个会员等级详情
+   * 数据来源：tier.server.ts
    */
   async getTierByLevel(db: Database, level: number): Promise<MembershipTier | null> {
     const row = await queryFirst<{
-      tier_id: number;
-      tier_name: string;
-      tier_name_en: string;
-      tier_level: number;
-      monthly_price_cents: number;
-      yearly_price_cents: number;
+      id: number;
+      name: string;
+      display_name: string;
+      price_monthly: number;
+      price_yearly: number;
       description: string | null;
-      features: string | null;
-      color_hex: string | null;
+      privileges: string | null;
+      badge_color: string | null;
+      sort_order: number;
       is_active: number;
-    }>(db, 'SELECT * FROM membership_tiers WHERE tier_level = ? AND is_active = 1', level);
+    }>(db, 'SELECT * FROM membership_tiers WHERE sort_order = ? AND is_active = 1', level);
 
     if (!row) return null;
 
     return {
-      tier_id: row.tier_id,
-      tier_name: row.tier_name,
-      tier_name_en: row.tier_name_en,
-      tier_level: row.tier_level,
-      monthly_price_cents: row.monthly_price_cents,
-      yearly_price_cents: row.yearly_price_cents,
+      tier_id: row.id,
+      tier_name: row.name,
+      tier_name_en: row.name,
+      tier_level: row.sort_order,
+      monthly_price_cents: row.price_monthly,
+      yearly_price_cents: row.price_yearly,
       description: row.description,
-      features: this.parseFeatures(row.features),
-      color_hex: row.color_hex,
+      features: row.privileges ? Object.keys(JSON.parse(row.privileges)) : [],
+      color_hex: row.badge_color,
       is_active: row.is_active === 1,
     };
   }
@@ -191,51 +171,31 @@ class MembershipService {
 
   /**
    * 获取用户会员信息
+   * 数据来源：tier.server.ts → subscriptions 表（统一数据源）
    */
   async getUserMembership(db: Database, userId: number): Promise<UserMembership | null> {
-    const row = await queryFirst<{
-      user_id: number;
-      tier_level: number;
-      tier_name: string;
-      tier_name_en: string;
-      color_hex: string | null;
-      started_at: string;
-      expires_at: string | null;
-      status: string;
-    }>(
-      db,
-      `SELECT um.user_id, um.tier_level, um.started_at, um.expires_at, um.status,
-              mt.tier_name, mt.tier_name_en, mt.color_hex
-       FROM user_memberships um
-       JOIN membership_tiers mt ON um.tier_level = mt.tier_level
-       WHERE um.user_id = ? AND um.status = 'active'
-       ORDER BY um.tier_level DESC
-       LIMIT 1`,
-      userId
-    );
+    const { tier, subscription } = await getUserMembershipTier(db, userId);
 
-    if (!row) return null;
-
-    // 检查是否过期
-    if (row.expires_at && new Date(row.expires_at) < new Date()) {
-      // 更新过期状态
-      await execute(
-        db,
-        "UPDATE user_memberships SET status = 'expired' WHERE user_id = ?",
-        userId
-      );
-      return null;
+    if (!tier || tier.sort_order === 0) {
+      return null; // 免费用户
     }
 
+    const startDate = subscription?.start_date
+      ? new Date(subscription.start_date * 1000).toISOString()
+      : new Date().toISOString();
+    const endDate = subscription?.end_date
+      ? new Date(subscription.end_date * 1000).toISOString()
+      : null;
+
     return {
-      user_id: row.user_id,
-      tier_level: row.tier_level,
-      tier_name: row.tier_name,
-      tier_name_en: row.tier_name_en,
-      color_hex: row.color_hex,
-      started_at: row.started_at,
-      expires_at: row.expires_at,
-      status: row.status as 'active' | 'expired' | 'cancelled',
+      user_id: userId,
+      tier_level: tier.sort_order,
+      tier_name: tier.display_name,
+      tier_name_en: tier.name,
+      color_hex: tier.badge_color,
+      started_at: startDate,
+      expires_at: endDate,
+      status: subscription?.status === 'active' ? 'active' : 'expired',
     };
   }
 
@@ -260,8 +220,7 @@ class MembershipService {
 
       if (existing) {
         // 更新现有记录
-        await execute(
-          db,
+        await db.prepare(
           `UPDATE user_memberships
            SET tier_level = ?,
                expires_at = ?,
@@ -269,30 +228,19 @@ class MembershipService {
                payment_id = ?,
                status = 'active',
                updated_at = datetime('now')
-           WHERE user_id = ?`,
-          tierLevel,
-          expiresAt,
-          paymentMethod,
-          paymentId,
-          userId
-        );
+           WHERE user_id = ?`
+        ).bind(tierLevel, expiresAt, paymentMethod, paymentId, userId).run();
       } else {
         // 创建新记录
-        await execute(
-          db,
+        await db.prepare(
           `INSERT INTO user_memberships (user_id, tier_level, started_at, expires_at, payment_method, payment_id, status)
-           VALUES (?, ?, datetime('now'), ?, ?, ?, 'active')`,
-          userId,
-          tierLevel,
-          expiresAt,
-          paymentMethod,
-          paymentId
-        );
+           VALUES (?, ?, datetime('now'), ?, ?, ?, 'active')`
+        ).bind(userId, tierLevel, expiresAt, paymentMethod, paymentId).run();
       }
 
       return true;
     } catch (error) {
-      console.error('Upsert user membership error:', error);
+      getLogger().error('Upsert user membership failed', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -443,14 +391,10 @@ class MembershipService {
     userId: number
   ): Promise<boolean> {
     try {
-      await execute(
-        db,
-        "UPDATE user_memberships SET status = 'cancelled' WHERE user_id = ?",
-        userId
-      );
+      await db.prepare("UPDATE user_memberships SET status = 'cancelled' WHERE user_id = ?").bind(userId).run();
       return true;
     } catch (error) {
-      console.error('Cancel membership error:', error);
+      getLogger().error('Cancel membership failed', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -460,17 +404,16 @@ class MembershipService {
    */
   async expireSubscriptions(db: Database): Promise<number> {
     try {
-      const result = await execute(
-        db,
-        `UPDATE user_memberships 
-         SET status = 'expired' 
-         WHERE status = 'active' 
-           AND expires_at IS NOT NULL 
+      const result = await db.prepare(
+        `UPDATE user_memberships
+         SET status = 'expired'
+         WHERE status = 'active'
+           AND expires_at IS NOT NULL
            AND expires_at < datetime('now')`
-      );
+      ).run();
       return result.meta?.changes ?? 0;
     } catch (error) {
-      console.error('Expire subscriptions error:', error);
+      getLogger().error('Expire subscriptions failed', { error: error instanceof Error ? error.message : String(error) });
       return 0;
     }
   }

@@ -3,7 +3,7 @@
  * 提供续写、润色、翻译等功能
  */
 
-import type { Route } from "./+types/api.ai.writing";
+import type { LoaderFunctionArgs } from "react-router";
 import {
     callDeepseek,
     trackAIUsage,
@@ -53,19 +53,19 @@ const WRITING_PROMPTS: Record<WritingAction, (content: string, targetLang?: stri
     }),
 };
 
-export async function action({ request, context }: Route.ActionArgs): Promise<Response> {
+export async function action({ request, context }: LoaderFunctionArgs): Promise<Response> {
     if (request.method !== "POST") {
         return Response.json({ success: false, error: "Method not allowed" }, { status: 405 });
     }
 
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; AI?: import('@cloudflare/workers-types').Ai; DEEPSEEK_API_KEY?: string; ANTHROPIC_API_KEY?: string };
     const db = env.anime_db;
 
-    // 鉴权：仅管理员可用
-    const { requireAdmin } = await import("~/utils/auth");
-    const session = await requireAdmin(request, db);
+    // 鉴权：登录用户即可使用（不限管理员）
+    const { requireAuth } = await import("~/utils/auth");
+    const session = await requireAuth(request, db);
     if (!session) {
-        return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
+        return Response.json({ success: false, error: "请先登录" }, { status: 401 });
     }
 
     const kv = env.CACHE_KV || null;

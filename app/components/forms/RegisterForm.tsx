@@ -213,7 +213,7 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                         className="mt-6 w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-xl text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         disabled={isSendingCode}
                     >
-                        {isSendingCode ? <Loader2 className="animate-spin" size={20} /> : "下一步，发送验证码"}
+                        {isSendingCode ? "发送中..." : "下一步，发送验证码"}
                         {!isSendingCode && <ArrowRight size={20} />}
                     </motion.button>
                 ) : (
@@ -258,8 +258,17 @@ export function RegisterForm({ onRegister, onSendCode, isLoading, error }: Regis
                             disabled={isLoading || formData.captchaInput.length !== 6}
                             className="w-full flex justify-center items-center gap-2 py-[18px] px-6 rounded-xl text-[16px] font-bold tracking-wide text-white bg-gradient-to-r from-primary-start to-primary-end hover:shadow-lg hover:shadow-primary-start/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "完成注册"}
-                            {!isLoading && <ArrowRight size={20} />}
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={20} />
+                                    注册中...
+                                </>
+                            ) : (
+                                <>
+                                    完成注册
+                                    <ArrowRight size={20} />
+                                </>
+                            )}
                         </button>
 
                         <button

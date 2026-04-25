@@ -1,5 +1,4 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { json } from "react-router";
 
 /**
  * 动态 OG Image 生成
@@ -10,7 +9,7 @@ import { json } from "react-router";
  */
 export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const { slug } = params;
-  const env = (context as any).cloudflare.env;
+  const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
   const { anime_db } = env;
 
   // 检查 User-Agent，判断是否为爬虫

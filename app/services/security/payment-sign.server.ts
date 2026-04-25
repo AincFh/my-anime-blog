@@ -149,3 +149,42 @@ export function parseAmount(amountInYuan: string | number): number {
         : amountInYuan;
     return Math.round(yuan * 100);
 }
+
+/**
+ * 验证模拟支付完成签名（返回 { valid: boolean; reason?: string }）
+ */
+export async function verifyPaymentSignature(
+    orderNo: string,
+    amount: number,
+    userId: number,
+    nonce: string,
+    timestamp: number,
+    signature: string,
+    secret: string
+): Promise<{ valid: boolean; reason?: string }> {
+    if (Math.abs(Date.now() / 1000 - timestamp) > 300) {
+        return { valid: false, reason: "签名已过期" };
+    }
+
+    const params: Record<string, string | number> = {
+        order_no: orderNo,
+        amount,
+        user_id: userId,
+        nonce,
+        timestamp,
+    };
+
+    const expectedSign = (await generatePaymentSign(params, secret)).toLowerCase();
+    const actualSign = signature.toLowerCase();
+
+    if (expectedSign.length !== actualSign.length) return { valid: false, reason: "签名长度不匹配" };
+
+    let mismatch = 0;
+    for (let i = 0; i < expectedSign.length; i++) {
+        mismatch |= expectedSign.charCodeAt(i) ^ actualSign.charCodeAt(i);
+    }
+
+    if (mismatch !== 0) return { valid: false, reason: "签名验证失败" };
+
+    return { valid: true };
+}

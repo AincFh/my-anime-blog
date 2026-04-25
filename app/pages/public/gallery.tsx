@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { GlassCard } from "../../components/layout/GlassCard";
+import { GlassCard } from "~/components/ui/layout/GlassCard";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
-import type { Route } from "./+types/gallery";
+import type { LoaderFunctionArgs } from "react-router";
 import { useState } from "react";
+import { useLoaderData } from "react-router";
 import { X, Camera } from "lucide-react";
-import { getWithCache } from "~/services/cache.server";
+import { getWithCache } from "~/services/cache";
 
 /** 相册图片数据结构 */
 export interface GalleryImage {
@@ -18,8 +19,9 @@ export interface GalleryImage {
     created_at: number;
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const { anime_db, CACHE_KV } = context.cloudflare.env;
+export async function loader({ context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace };
+  const { anime_db, CACHE_KV } = env;
 
   try {
     const images = await getWithCache<GalleryImage[]>(
@@ -48,7 +50,8 @@ export async function loader({ context }: Route.LoaderArgs) {
   }
 }
 
-export default function Gallery({ loaderData }: Route.ComponentProps) {
+export default function Gallery() {
+    const loaderData = useLoaderData<typeof loader>();
   const { images } = loaderData || { images: [] };
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
@@ -179,7 +182,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error?: unknown }) {
   let message = "图库加载失败";
   let details = "无法显示图库内容，请稍后重试";
   let stack: string | undefined;

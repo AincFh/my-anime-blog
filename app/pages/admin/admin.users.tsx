@@ -1,22 +1,23 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
-import type { Route } from "./+types/admin.users";
+import type { LoaderFunctionArgs } from "react-router";
 import { useFetcher, redirect } from "react-router";
-import { getSessionId } from "~/utils/auth";
+import type { KVNamespace } from "@cloudflare/workers-types";
+import { getSessionId, requireAdmin, type Session } from "~/utils/auth";
 import { Search, Shield, User, Mail, Calendar, MoreVertical, ShieldAlert, CheckCircle2, UserCheck, UserX, Plus, Key, X as CloseIcon, Coins, Sparkles, AlertCircle, Check } from "lucide-react";
 import { hashPassword } from "~/services/crypto.server";
 import { IconEmoji } from "~/components/ui/IconEmoji";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const sessionId = getSessionId(request);
     if (!sessionId) throw redirect("/panel/login");
 
-    const { anime_db } = (context as any).cloudflare.env;
+    const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CACHE_KV: KVNamespace; CSR_F_SECRET?: string; };
 
     // 验证管理员权限
     const { verifySession } = await import("~/utils/auth");
     const session = await verifySession(sessionId, anime_db);
-    if (!session || !session.user || session.user.role !== "admin") {
+    if (!session || session.role !== "admin") {
         throw redirect("/");
     }
 
@@ -25,20 +26,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
             "SELECT id, username, email, avatar_url, role, level, exp, coins, created_at FROM users ORDER BY created_at DESC"
         ).all();
 
-        const users = (results || []).map((user: any) => ({
+        const users = (results || []).map((user: Record<string, unknown>) => ({
             ...user,
-            createdAt: new Date(user.created_at * 1000).toLocaleDateString(),
+            createdAt: new Date(Number(user.created_at) * 1000).toLocaleDateString(),
         }));
 
         // 获取并生成 CSRF Token
-        const env = (context as any).cloudflare.env;
-        const secret = env.CSRF_SECRET;
+        const secret = (context.cloudflare.env as Record<string, unknown>).CSR_F_SECRET as string | undefined;
         if (!secret) {
             console.error("Critical: CSRF_SECRET not set in admin.users");
             throw new Error("系统安全配置错误: 缺少 CSRF 密钥");
         }
         const { generateCSRFToken } = await import("~/services/security/csrf.server");
-        const csrfToken = await generateCSRFToken(sessionId, env.CACHE_KV, secret);
+        const csrfToken = await generateCSRFToken(sessionId, anime_db, secret);
 
         return { users, csrfToken };
     } catch (error) {
@@ -47,40 +47,39 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: { request: Request; params: Record<string, string>; context: unknown }) {
     const { requireAdmin } = await import("~/utils/auth");
-    const { anime_db } = (context as any).cloudflare.env;
+    const { anime_db } = (context as { cloudflare?: { env?: { anime_db?: import('~/services/db.server').Database } } }).cloudflare?.env ?? {} as { anime_db: import('~/services/db.server').Database; CACHE_KV?: KVNamespace; CSR_F_SECRET?: string };
 
     // 1. 强制管理员鉴权
-    const session = await requireAdmin(request, anime_db);
+    const session = await requireAdmin(request, anime_db) as Session | null;
     if (!session) throw redirect("/panel/login");
 
     const formData = await request.formData();
 
     // 2. CSRF 校验
-    const env = (context as any).cloudflare.env;
+    const secret = (context as Record<string, unknown>).CSR_F_SECRET as string | undefined;
     const { validateCSRFToken } = await import("~/services/security/csrf.server");
     const csrfToken = formData.get("_csrf") as string;
-    const secret = env.CSRF_SECRET;
     if (!secret) {
         console.error("Critical: CSRF_SECRET not set in admin.users action");
         return { success: false, error: "系统安全配置错误: 缺少 CSRF 密钥" };
     }
 
-    const csrfResult = await validateCSRFToken(csrfToken, (session as any).sessionId, env.CACHE_KV, secret);
+    const csrfResult = await validateCSRFToken(csrfToken, session.sessionId, anime_db, secret);
     if (!csrfResult.valid) {
         return { success: false, error: "CSRF 验证失败" };
     }
 
     const intent = formData.get("intent");
     const userId = parseInt(formData.get("userId") as string);
-    
+
     if (isNaN(userId)) {
         return { success: false, error: "无效的用户ID" };
     }
 
     // 禁止操作自己
-    if (userId === (session.user as any).id) {
+    if (userId === session.userId) {
         return { success: false, error: "无法对自己执行此操作" };
     }
 
@@ -98,13 +97,13 @@ export async function action({ request, context }: Route.ActionArgs) {
 
         try {
             await anime_db.prepare(`
-                UPDATE users SET 
+                UPDATE users SET
                 level = ?, exp = ?, coins = ?, username = ?, email = ?
                 WHERE id = ?
             `).bind(level, exp, coins, username, email, userId).run();
             return { success: true, message: "上帝指令已下达：用户核心数据已强行覆盖" };
-        } catch (e: any) {
-            return { success: false, error: "数据修正失败: " + e.message };
+        } catch (e: unknown) {
+            return { success: false, error: "数据修正失败: " + (e instanceof Error ? e.message : String(e)) };
         }
     }
 
@@ -112,7 +111,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         try {
             await anime_db.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
             return { success: true, message: "极刑下达：已将该旅行者从时间线中物理抹除" };
-        } catch (e: any) {
+        } catch (e: unknown) {
             return { success: false, error: "抹除失败: 具有被依赖的外键关联(可能留有评论等)" };
         }
     }
@@ -141,8 +140,9 @@ export async function action({ request, context }: Route.ActionArgs) {
                 "INSERT INTO users (email, username, password_hash, role) VALUES (?, ?, ?, ?)"
             ).bind(email, username, passwordHash, role).run();
             return { success: true, message: `新旅行者 ${username} 已加入团队` };
-        } catch (e: any) {
-            return { success: false, message: e.message.includes("UNIQUE") ? "邮箱已被占用" : "创建失败" };
+        } catch (e: unknown) {
+            const errMsg = e instanceof Error ? e.message : String(e);
+            return { success: false, message: errMsg.includes("UNIQUE") ? "邮箱已被占用" : "创建失败" };
         }
     }
 
@@ -159,7 +159,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     return { success: false, message: "未知指令" };
 }
 
-export default function UsersManager({ loaderData }: Route.ComponentProps) {
+export default function UsersManager({ loaderData }: { loaderData: { users: Array<Record<string, unknown> & { createdAt: string }>; csrfToken: string } }) {
     const { users } = loaderData;
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState("all");
@@ -171,11 +171,11 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
     // 状态自动清理与结果反馈
     useEffect(() => {
         if (fetcher.state === "idle" && fetcher.data) {
-            const data = fetcher.data as any;
+            const data = fetcher.data as { error?: string; success?: boolean; message?: string };
             if (data.error || !data.success) {
                 alert("指令执行失败: " + (data.error || data.message || "未知异常"));
             } else if (data.success) {
-                alert(data.message);
+                alert(data.message || "操作成功");
                 setShowAddModal(false);
                 setResetPasswordId(null);
                 setGodModeUser(null);
@@ -184,7 +184,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
     }, [fetcher.state, fetcher.data]);
 
     const filteredUsers = useMemo(() => {
-        return users.filter((u: any) => {
+        return users.filter((u: Record<string, unknown>) => {
             const matchesSearch = u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 u.email.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesRole = roleFilter === "all" ? true : u.role === roleFilter;
@@ -192,7 +192,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
         });
     }, [users, searchQuery, roleFilter]);
 
-    const handleAction = (userId: number, intent: string, extra: any = {}) => {
+    const handleAction = (userId: number, intent: string, extra: Record<string, string> = {}) => {
         const formData = new FormData();
         formData.append("intent", intent);
         formData.append("userId", userId.toString());
@@ -377,7 +377,7 @@ export default function UsersManager({ loaderData }: Route.ComponentProps) {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredUsers.map((user: any, index: number) => (
+                                    filteredUsers.map((user: Record<string, unknown>, index: number) => (
                                         <motion.tr
                                             key={user.id}
                                             initial={{ opacity: 0, x: -10 }}

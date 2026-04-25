@@ -8,6 +8,7 @@ export default [
   route("articles", "pages/public/articles.tsx"),
   route("articles/:slug", "pages/public/articles.$slug.tsx"),
   route("archive", "pages/public/archive.tsx"),
+  route("changelog", "pages/public/changelog.tsx"),
   route("gallery", "pages/public/gallery.tsx"),
   route("bangumi", "pages/public/bangumi.tsx"),
   route("bangumi/:id", "pages/public/bangumi.$id.tsx"),
@@ -116,8 +117,11 @@ export default [
   route("api/animes", "api/misc/api.animes.ts"),
   route("api/article/like", "api/article/api.article.like.ts"),
 
-  // Notion 相关
+  // Notion CMS
   route("api/notion/sync", "api/notion/api.notion.sync.ts"),
+  route("api/notion/changelog", "api/notion/api.notion.changelog.ts"),
+  route("api/notion/announcements", "api/notion/api.notion.announcements.ts"),
+  route("api/notion/site-content", "api/notion/api.notion.site-content.ts"),
 
   // 杂项
   route("action/set-theme", "api/misc/action.set-theme.ts"),

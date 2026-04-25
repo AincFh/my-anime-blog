@@ -1,15 +1,15 @@
-import type { Route } from "./+types/api.admin.comments";
+import type { ActionFunctionArgs } from "react-router";
 import { jsonWithSecurity } from "~/utils/security";
 
 /**
  * 管理员评论管理 API
  * 功能：批准、删除评论
  */
-export async function action({ request, context }: Route.ActionArgs) {
-    // 1. 权限验证
+export async function action({ request, context }: ActionFunctionArgs) {
     // 1. 权限验证
     const { requireAdmin } = await import("~/utils/auth");
-    const { anime_db } = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CSRF_SECRET?: string; PAYMENT_SECRET?: string };
+    const { anime_db } = env;
 
     // 强制校验管理员权限
     const session = await requireAdmin(request, anime_db);
@@ -20,12 +20,12 @@ export async function action({ request, context }: Route.ActionArgs) {
     const formData = await request.formData();
 
     // 2. CSRF 校验 (P0 安全加固)
-    const env = (context as any).cloudflare.env;
+    const env2 = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; CSRF_SECRET?: string; PAYMENT_SECRET?: string };
     const { validateCSRFToken } = await import("~/services/security/csrf.server");
     const csrfToken = formData.get("_csrf") as string;
     
     // [安全加固] 严禁使用硬编码默认密钥，必须从环境变量获取
-    const secret = env.CSRF_SECRET || env.PAYMENT_SECRET;
+    const secret = env2.CSRF_SECRET || env2.PAYMENT_SECRET;
     if (!secret) {
         console.error("CRITICAL: CSRF_SECRET or PAYMENT_SECRET not configured");
         return jsonWithSecurity({ error: "服务器安全配置错误" }, { status: 500 });

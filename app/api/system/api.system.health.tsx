@@ -3,12 +3,12 @@
  * 用于后台看板实时监测数据库、KV 及外部服务状态
  */
 
-import type { Route } from "./+types/api.system.health";
+import type { LoaderFunctionArgs } from "react-router";
 import { queryFirst } from "~/services/db.server";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context, request }: LoaderFunctionArgs) {
     // 仅限管理员访问
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
     const db = env.anime_db;
 
     const { requireAdmin } = await import("~/utils/auth");

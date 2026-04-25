@@ -4,11 +4,13 @@
  */
 
 import { hashPassword, verifyPassword, generateToken, generateVerificationCode, generateDeviceFingerprint } from './crypto.server';
-import { checkRateLimit, getClientIP, RATE_LIMITS } from './ratelimit';
-import { sendVerificationCodeEmail } from './email.server';
+import { checkRateLimit, getClientIP } from './rate-limiter.server';
+import { sendVerificationCodeEmail } from './email';
 import { UserRepository, SessionRepository } from '~/repositories';
-import { AUTH_CONFIG, SECURITY_CONFIG } from '~/config';
+import { AUTH_CONFIG, RATE_LIMITS, SECURITY_CONFIG } from '~/config';
 import type { Database } from '~/services/db.server';
+import { logLoginAudit } from './security/audit-log.server';
+import { getLogger } from '~/utils/logger';
 
 export interface User {
   id: number;
@@ -178,7 +180,7 @@ export async function registerUser(
 
     return { success: true, user: newUser };
   } catch (error) {
-    console.error('Registration error:', error);
+    getLogger().error('Registration failed', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: '注册失败，请检查输入信息' };
   }
 }
@@ -192,7 +194,7 @@ export async function generateTempPassword(
 ): Promise<string | null> {
   if (!kv) {
     // KV 未配置时禁用临时密码功能
-    console.error('[安全] 临时密码功能不可用：KV 未配置');
+  getLogger().warn('Temporary password disabled: KV not configured');
     return null;
   }
 
@@ -245,6 +247,7 @@ export async function loginUser(
     const deviceKey = `device_anomaly:${deviceFingerprint}`;
     const anomalyCount = await kv.get(deviceKey);
     if (anomalyCount && parseInt(anomalyCount) > 10) {
+      await logLoginAudit(db, undefined, false, request, 'device_anomaly');
       return { success: false, error: '设备存在异常行为，请联系管理员' };
     }
   }
@@ -258,6 +261,7 @@ export async function loginUser(
       const currentCount = await kv.get(deviceKey);
       await kv.put(deviceKey, ((currentCount ? parseInt(currentCount) : 0) + 1).toString(), { expirationTtl: AUTH_CONFIG.deviceRecordExpiration });
     }
+    await logLoginAudit(db, undefined, false, request, 'rate_limit_exceeded');
     return { success: false, error: '登录失败次数过多，请10分钟后再试' };
   }
 
@@ -266,6 +270,7 @@ export async function loginUser(
 
   if (!user) {
     // 用户不存在时不额外计数（checkRateLimit 已经递增了本次请求配额）
+    await logLoginAudit(db, undefined, false, request, 'user_not_found');
     return { success: false, error: '邮箱或密码错误' };
   }
 
@@ -281,6 +286,7 @@ export async function loginUser(
 
   if (!passwordValid) {
     // 密码错误也不额外计数（checkRateLimit 已经递增了本次请求配额）
+    await logLoginAudit(db, user.id, false, request, 'invalid_password');
     return { success: false, error: '邮箱或密码错误' };
   }
 
@@ -304,6 +310,9 @@ export async function loginUser(
     };
     await kv.put(`session_device:${token}`, JSON.stringify(deviceInfo), { expirationTtl: AUTH_CONFIG.deviceRecordExpiration });
   }
+
+  // 记录登录审计日志
+  await logLoginAudit(db, user.id, true, request);
 
   // 返回不含密码的用户信息
   const userData: User = {
@@ -360,7 +369,7 @@ export async function verifySession(
       );
 
       if (deviceInfo.fingerprint !== currentFingerprint) {
-        console.warn(`Device fingerprint mismatch for session ${token}`);
+        getLogger().warn('Device fingerprint mismatch detected', { stored: deviceInfo.fingerprint, current: currentFingerprint });
       }
     }
   }
@@ -398,7 +407,7 @@ export async function logoutUser(
     await sessionRepo.delete(token);
     return { success: true };
   } catch (error) {
-    console.error('Logout error:', error);
+    getLogger().error('Logout failed', { error: error instanceof Error ? error.message : String(error) });
     return { success: false };
   }
 }
@@ -415,7 +424,7 @@ export async function revokeAllUserSessions(
     await sessionRepo.deleteByUserId(userId);
     return { success: true };
   } catch (error) {
-    console.error('Revoke sessions error:', error);
+    getLogger().error('Revoke sessions failed', { error: error instanceof Error ? error.message : String(error) });
     return { success: false };
   }
 }
@@ -439,7 +448,7 @@ export async function updateUserProfile(
 
     return { success: true, user: updatedUser };
   } catch (error) {
-    console.error('Update profile error:', error);
+    getLogger().error('Update profile failed', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: '更新失败，请稍后重试' };
   }
 }
@@ -449,7 +458,7 @@ export async function updateUserProfile(
  */
 export async function updateUserPreferences(
   userId: number,
-  preferences: any,
+  preferences: Record<string, unknown>,
   db: Database
 ): Promise<{ success: boolean; error?: string }> {
   const userRepo = new UserRepository(db);
@@ -457,7 +466,7 @@ export async function updateUserPreferences(
     await userRepo.update(userId, { preferences });
     return { success: true };
   } catch (error) {
-    console.error('Update preferences error:', error);
+    getLogger().error('Update preferences failed', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: '偏好设置保存失败' };
   }
 }
@@ -489,7 +498,8 @@ export async function changePassword(
 
     return { success: true };
   } catch (error) {
-    console.error('Change password error:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    getLogger().error('Change password failed', { error: errMsg });
     return { success: false, error: '密码修改失败，请稍后重试' };
   }
 }

@@ -22,8 +22,8 @@ export function SiteFooter({
     return (
         <footer className="relative z-10 mt-auto py-6 px-4 border-t border-white/10">
             <div className="max-w-6xl mx-auto">
-                {/* 法律页面链接 */}
-                <div className="flex flex-wrap justify-center gap-3 mb-4 text-xs text-slate-500 dark:text-slate-400">
+                {/* 法律页面链接 — 精简版 */}
+                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mb-4 text-xs text-slate-500 dark:text-slate-400">
                     <Link
                         to="/terms"
                         className="hover:text-primary-start transition-colors"
@@ -43,27 +43,6 @@ export function SiteFooter({
                         className="hover:text-primary-start transition-colors"
                     >
                         免责声明
-                    </Link>
-                    <span className="opacity-50">|</span>
-                    <Link
-                        to="/legal/ai"
-                        className="hover:text-primary-start transition-colors"
-                    >
-                        AI 服务条款
-                    </Link>
-                    <span className="opacity-50">|</span>
-                    <Link
-                        to="/legal/cookie"
-                        className="hover:text-primary-start transition-colors"
-                    >
-                        Cookie 政策
-                    </Link>
-                    <span className="opacity-50">|</span>
-                    <Link
-                        to="/legal/minors"
-                        className="hover:text-primary-start transition-colors"
-                    >
-                        未成年人保护
                     </Link>
                 </div>
 

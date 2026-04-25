@@ -1,13 +1,13 @@
-﻿/**
+/**
  * API: 获取当前用户信息
  * GET /api/user/me
  */
 
-import type { Route } from "./+types/api.user.me";
+import type { LoaderFunctionArgs } from "react-router";
 import { verifySession, getSessionToken } from "~/services/auth.server";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = (context as any).cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database };
   const anime_db = env?.anime_db;
 
   try {

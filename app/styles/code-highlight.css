@@ -1,9 +1,8 @@
-/**
- * 代码高亮样式 - GitHub Dark 风格
- * 基于 highlight.js 的主题定制
- */
+﻿/**
+ * 浠ｇ爜楂樹寒鏍峰紡 - GitHub Dark 椋庢牸
+ * 鍩轰簬 highlight.js 鐨勪富棰樺畾鍒? */
 
-/* 代码块容器 */
+/* 浠ｇ爜鍧楀鍣?*/
 .code-block-wrapper {
     @apply relative my-6 rounded-xl overflow-hidden;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -14,20 +13,20 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* 代码块头部 */
+/* 浠ｇ爜鍧楀ご閮?*/
 .code-block-header {
     @apply flex items-center justify-between px-4 py-2;
     background: rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 语言标签 */
+/* 璇█鏍囩 */
 .code-language {
     @apply text-xs font-mono font-medium uppercase tracking-wider;
     color: #94a3b8;
 }
 
-/* 复制按钮 */
+/* 澶嶅埗鎸夐挳 */
 .copy-code-btn {
     @apply text-xs px-3 py-1 rounded-md font-medium transition-all duration-200;
     background: rgba(255, 255, 255, 0.1);
@@ -41,7 +40,7 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* 代码块内容 */
+/* 浠ｇ爜鍧楀唴瀹?*/
 .code-block-wrapper pre {
     @apply p-4 m-0 overflow-x-auto;
     background: transparent !important;
@@ -54,7 +53,7 @@
     tab-size: 2;
 }
 
-/* 行内代码 */
+/* 琛屽唴浠ｇ爜 */
 .inline-code {
     @apply px-1.5 py-0.5 rounded text-sm font-mono;
     background: rgba(255, 159, 67, 0.15);
@@ -63,7 +62,7 @@
 }
 
 /* ============================================
-   Highlight.js GitHub Dark 主题
+   Highlight.js GitHub Dark 涓婚
    ============================================ */
 
 .hljs {
@@ -71,21 +70,21 @@
     background: transparent;
 }
 
-/* 注释 */
+/* 娉ㄩ噴 */
 .hljs-comment,
 .hljs-quote {
     color: #8b949e;
     font-style: italic;
 }
 
-/* 关键字 */
+/* 鍏抽敭瀛?*/
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-addition {
     color: #ff7b72;
 }
 
-/* 数字 */
+/* 鏁板瓧 */
 .hljs-number,
 .hljs-regexp,
 .hljs-selector-attr,
@@ -93,7 +92,7 @@
     color: #79c0ff;
 }
 
-/* 字符串 */
+/* 瀛楃涓?*/
 .hljs-string,
 .hljs-doctag,
 .hljs-template-tag,
@@ -102,7 +101,7 @@
     color: #a5d6ff;
 }
 
-/* 变量、属性 */
+/* 鍙橀噺銆佸睘鎬?*/
 .hljs-variable,
 .hljs-attribute,
 .hljs-property,
@@ -110,13 +109,13 @@
     color: #ffa657;
 }
 
-/* 函数 */
+/* 鍑芥暟 */
 .hljs-function,
 .hljs-title.function_ {
     color: #d2a8ff;
 }
 
-/* 类名 */
+/* 绫诲悕 */
 .hljs-class .hljs-title,
 .hljs-title.class_,
 .hljs-literal,
@@ -125,44 +124,44 @@
     color: #7ee787;
 }
 
-/* 标签名 */
+/* 鏍囩鍚?*/
 .hljs-tag,
 .hljs-name {
     color: #7ee787;
 }
 
-/* 属性名 */
+/* 灞炴€у悕 */
 .hljs-attr {
     color: #79c0ff;
 }
 
-/* 符号 */
+/* 绗﹀彿 */
 .hljs-symbol,
 .hljs-bullet,
 .hljs-subst {
     color: #ff7b72;
 }
 
-/* 标题 */
+/* 鏍囬 */
 .hljs-title,
 .hljs-section {
     color: #d2a8ff;
     font-weight: bold;
 }
 
-/* 删除 */
+/* 鍒犻櫎 */
 .hljs-deletion {
     color: #ffa198;
     background-color: rgba(248, 81, 73, 0.15);
 }
 
-/* 添加 */
+/* 娣诲姞 */
 .hljs-addition {
     color: #7ee787;
     background-color: rgba(46, 160, 67, 0.15);
 }
 
-/* 强调 */
+/* 寮鸿皟 */
 .hljs-emphasis {
     font-style: italic;
 }
@@ -180,14 +179,14 @@
     color: #ff7b72;
 }
 
-/* 链接 */
+/* 閾炬帴 */
 .hljs-link {
     color: #a5d6ff;
     text-decoration: underline;
 }
 
 /* ============================================
-   Spoiler 剧透块样式
+   Spoiler 鍓ч€忓潡鏍峰紡
    ============================================ */
 
 [data-spoiler] {
@@ -213,7 +212,7 @@
 }
 
 [data-spoiler]::after {
-    content: "悬停查看";
+    content: "鎮仠鏌ョ湅";
     @apply absolute inset-0 flex items-center justify-center text-sm font-medium;
     background: rgba(0, 0, 0, 0.5);
     color: rgba(255, 255, 255, 0.8);

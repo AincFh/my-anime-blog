@@ -68,7 +68,7 @@ export async function logAudit(
         );
     } catch (error) {
         // 审计日志失败不应影响主业务
-        console.error('Audit log failed:', error);
+        getLogger().error('Audit log write failed', { error: error instanceof Error ? error.message : String(error) });
     }
 }
 
@@ -119,7 +119,7 @@ export function extractAuditInfo(request: Request): {
  */
 export async function logLoginAudit(
     db: Database,
-    userId: number,
+    userId: number | undefined,
     success: boolean,
     request: Request,
     failReason?: string

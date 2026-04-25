@@ -1,11 +1,11 @@
-﻿import type { Route } from "./+types/action.set-theme";
+import type { ActionFunctionArgs } from "react-router";
 import { createThemeAction } from "remix-themes";
 import { createDynamicThemeSessionResolver } from "~/sessions.theme.server";
 
-export async function action({ request, context }: Route.ActionArgs) {
-    const env = (context as any).cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const env = context.cloudflare.env as { ENVIRONMENT?: string; SESSION_SECRET?: string };
     const isProd = env.ENVIRONMENT === "production";
     const secret = env.SESSION_SECRET || "default_secret";
     const resolver = createDynamicThemeSessionResolver(secret, isProd);
-    return (createThemeAction as any)(resolver)({ request, context, params: {} } as any);
+    return (createThemeAction as Function)(resolver)({ request, context, params: {} } as Record<string, unknown>);
 }

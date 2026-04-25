@@ -3,6 +3,7 @@
  * 处理订阅相关操作：购买、取消、续费等
  */
 
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { getSessionToken, verifySession } from '~/services/auth.server';
 import { createPaymentOrder } from '~/services/payment/gateway.server';
 import {
@@ -13,8 +14,9 @@ import {
 import { getTierById, getAllTiers } from '~/services/membership/tier.server';
 import { logAudit } from '~/services/security/audit-log.server';
 
-export async function loader({ request, context }: { request: Request; context: any }) {
-    const { anime_db } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
+    const { anime_db } = env;
 
     // 获取用户
     const token = getSessionToken(request);
@@ -37,8 +39,8 @@ export async function loader({ request, context }: { request: Request; context: 
     });
 }
 
-export async function action({ request, context }: { request: Request; context: any }) {
-    const { anime_db, PAYMENT_SECRET } = context.cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; PAYMENT_SECRET?: string };
 
     // 获取用户
     const token = getSessionToken(request);

@@ -1,5 +1,6 @@
 import { generateOrderNo, generateNonce, generatePaymentSign } from '../security/payment-sign.server';
 import { execute, queryFirst, type Database, queryAll } from '../db.server';
+import { getLogger } from '~/utils/logger';
 
 export type PaymentMethod = 'wechat' | 'alipay' | 'paypal' | 'mock';
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'cancelled' | 'expired';
@@ -125,7 +126,7 @@ export async function createPaymentOrder(
 
         return { success: true, order: order! };
     } catch (error) {
-        console.error('Create order error:', error);
+    getLogger().error('Create order failed', { error: error instanceof Error ? error.message : String(error) });
         return { success: false, error: '创建订单失败' };
     }
 }
@@ -178,7 +179,7 @@ export async function updateOrderStatus(
 
         return true;
     } catch (error) {
-        console.error('Update order status error:', error);
+    getLogger().error('Update order status failed', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 }
@@ -267,7 +268,7 @@ export async function acquirePaymentLock(
     try {
         const existing = await kv.get(lockKey);
         if (existing) {
-            console.log(`支付锁已存在: ${lockKey}`);
+            getLogger().debug('Payment lock already exists', { lockKey });
             return false;
         }
 
@@ -279,7 +280,7 @@ export async function acquirePaymentLock(
 
         return true;
     } catch (error) {
-        console.error('获取支付锁失败:', error);
+    getLogger().error('Acquire payment lock failed', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 }
@@ -296,7 +297,7 @@ export async function releasePaymentLock(
     try {
         await kv.delete(lockKey);
     } catch (error) {
-        console.error('释放支付锁失败:', error);
+    getLogger().error('Release payment lock failed', { error: error instanceof Error ? error.message : String(error) });
     }
 }
 

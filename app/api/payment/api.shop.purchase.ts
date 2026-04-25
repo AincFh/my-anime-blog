@@ -2,6 +2,7 @@
  * 积分商城购买 API
  */
 
+import type { D1PreparedStatement } from '@cloudflare/workers-types';
 import { getSessionToken, verifySession } from '~/services/auth.server';
 import { getUserCoins } from '~/services/membership/coins.server';
 import { logAudit } from '~/services/security/audit-log.server';
@@ -17,8 +18,7 @@ interface ShopItem {
 }
 
 // 购买商品
-// 购买商品
-export async function action({ request, context }: { request: Request; context: any }) {
+export async function action({ request, context }: { request: Request; context: { cloudflare: { env: { anime_db: import('~/services/db.server').Database } } } }) {
     const { anime_db } = context.cloudflare.env;
 
     const token = getSessionToken(request);
@@ -69,7 +69,7 @@ export async function action({ request, context }: { request: Request; context: 
     }
 
     // 3. 构建原子事务 (Write Phase - Atomic Batch)
-    const statements: any[] = [];
+    const statements: D1PreparedStatement[] = [];
 
     // Statement 1: 扣除积分 (带条件检查)
     statements.push(

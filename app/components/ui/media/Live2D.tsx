@@ -179,7 +179,7 @@ const PERSONALITY_MAP: Record<string, Personality> = {
       emphasis: ["呀", "呐", "嗯", "哦", "呢"],
     },
   },
-  ni_j: {
+  'ni-j': {
     gender: "neutral", archetype: "双子上", style: "神秘双面",
     pronouns: { subject: "我们", possessive: "我们的" },
     honorifics: ["你", "人类", "朋友"],
@@ -505,6 +505,7 @@ export function Live2D() {
   const dockIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dockObserverRef = useRef<MutationObserver | null>(null);
   const dockResizeRef = useRef<(() => void) | null>(null);
+  const dockResizeObserverRef = useRef<ResizeObserver | null>(null);
   const modelNameRef = useRef<string>(pickRandomModel());
   const dialogQueueRef = useRef<string[]>([]);
   const isShowingDialogRef = useRef(false);
@@ -662,8 +663,8 @@ export function Live2D() {
               attributeFilter: ['style', 'class'],
             });
             // 同时监听 canvas 尺寸变化（加载完成后）
-            const ro = new ResizeObserver(() => syncClickArea());
-            ro.observe(el);
+            dockResizeObserverRef.current = new ResizeObserver(() => syncClickArea());
+            dockResizeObserverRef.current.observe(el);
           };
           setTimeout(attachObserver, 400);
           setTimeout(attachObserver, 2200);
@@ -767,6 +768,10 @@ export function Live2D() {
           if (dockResizeRef.current) {
             window.removeEventListener('resize', dockResizeRef.current);
             dockResizeRef.current = null;
+          }
+          if (dockResizeObserverRef.current) {
+            dockResizeObserverRef.current.disconnect();
+            dockResizeObserverRef.current = null;
           }
             const widget = document.getElementById('live2d-widget');
             if (widget) widget.remove();

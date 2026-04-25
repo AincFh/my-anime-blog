@@ -12,8 +12,8 @@ interface Article {
   updated_at: number;
 }
 
-export async function loader({ context, request }: { context: any, request: Request }) {
-  const { anime_db } = context.cloudflare.env;
+export async function loader({ context, request }: LoaderFunctionArgs) {
+  const { anime_db } = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
   const url = new URL(request.url);
 
   try {

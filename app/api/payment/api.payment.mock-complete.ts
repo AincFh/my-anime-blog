@@ -8,11 +8,12 @@ import { getOrder, updateOrderStatus } from '~/services/payment/gateway.server';
 import { createSubscription } from '~/services/membership/subscription.server';
 import { addCoins } from '~/services/membership/coins.server';
 import { logAudit } from '~/services/security/audit-log.server';
-import { verifyPaymentSignature } from '~/services/payment/signature.server';
-import { redirect } from 'react-router';
+import { verifyPaymentSignature } from '~/services/security/payment-sign.server';
+import type { LoaderFunctionArgs } from "react-router";
 
-export async function loader({ request, context }: { request: Request; context: any }) {
-    const { anime_db, PAYMENT_SECRET, ENVIRONMENT } = context.cloudflare.env;
+export async function loader({ request, context }: LoaderFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database; PAYMENT_SECRET?: string; ENVIRONMENT?: string };
+    const { anime_db, PAYMENT_SECRET, ENVIRONMENT } = env;
 
     // [安全加固] 严禁生产环境使用 Mock 支付
     if (ENVIRONMENT === 'production') {

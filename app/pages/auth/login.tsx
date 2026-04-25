@@ -69,18 +69,6 @@ export default function Login() {
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-[4px] transition-all duration-700 pointer-events-none" />
             </div>
 
-            {/* 顶部导航栏 - 可返回 */}
-            <div className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
-                <Link
-                    to="/"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-all duration-300"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span className="text-sm font-medium">返回首页</span>
-                </Link>
-            </div>
 
             <ResponsiveContainer maxWidth="sm" className="relative z-10 w-full max-w-[440px] mx-auto px-4 sm:px-6">
                 <motion.div

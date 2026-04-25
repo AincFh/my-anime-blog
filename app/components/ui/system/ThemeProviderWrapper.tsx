@@ -56,7 +56,7 @@ function InnerThemeProviderWrapper({ children }: { children: React.ReactNode }) 
                 className={`
                     fixed inset-0 z-[9999] pointer-events-none transition-all duration-300 ease-out
                     ${transitioning ? 'opacity-100' : 'opacity-0'}
-                    ${theme === 'dark' ? 'bg-slate-950' : 'bg-white'}
+                    ${theme === 'dark' ? 'bg-[#1c1f2b]' : 'bg-white'}
                 `}
             />
 

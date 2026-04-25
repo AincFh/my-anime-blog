@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { getSessionId, verifySession } from '~/utils/auth';
-import { purgeAllCache, purgeCacheForUrls } from '~/services/cloudflare-cache.server';
+import { purgeAllCache, purgeCacheForUrls } from '~/services/cache/cdn-purge';
 
 /**
  * 清除CDN缓存API
@@ -12,7 +12,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const sessionId = getSessionId(request);
 
   // 验证 session（使用 utils/auth 中的统一函数，cookie 名 = "session"）
-  const env = (context as any).cloudflare.env;
+  const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; CF_API_TOKEN?: string; CF_ZONE_ID?: string };
   const session = sessionId
     ? await verifySession(sessionId, env?.anime_db)
     : null;
@@ -84,9 +84,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
 }
 
 // GET 请求返回配置状态（不含敏感信息）
-export async function loader({ request, context }: { request: Request; context: any }) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionId = getSessionId(request);
-  const env = (context as any).cloudflare.env;
+  const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; CF_API_TOKEN?: string; CF_ZONE_ID?: string };
   const session = sessionId
     ? await verifySession(sessionId, env?.anime_db)
     : null;

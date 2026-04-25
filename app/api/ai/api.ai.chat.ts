@@ -3,7 +3,7 @@
  * 处理与 AI 聊天机器人的对话
  */
 
-import type { Route } from "./+types/api.ai.chat";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import {
     callDeepseek,
     trackAIUsage,
@@ -30,13 +30,13 @@ interface ChatResponse {
     remaining?: number;
 }
 
-export async function action({ request, context }: Route.ActionArgs): Promise<Response> {
+export async function action({ request, context }: ActionFunctionArgs): Promise<Response> {
     // 只接受 POST 请求
     if (request.method !== "POST") {
         return Response.json({ success: false, error: "Method not allowed" }, { status: 405 });
     }
 
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; AI?: import('@cloudflare/workers-types').Ai; DEEPSEEK_API_KEY?: string; ANTHROPIC_API_KEY?: string };
     const db = env.anime_db;
     const kv = env.CACHE_KV || null;
 
@@ -148,8 +148,8 @@ export async function action({ request, context }: Route.ActionArgs): Promise<Re
 }
 
 // GET 请求返回配置
-export async function loader({ context }: Route.LoaderArgs) {
-    const env = (context as any).cloudflare.env;
+export async function loader({ context }: LoaderFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; CACHE_KV?: import('@cloudflare/workers-types').KVNamespace; AI?: import('@cloudflare/workers-types').Ai; DEEPSEEK_API_KEY?: string; ANTHROPIC_API_KEY?: string };
     const db = env.anime_db;
     const kv = env.CACHE_KV || null;
 

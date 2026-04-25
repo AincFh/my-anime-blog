@@ -3,23 +3,23 @@
  * 展示用户余额、交易记录和充值档位
  */
 
-import type { Route } from "./+types/wallet";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, Sparkles, ArrowUp, ArrowDown, Clock, Gift, ChevronRight, Zap, Star } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { RECHARGE_PACKAGES } from "~/config/game";
+import { RECHARGE_PACKAGES } from "~/services/membership/game-config";
 import { toast } from "~/components/ui/Toast";
 import { IconEmoji } from "~/components/ui/IconEmoji";
 import { FloatingSubNav } from "~/components/layout/FloatingSubNav";
 
 // ==================== 数据加载 ====================
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     const { getSessionToken, verifySession } = await import("~/services/auth.server");
     const { getUserCoins, getCoinTransactionHistory } = await import("~/services/membership/coins.server");
 
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
     const { anime_db } = env;
 
     const token = getSessionToken(request);
@@ -37,12 +37,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 // ==================== 充值下单 ====================
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
     const { getSessionToken, verifySession } = await import("~/services/auth.server");
     const { createPaymentOrder } = await import("~/services/payment/gateway.server");
     const { generateSecurePayUrl } = await import("~/services/payment/signature.server");
 
-    const env = (context as any).cloudflare.env;
+    const env = context.cloudflare.env as { anime_db: import('~/services/db.server').Database };
     const { anime_db } = env;
 
     const token = getSessionToken(request);
@@ -108,7 +108,8 @@ const SOURCE_LABELS: Record<string, string> = {
     refund: "退款",
 };
 
-export default function WalletPage({ loaderData }: Route.ComponentProps) {
+export default function WalletPage() {
+    const loaderData = useLoaderData<typeof loader>();
     const { balance, transactions, packages } = loaderData;
     const [selectedPkg, setSelectedPkg] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,7 +123,7 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
             const form = new FormData();
             form.append("packageId", selectedPkg);
             const resp = await fetch("/wallet", { method: "POST", body: form });
-            const data = (await resp.json()) as any;
+            const data = (await resp.json()) as { success?: boolean; payUrl?: string; error?: string };
             if (data.success && data.payUrl) {
                 window.location.href = data.payUrl;
             } else {
@@ -140,7 +141,6 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
             {/* 灵动岛导航 */}
             <FloatingSubNav
                 title="我的星尘"
-                backUrl="/user/dashboard"
                 rightContent={
                     <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all active:scale-95">
                         <Sparkles className="w-4 h-4" />
@@ -212,7 +212,7 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
                         >
                             {/* 充值档位 */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                {packages.map((pkg: any) => {
+                                {packages.map((pkg: Record<string, unknown>) => {
                                     const isSelected = selectedPkg === pkg.id;
                                     return (
                                         <motion.button
@@ -280,7 +280,7 @@ export default function WalletPage({ loaderData }: Route.ComponentProps) {
                                     <p>暂无交易记录</p>
                                 </div>
                             ) : (
-                                transactions.map((tx: any, idx: number) => {
+                                transactions.map((tx: Record<string, unknown>, idx: number) => {
                                     const isEarn = tx.type === "earn" || tx.type === "refund";
                                     return (
                                         <motion.div

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, useActionData, useLoaderData, useNavigation, useSubmit, redirect } from "react-router";
+import { Form, useActionData, useLoaderData, useNavigation, useSubmit, redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     User, Lock, Bell, Palette, Shield, Database,
@@ -23,20 +23,20 @@ import { getUserCoins } from "~/services/membership/coins.server";
 namespace Route {
     export interface LoaderArgs {
         request: Request;
-        context: any;
-        params: any;
+        context: { cloudflare: { env: { anime_db?: import('~/services/db.server').Database; CSRF_SECRET?: string } } };
+        params: Record<string, string>;
     }
     export interface ActionArgs {
         request: Request;
-        context: any;
-        params: any;
+        context: { cloudflare: { env: { anime_db?: import('~/services/db.server').Database; CSRF_SECRET?: string } } };
+        params: Record<string, string>;
     }
 }
 
 // Loader: 获取用户信息
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
     try {
-        const env = (context as any).cloudflare.env;
+        const env = context.cloudflare.env;
         const db = env.anime_db;
         const token = getSessionToken(request);
 
@@ -71,8 +71,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 // Action: 处理表单提交
-export async function action({ request, context }: Route.ActionArgs) {
-    const env = (context as any).cloudflare.env;
+export async function action({ request, context }: ActionFunctionArgs) {
+    const env = context.cloudflare.env as { anime_db?: import('~/services/db.server').Database; CSRF_SECRET?: string };
     const db = env.anime_db;
     const token = getSessionToken(request);
     const result = await verifySession(token, db);
@@ -131,7 +131,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function SettingsPage() {
-    const { user, stats } = useLoaderData() as { user: AuthUser, stats: any };
+    const { user, stats } = useLoaderData() as { user: AuthUser, stats: { coins: number } };
     const actionData = useActionData();
     const navigation = useNavigation();
     const submit = useSubmit();
@@ -228,7 +228,6 @@ export default function SettingsPage() {
             {/* 灵动岛导航 */}
             <FloatingSubNav
                 title="设置"
-                backUrl="/user/dashboard"
                 rightContent={
                     <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all active:scale-95">
                         <Save className="w-5 h-5" />
