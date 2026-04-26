@@ -26,7 +26,16 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
+
+    // Ensure consistent SSR/client initial render; show skeleton only after hydration
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // Show skeleton while not mounted or still loading
+    const showSkeleton = isMounted && !isLoaded && !hasError;
 
     const handleLoad = () => {
         setIsLoaded(true);
@@ -37,9 +46,9 @@ export function OptimizedImage({
     };
 
     useEffect(() => {
-        // Reset state when src changes
         setIsLoaded(false);
         setHasError(false);
+        setIsMounted(false);
 
         if (imgRef.current?.complete) {
             if (imgRef.current.naturalWidth === 0) {
@@ -47,6 +56,7 @@ export function OptimizedImage({
             } else {
                 setIsLoaded(true);
             }
+            setIsMounted(true);
         }
     }, [src]);
 
@@ -54,6 +64,7 @@ export function OptimizedImage({
 
     return (
         <div
+            suppressHydrationWarning
             className={cn(
                 "relative overflow-hidden bg-slate-200/50 dark:bg-slate-800/50",
                 className
@@ -65,7 +76,7 @@ export function OptimizedImage({
             }}
         >
             {/* Blur placeholder */}
-            {placeholderBlur && !isLoaded && (
+            {placeholderBlur && isMounted && !isLoaded && (
                 <div
                     className="absolute inset-0 z-10 bg-cover bg-center"
                     style={{
@@ -78,7 +89,7 @@ export function OptimizedImage({
 
             {/* Loading skeleton */}
             <AnimatePresence>
-                {!isLoaded && !hasError && (
+                {showSkeleton && (
                     <motion.div
                         initial={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -95,6 +106,7 @@ export function OptimizedImage({
                 alt={alt}
                 loading={lazy ? "lazy" : "eager"}
                 decoding="async"
+                suppressHydrationWarning
                 className={cn(
                     "w-full h-full object-cover object-center transition-opacity duration-500",
                     isLoaded ? "opacity-100" : "opacity-0"
