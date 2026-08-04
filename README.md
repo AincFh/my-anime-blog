@@ -1,8 +1,10 @@
 # A.T. Field
 
-**基于 React Router v7 与 Cloudflare Workers 的全栈内容与社区平台**
+**基于 React Router v8.3 与 Cloudflare Workers 的全栈内容与社区平台**
 
-[在线站点](https://aincfh.dpdns.org) · [部署与运维文档](docs/DEPLOYMENT.md) · [数据库迁移](database/)
+[在线站点](https://aincfh.dpdns.org) · [源码仓库](https://github.com/AincFh/my-anime-blog) · [部署与运维文档](docs/DEPLOYMENT.md) · [数据库迁移](database/)
+
+> **当前状态（2026-08-04）**：项目已部署到 Cloudflare Workers，主域名为 [`aincfh.dpdns.org`](https://aincfh.dpdns.org)。最近一轮发布完成了支付交付、商城购买、抽卡、上传配额、认证会话和 D1 发布门禁的生产级加固；当前本地回归为 **122 个测试文件、505 项测试通过**，依赖审计为 0 个已知漏洞。
 
 ## 项目概览
 
@@ -10,11 +12,11 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 
 | 维度 | 实现 |
 | --- | --- |
-| 前端与渲染 | TypeScript、React、React Router v7 SSR、Tailwind CSS v4 |
+| 前端与渲染 | TypeScript、React 19、React Router v8.3 SSR、Tailwind CSS v4 |
 | 边缘运行时 | Cloudflare Workers、Workers AI |
 | 数据与存储 | Cloudflare D1、KV、R2、Analytics Engine |
 | 工程化 | Vitest、Wrangler、数据库增量迁移、生产 readiness gate |
-| 当前验证 | 122 个测试文件、505 项测试通过；typecheck、生产构建和依赖审计通过 |
+| 当前验证 | 122 个测试文件、505 项测试通过；typecheck、生产构建、数据库安全检查和依赖审计通过 |
 
 ### 核心工程实践
 
@@ -22,6 +24,16 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 - 对支付交付、抽卡、商店购买、会员和上传配额使用 D1 批处理、幂等键和审计日志，降低重复扣款与数据不一致风险。
 - 使用会话撤销、CSRF、登录限流、TOTP、CSP nonce、R2 文件校验和安全响应头保护用户与资产链路。
 - 通过生产 D1 readiness、迁移安全检查、公开健康探针、构建校验和全量测试形成发布门禁。
+
+### 当前生产发布
+
+| 项目 | 状态 |
+| --- | --- |
+| Worker | `my-anime-blog`，100% 流量 |
+| 最近版本 | `8e34469d-0941-4d1e-8336-d2f48d141b2d`（2026-08-03） |
+| 公开入口 | [`https://aincfh.dpdns.org`](https://aincfh.dpdns.org) |
+| 只读验收 | 首页、文章、番剧、图库、RSS/Atom、搜索和公开 readiness 均通过 |
+| 保护边界 | 未认证的系统 health 接口按设计返回 `401`；生产支付、上传和资产写入不使用真实业务数据做冒烟测试 |
 
 ---
 
@@ -52,7 +64,7 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 </h3>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Framework-React_Router_v7-blue?style=flat-square&logo=react" />
+  <img src="https://img.shields.io/badge/Framework-React_Router_v8.3-blue?style=flat-square&logo=react" />
   <img src="https://img.shields.io/badge/Runtime-Cloudflare_Workers-orange?style=flat-square&logo=cloudflare" />
   <img src="https://img.shields.io/badge/Database-Cloudflare_D1_(SQLite)-green?style=flat-square" />
   <img src="https://img.shields.io/badge/Storage-Cloudflare_R2-yellow?style=flat-square" />
@@ -256,13 +268,42 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 
 ### 🚧 待完成功能
 
-- [ ] 接入生产支付提供商（本地 Mock 钱包流程已安全化）
-- [ ] 番剧评分短评展示
-- [ ] 更多彩蛋交互
+- [ ] 接入真实支付提供商并完成独立沙箱验收（当前保留 Mock 钱包流程）
+- [ ] 为生产支付、上传、注册和资产链路建立隔离测试账号的定期冒烟流程
+- [ ] 使用 Durable Objects 或 D1 outbox 完成跨 Worker isolate 的严格串行化
+- [ ] 完成生产恢复演练、Cloudflare 边缘响应头对齐和浏览器 FPS 基准记录
+- [ ] 番剧评分短评展示与更多彩蛋交互
 
 ---
 
 ## 📅 更新日志 (Changelog)
+
+<details open>
+<summary><strong>🚀 v1.7.0 (2026-08-03) — 生产安全、数据一致性与发布工程化</strong></summary>
+
+**生产链路加固:**
+- 💳 **支付交付幂等化**：支付回调使用 D1 条件写入与唯一交付记录作为 exactly-once 边界，重复回调不会重复发放；失败订单允许经过签名和金额校验的晚到成功回调重试结算。
+- 🛒 **商城与抽卡一致性**：余额、库存、订单、抽卡结果和资产流水进入受控的 D1 批处理，补充订单号/请求幂等校验，避免重复扣款、超卖和扣费后不发奖。
+- 📦 **上传配额治理**：R2 上传增加 D1 配额预留、并发竞争保护、频率限制、失败补偿和审计记录，避免对象存储与数据库状态长期漂移。
+- 🔐 **认证会话闭环**：登录失败限流按账号/IP 原子计数，成功后可恢复；改密与重置密码撤销既有会话，Cookie 解析、CSRF、TOTP 和 Bearer 认证边界进一步收紧。
+
+**数据库与发布工程:**
+- 🧱 **生产 D1 readiness gate**：部署前只读校验表、字段、索引、通知约束和外键完整性；迁移清单采用增量、可重复执行的策略，阻止破坏性 schema 变更进入生产。
+- 🧭 **Repository 边界收敛**：生产 SQL 统一进入 repository 层，核心查询改为显式字段投影，`SELECT *` 和 API/Service 直连 D1 会被自动检查拦截。
+- 🧪 **质量门禁完整化**：`typecheck`、生产构建、数据库安全校验、readiness、全量 Vitest 和 `npm audit` 纳入发布前验证；当前 122 个测试文件、505 项测试全绿，审计结果为 0 漏洞。
+- ☁️ **主 Worker 正式发布**：`my-anime-blog` 已通过 production 配置校验并接管主域 100% 流量，发布后完成公开路由、readiness、CSP 和认证边界的只读验收。
+
+**体验与运行时优化:**
+- 🎵 **播放器时间轴兼容**：歌词时间戳支持标准 LRC、小时格式和增强格式，非法时间会被忽略，减少歌曲切换后歌词与进度不同步。
+- ⚙️ **动画生命周期治理**：无交互时停止多余 RAF 调度，组件卸载时取消动画帧，降低首页空闲 CPU 占用和长期运行的资源泄漏风险。
+- 🧵 **Worker 请求隔离**：Cron 和请求处理使用当前调用上下文，不再依赖 isolate 级可变请求环境，避免复用实例造成上下文串扰。
+
+**已知边界:**
+- 真实支付服务商仍需单独接入和验收，当前支付页面保留 Mock 流程。
+- 严格跨 isolate 的支付串行化仍需 Durable Objects 或 D1 outbox；当前以 D1 条件写入和唯一约束作为资金安全边界。
+- Cloudflare 边缘响应头规则、生产恢复演练、真实业务账号的上传/支付冒烟和浏览器 FPS 还需要单独的运维窗口验证。
+
+</details>
 
 <details open>
 <summary><strong>✨ v1.6.0 (2026-04-08) — 架构升级与 AI 深度集成</strong></summary>
@@ -419,9 +460,9 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 
 ```bash
 # Node.js >= 22, Git
-git clone <your-repo-url>
+git clone https://github.com/AincFh/my-anime-blog.git
 cd my-anime-blog
-npm install
+npm ci
 ```
 
 ### 2. Cloudflare 配置
@@ -453,8 +494,12 @@ npx wrangler d1 execute anime_db --local --file=database/seed.sql -y
 
 ```bash
 npm run dev        # 本地开发
-npm run deploy:dry-run # 生产配置与上传包本地预检，不执行部署
-npm run deploy     # 正式部署（必须获得明确生产授权）
+npm run typecheck  # 生成 Cloudflare 类型并执行 TypeScript 检查
+npm test -- --run  # 全量测试
+npm run db:validate # 迁移、repository 边界与本地 D1 安全检查
+npm run build:production # 生产环境构建与 Worker 目标校验
+npm run deploy:dry-run   # 生产配置与上传包本地预检，不执行部署
+npm run deploy           # 正式部署（必须获得明确生产授权）
 ```
 
 生产构建必须使用项目脚本生成并校验 `env.production` 配置；不得直接部署普通 `npm run build` 的产物。完整门禁、数据库准备和回滚流程见 `docs/DEPLOYMENT.md`。
@@ -488,14 +533,21 @@ my-anime-blog/
 │   │   ├── membership/       #    会员服务 (tier, subscription, coins)
 │   │   ├── payment/          #    支付服务 (gateway, mock, signature)
 │   │   └── security/         #    安全服务 (audit, totp, csrf)
+│   ├── repositories/         # 🗄️ D1/KV/R2 数据访问层
+│   ├── types/                # 📐 运行时与 DTO 类型定义
+│   ├── styles/               # 🎨 全局样式与设计令牌
 │   ├── utils/                # 🛠️ 工具函数
 │   └── routes.ts             # 🗺️ 统一路由映射中心
 ├── database/                 # 💾 SQL 文件
 │   ├── schema.sql            #    核心表
 │   ├── schema_membership.sql #    会员系统表
 │   ├── seed.sql              #    初始数据
-│   └── scripts/              #    迁移与运维脚本
-└── public/                   # 📦 静态资源
+│   └── migration_*.sql       #    增量、可重复执行的迁移
+├── scripts/                  # 🔧 构建、迁移与发布门禁脚本
+├── workers/                  # ☁️ Cloudflare Worker 入口
+├── docs/                     # 📚 部署、恢复与生产状态记录
+├── public/                   # 📦 静态资源
+└── wrangler.jsonc            # ⚙️ Cloudflare 环境与绑定配置
 ```
 
 ---
@@ -512,7 +564,7 @@ my-anime-blog/
 
 | 类别 | 技术 | 用途 |
 |------|------|------|
-| **Framework** | React Router v7 (Remix) | 全栈 SSR 框架 |
+| **Framework** | React Router v8.3 (Remix) | 全栈 SSR 框架 |
 | **Runtime** | Cloudflare Workers | 边缘计算 Serverless |
 | **Database** | Cloudflare D1 (SQLite) | 分布式关系型数据库 |
 | **Storage** | Cloudflare R2 | 对象存储（图片/媒体） |
@@ -521,6 +573,7 @@ my-anime-blog/
 | **Animation** | Framer Motion | 物理动画引擎 |
 | **Icons** | Lucide React | 图标库 |
 | **AI** | Deepseek / Workers AI | 智能内容生成与审核 |
+| **Build & QA** | Vite 7.3、Wrangler 4.116、Vitest 3.2、TypeScript 5.9 | 构建、类型检查、测试与发布门禁 |
 
 ---
 
