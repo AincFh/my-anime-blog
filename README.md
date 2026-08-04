@@ -1,3 +1,30 @@
+# A.T. Field
+
+**基于 React Router v7 与 Cloudflare Workers 的全栈内容与社区平台**
+
+[在线站点](https://aincfh.dpdns.org) · [部署与运维文档](docs/DEPLOYMENT.md) · [数据库迁移](database/)
+
+## 项目概览
+
+A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖文章、番剧资料、图库、社交互动、会员权益、虚拟积分和管理后台。项目采用边缘 SSR 与无服务器架构，重点处理了 D1 数据一致性、会话安全、支付幂等、上传配额和可观测性等生产问题。
+
+| 维度 | 实现 |
+| --- | --- |
+| 前端与渲染 | TypeScript、React、React Router v7 SSR、Tailwind CSS v4 |
+| 边缘运行时 | Cloudflare Workers、Workers AI |
+| 数据与存储 | Cloudflare D1、KV、R2、Analytics Engine |
+| 工程化 | Vitest、Wrangler、数据库增量迁移、生产 readiness gate |
+| 当前验证 | 122 个测试文件、505 项测试通过；typecheck、生产构建和依赖审计通过 |
+
+### 核心工程实践
+
+- 通过 `repositories → services → API/pages` 分层封装 D1 访问，使用显式字段投影和参数化查询。
+- 对支付交付、抽卡、商店购买、会员和上传配额使用 D1 批处理、幂等键和审计日志，降低重复扣款与数据不一致风险。
+- 使用会话撤销、CSRF、登录限流、TOTP、CSP nonce、R2 文件校验和安全响应头保护用户与资产链路。
+- 通过生产 D1 readiness、迁移安全检查、公开健康探针、构建校验和全量测试形成发布门禁。
+
+---
+
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=8B5CF6&height=260&section=header&text=Project%20::%20A.T.%20Field&fontSize=65&fontAlignY=35&desc=Absolute%20Domain%20Deployed&descAlignY=60&descAlign=50&animation=twinkling" width="100%" />
 </p>
@@ -49,6 +76,8 @@
 ---
 
 ## 🎯 项目进度
+
+> 状态说明：下方 `✅` 表示功能已实现或已有本地验证记录，不等同于已完成独立 Preview 验收或生产验证。生产就绪状态以 `docs/UNKNOWN_REGISTER.md` 和最新质量门禁记录为准。
 
 ### ✅ 已完成
 
@@ -227,7 +256,7 @@
 
 ### 🚧 待完成功能
 
-- [ ] 钱包系统充值功能完善
+- [ ] 接入生产支付提供商（本地 Mock 钱包流程已安全化）
 - [ ] 番剧评分短评展示
 - [ ] 更多彩蛋交互
 
@@ -389,7 +418,7 @@
 ### 1. 环境准备
 
 ```bash
-# Node.js >= 20, Git
+# Node.js >= 22, Git
 git clone <your-repo-url>
 cd my-anime-blog
 npm install
@@ -403,25 +432,32 @@ npx wrangler d1 create anime-db
 # 将 database_id 填入 wrangler.jsonc
 ```
 
-### 3. 数据库初始化
+### 3. 本地数据库初始化
+
+`schema.sql`、`schema_membership.sql` 和 seed 文件仅用于本地或全新隔离数据库，禁止直接用于已有生产数据库。
 
 ```bash
 # 核心表
-npx wrangler d1 execute anime-db --remote --file=database/schema.sql -y
+npx wrangler d1 execute anime_db --local --file=database/schema.sql -y
 
 # 会员系统表
-npx wrangler d1 execute anime-db --remote --file=database/schema_membership.sql -y
+npx wrangler d1 execute anime_db --local --file=database/schema_membership.sql -y
 
 # 初始数据
-npx wrangler d1 execute anime-db --remote --file=database/seed.sql -y
+npx wrangler d1 execute anime_db --local --file=database/seed.sql -y
 ```
+
+生产数据库只允许在备份、独立 Preview 预演、迁移审查和明确授权后执行增量 migration；不得执行 schema 或 seed 文件。
 
 ### 4. 本地开发 & 部署
 
 ```bash
 npm run dev        # 本地开发
-npm run deploy     # 正式部署
+npm run deploy:dry-run # 生产配置与上传包本地预检，不执行部署
+npm run deploy     # 正式部署（必须获得明确生产授权）
 ```
+
+生产构建必须使用项目脚本生成并校验 `env.production` 配置；不得直接部署普通 `npm run build` 的产物。完整门禁、数据库准备和回滚流程见 `docs/DEPLOYMENT.md`。
 
 ---
 

@@ -28,6 +28,15 @@ wrangler.jsonc
 # Cursor 调试文件
 Trace-*.json.gz
 
+# Local AI/IDE workspace rules
+/.Antigravityrules
+/.cursor/
+/.trae/
+/CLAUDE.md
+
+# Historical build output; current output is generated under build/
+/dist/
+
 # 无关参考项目
 awesome-design-md-main/
 
