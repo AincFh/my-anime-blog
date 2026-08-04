@@ -6,6 +6,8 @@
 
 > **当前状态（2026-08-04）**：项目已部署到 Cloudflare Workers，主域名为 [`aincfh.dpdns.org`](https://aincfh.dpdns.org)。最近一轮发布完成了支付交付、商城购买、抽卡、上传配额、认证会话和 D1 发布门禁的生产级加固；当前本地回归为 **122 个测试文件、505 项测试通过**，依赖审计为 0 个已知漏洞。
 
+> **日志口径**：2026-04-08 至 2026-04-26 的内容来自 Git 提交；2026-07-19 之后的内容来自 `docs/PRODUCTION_DEPLOYMENT_STATUS.md`、本地门禁和 Cloudflare 发布验收。只有明确写为“生产发布”的内容才代表已部署，候选批次仍按未发布处理。
+
 ## 项目概览
 
 A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖文章、番剧资料、图库、社交互动、会员权益、虚拟积分和管理后台。项目采用边缘 SSR 与无服务器架构，重点处理了 D1 数据一致性、会话安全、支付幂等、上传配额和可观测性等生产问题。
@@ -279,7 +281,7 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 ## 📅 更新日志 (Changelog)
 
 <details open>
-<summary><strong>🚀 v1.7.0 (2026-08-03) — 生产安全、数据一致性与发布工程化</strong></summary>
+<summary><strong>🚀 2026-08-03 — 生产安全、数据一致性与发布工程化</strong></summary>
 
 **生产链路加固:**
 - 💳 **支付交付幂等化**：支付回调使用 D1 条件写入与唯一交付记录作为 exactly-once 边界，重复回调不会重复发放；失败订单允许经过签名和金额校验的晚到成功回调重试结算。
@@ -298,10 +300,68 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 - ⚙️ **动画生命周期治理**：无交互时停止多余 RAF 调度，组件卸载时取消动画帧，降低首页空闲 CPU 占用和长期运行的资源泄漏风险。
 - 🧵 **Worker 请求隔离**：Cron 和请求处理使用当前调用上下文，不再依赖 isolate 级可变请求环境，避免复用实例造成上下文串扰。
 
+**主要实现位置:** `app/repositories/payment-delivery.repository.ts`、`app/repositories/upload-reservation.repository.ts`、`app/hooks/useMusicPlayer.ts`、`app/components/ui/animations/FluidTrail.tsx`、`workers/app.ts`。
+
 **已知边界:**
 - 真实支付服务商仍需单独接入和验收，当前支付页面保留 Mock 流程。
 - 严格跨 isolate 的支付串行化仍需 Durable Objects 或 D1 outbox；当前以 D1 条件写入和唯一约束作为资金安全边界。
 - Cloudflare 边缘响应头规则、生产恢复演练、真实业务账号的上传/支付冒烟和浏览器 FPS 还需要单独的运维窗口验证。
+
+</details>
+
+<details>
+<summary><strong>🛡️ 2026-07-19 — 2026-07-31 — 生产基线、依赖安全与认证治理</strong></summary>
+
+**生产发布基线:**
+- ☁️ **部署目标固定**：production 构建明确生成 `my-anime-blog`，避免 `--env production` 误解析为另一个 Worker；部署前增加 Worker 名称、环境变量和远程 D1 绑定校验。
+- 🧱 **D1 增量迁移治理**：迁移清单、重复执行检查、外键检查和生产 readiness gate 形成闭环；历史不兼容的 `migrations/0006_mission_system.sql` 保留为退役记录，不直接重放旧任务种子。
+- ⏱️ **定时任务可观测**：部署 `fetch` 与 `scheduled` handlers，订单过期状态机和 KV 心跳经过生产只读验收。
+
+**依赖与认证安全:**
+- 🔄 升级 React 19.2、React Router 8.3、Wrangler 4.116 和 Cloudflare Vite 插件 1.47，移除未使用的 Cloudflare 适配依赖；`npm ci` 可复现安装。
+- 🔐 登录失败限流改为 D1 原子计数，覆盖 IP、账号和邮箱维度；密码重置、后台改密、会话撤销和 CSRF 形成完整闭环。
+- 📝 Notion 同步改为管理员 CSRF 保护的 POST，增加超时、分页上限、游标保护和失败时保留权威快照的边界；AI 配置增加运行时校验。
+- 🧪 生产发布前固定执行 `typecheck`、全量测试、生产构建、`db:validate`、`deploy:readiness`、`deploy:dry-run` 和 `npm audit`。
+
+**发布证据:**
+- 2026-07-21 完成一次生产增量迁移和 Worker 发布，D1/KV/R2/AI/Analytics/Assets 绑定及四条 Cron 通过验收。
+- 2026-07-31 完成依赖升级、认证迁移和移动端播放器避让发布；桌面播放器展开、全屏、移动端和切歌联动的生产浏览器检查无控制台错误。
+
+**主要实现位置:** `wrangler.jsonc`、`scripts/check-production-d1-readiness.mjs`、`database/migration-manifest.json`、`app/services/auth.server.ts`、`app/services/notion-sync.server.ts`。
+
+</details>
+
+<details>
+<summary><strong>🎮 2026-04-25 — 2026-04-26 — 会员经济、架构拆分与播放器迭代</strong></summary>
+
+**功能与体验:**
+- 🎁 **签到与星尘经济**：补签、连续签到、任务奖励和星尘流水进入独立服务与 repository，补充签到记录和任务迁移。
+- 🌗 **主题切换修复**：深浅色切换同步 DOM class，并通过统一的主题 Provider 处理过渡状态。
+- 🎵 **移动端播放器重做**：重新设计移动端播放器布局和交互，处理播放器、底部导航与 AI 入口的避让关系；后续生产检查覆盖展开、全屏和切歌联动。
+
+**架构与稳定性:**
+- 🧩 **前后端分层**：将路由中的职责拆分为 `app/api`、`app/pages`、`app/services`、`app/repositories`，让页面负责渲染与编排，数据访问集中到 repository。
+- 🛠️ **后台回归修复**：修复首页播放器配置越界、商城后台编辑句柄和后台登录路由隔离问题，补齐全站 Toast/Modal 交互。
+- 🛡️ **CSP 与 SSR 稳定性**：补齐音乐源站连接策略，修复 `OptimizedImage` hydration mismatch，并保留 nonce CSP 生成链路。
+- ✅ **工程质量收敛**：全站原生 `confirm()`/`alert()` 逐步替换为统一 Modal/Toast，补齐编辑器和路由上下文类型，`npm run typecheck` 达到 0 错误。
+
+**主要实现位置:** `app/routes.ts`、`app/services/membership/makeup-signin.server.ts`、`app/components/ui/media/MusicPlayerMobile.tsx`、`app/entry.server.tsx`。
+
+**对应提交:** `ddda45b`、`e66c409`、`4abde68`、`0d86cac`、`4d1abe1`、`85057b5`。
+
+</details>
+
+<details>
+<summary><strong>🔒 2026-04-17 — P0 安全修复与会员数据模型补全</strong></summary>
+
+- 🔐 收紧注册、登录、找回密码、Markdown/Notion 编辑器和外部图片等输入边界，清理不应进入公开仓库的配置内容。
+- 👥 补全会员等级、订阅、支付、星尘、商城、任务、权限和用户会员关系等 D1 表及增量迁移。
+- 🧱 将会员核心逻辑集中到 `app/services/membership/`，后台权限判断统一复用 permission helpers，避免各页面自行拼接权限规则。
+- 📜 增加法律与隐私相关页面，完善会员、支付和用户数据处理的产品边界说明。
+
+**主要实现位置:** `app/services/membership/membership.server.ts`、`app/utils/permissions.ts`、`database/migration_005_user_missions.sql`、`database/migration_006_user_memberships.sql`。
+
+**对应提交:** `abe5330`、`8b59fcd`。
 
 </details>
 
@@ -343,25 +403,7 @@ A.T. Field 是一个已部署到 Cloudflare 的全栈个人内容平台，覆盖
 - 所有迁移已在本地测试通过
 - 详细说明见 `database/PENDING_MIGRATIONS.md`
 
-</details>
-
-<details>
-
-**更新内容 & 新玩法:**
-- 🛡️ **上帝模式参数阵列补完**: 万能控制枢纽增强，完整注入了针对 PV 偏移量、注册人数劫持、以及实时在线人数上下限的模拟，真正做到指哪打哪的全域数据拟态。
-
-**体验优化:**
-- 🎨 **全局交互视觉统一 (UI/UX PRO MAX)**: 
-  - 彻底抹除原生浏览器打断式警告。全站（前台商城、后台图库、清理策略、编辑器等）的原生 `confirm()` 和 `alert()` 已被高斯模糊风格的 `confirmModal` 和无感流光 `Toast` 完美取代。
-- ⚡ **TypeScript 类型链极度严苛**: 修复补全了全部遗漏的依赖（如 Tiptap 编辑器）及上下文属性生命树，达成 `npm run typecheck` 零错误金刚不坏之躯。
-
-**核心修复:**
-- 🔧 **回归修复**: 解决 `admin.tsx` 中 `musicPlaylistId` 变量越界导致的首页 500 万能白屏崩溃。
-- 🔧 **句柄修正**: 修复商店后台编辑函数 `setEditingMission` 绑定错误。
-- 🔧 **路由隔离**: 阻断 `/panel/login` 错误加载前台组件导致的持续 401 Unauthorized 无效请求。
-
-**接下来的方向:**
-- 🚀 **1:1 迭代换新内容**: 持续向着更加沉浸、动态丰富的次元生态演进，一比一对齐顶尖应用交互，带来更硬核的玩法与视觉重塑。
+**对应提交:** `b2a995a`、`44f1984`、`e60f276`。
 
 </details>
 
