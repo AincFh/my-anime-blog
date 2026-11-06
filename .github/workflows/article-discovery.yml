@@ -1,0 +1,36 @@
+name: Article Discovery · Isolated Regression
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/services/article-discovery.ts"
+      - "app/services/article-discovery.test.ts"
+      - "app/pages/public/articles.tsx"
+      - ".github/workflows/article-discovery.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/services/article-discovery.ts"
+      - "app/services/article-discovery.test.ts"
+      - "app/pages/public/articles.tsx"
+      - ".github/workflows/article-discovery.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      # Main project postinstall invokes 'wrangler types', but production
+      # Wrangler bindings are not checked into this repository.
+      # Isolate the pure D1 search engine tests without inventing a config.
+      - name: Install dependencies without production Cloudflare typegen
+        run: npm ci --ignore-scripts
+      - name: Run D1 fallback / pagination regression suite
+        run: npx vitest run app/services/article-discovery.test.ts

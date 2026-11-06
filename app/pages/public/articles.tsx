@@ -10,6 +10,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { getCategoryColor } from "~/utils/categoryColor";
 import { OptimizedImage } from "~/components/ui/media/OptimizedImage";
 import { getPlaceholderCover } from "~/utils/placeholder_covers";
+import { listPublishedArticles, listPublishedCategories, normalizeSearch, normalizePage, normalizeCategory, MAX_SEARCH_LENGTH } from "~/services/article-discovery";
 
 // 分类对应的颜色圆点
 const getCategoryDotColor = (category: string | null): string => {
@@ -50,75 +51,33 @@ const getDescription = (content: string): string => {
 export async function loader({ request, context }: LoaderFunctionArgs) {
     const { getDB } = await import("~/utils/db");
     const db = getDB(context);
-
     const url = new URL(request.url);
-    const q = url.searchParams.get("q") || "";
-    const categoryQuery = url.searchParams.get("category") || "all";
+    const q = normalizeSearch(url.searchParams.get("q"));
+    const category = normalizeCategory(url.searchParams.get("category"));
+    const page = normalizePage(url.searchParams.get("page"));
 
-    let articles: Article[] = [];
-    let categories: string[] = ['all'];
-
-    try {
-        // 从 D1 读取已发布的文章
-        let sql = `
-            SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at,
-                   (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id AND c.status = 'approved') as comment_count
-            FROM articles a
-            WHERE a.status = 'published'
-        `;
-        const params: string[] = [];
-
-        // 搜索支持（使用 FTS 或 LIKE）
-        if (q) {
-            // 尝试 FTS 搜索
-            try {
-                sql = `
-                    SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at,
-                           (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id AND c.status = 'approved') as comment_count
-                    FROM articles a
-                    JOIN articles_fts f ON a.id = f.rowid
-                    WHERE a.status = 'published' AND articles_fts MATCH ?
-                `;
-                params.push(q);
-            } catch {
-                // FTS 失败，回退到 LIKE
-                sql = `
-                    SELECT a.id, a.slug, a.title, a.summary as content, a.category, a.cover_image, a.tags, a.views, a.likes, a.created_at,
-                           (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id AND c.status = 'approved') as comment_count
-                    FROM articles a
-                    WHERE a.status = 'published' AND (a.title LIKE ? OR a.summary LIKE ?)
-                `;
-                const likeQ = `%${q}%`;
-                params.push(likeQ, likeQ);
-            }
-        }
-
-        // 分类过滤
-        if (categoryQuery !== "all") {
-            sql += ` AND a.category = ?`;
-            params.push(categoryQuery);
-        }
-
-        sql += ` ORDER BY a.created_at DESC LIMIT 50`;
-
-        const result = await db.prepare(sql).bind(...params).all();
-        articles = (result.results || []) as unknown as Article[];
-
-        // 获取所有分类
-        const categoriesResult = await db
-            .prepare("SELECT DISTINCT category FROM articles WHERE status = 'published' AND category IS NOT NULL AND category != '' AND category != 'null' AND category != 'undefined'")
-            .all();
-        categories = ['all', ...(categoriesResult.results || []).map((c: Record<string, unknown>) => c.category as string).filter(Boolean)];
-
-    } catch (error) {
-        console.error("Failed to fetch articles:", error);
+    // Both reads are independent. A missing FTS index must never erase the
+    // public categories or turn a normal search into a blank page.
+    const [articlesResult, categoriesResult] = await Promise.allSettled([
+        listPublishedArticles<Article>(db, { q, category, page }),
+        listPublishedCategories(db),
+    ]);
+    if (articlesResult.status === "rejected") {
+        console.error("Failed to fetch published articles:", articlesResult.reason);
     }
+    if (categoriesResult.status === "rejected") {
+        console.error("Failed to fetch article categories:", categoriesResult.reason);
+    }
+    const result = articlesResult.status === "fulfilled" ? articlesResult.value : null;
 
     return {
-        articles,
-        categories,
+        articles: result?.articles ?? [],
+        categories: categoriesResult.status === "fulfilled" ? categoriesResult.value : ["all"],
         q,
-        category: categoryQuery
+        category,
+        page,
+        hasNext: result?.hasNext ?? false,
+        loadFailed: articlesResult.status === "rejected",
     };
 }
 
@@ -145,7 +104,7 @@ export function ErrorBoundary({ error }: { error?: unknown }) {
 }
 
 export default function ArticlesPage() {
-    const { articles, categories, q, category } = useLoaderData<typeof loader>();
+    const { articles, categories, q, category, page, hasNext, loadFailed } = useLoaderData<typeof loader>();
     const [searchParams] = useSearchParams();
     const submit = useSubmit();
     const navigation = useNavigation();
@@ -181,6 +140,15 @@ export default function ArticlesPage() {
         submit({ q: searchTerm, category: newCategory }, { replace: true });
     };
 
+    const pageHref = (nextPage: number) => {
+        const params = new URLSearchParams();
+        if (q) params.set("q", q);
+        if (category !== "all") params.set("category", category);
+        params.set("page", String(nextPage));
+        return "/articles?" + params.toString();
+    };
+
+
     return (
         <div className="w-full max-w-[1600px] mx-auto pt-[70px] md:pt-[80px] pb-32 lg:pb-24 px-4 md:px-6 lg:px-10 xl:px-12">
             <div className="w-full">
@@ -215,6 +183,8 @@ export default function ArticlesPage() {
                             <input
                                 type="text"
                                 placeholder="搜索文章..."
+                                maxLength={MAX_SEARCH_LENGTH}
+                                aria-label="搜索已发布文章"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-11 pr-4 py-3.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white transition-all border border-transparent dark:border-white/5"
@@ -239,6 +209,11 @@ export default function ArticlesPage() {
                     </div>
                 </motion.div>
 
+                {loadFailed && (
+                    <div role="alert" className="mb-6 rounded-xl border border-rose-300/50 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-700/30 dark:bg-rose-900/20 dark:text-rose-200">
+                        文章检索暂不可用。可稍后刷新页面，或返回首页。
+                    </div>
+                )}
                 {/* 文章列表 - 现代化瀑布流布局 */}
                 {articles.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
@@ -343,6 +318,23 @@ export default function ArticlesPage() {
                             {q ? '未能找到符合搜索词的记录。探索一下其他领域的文章吧？' : '这里目前像宇宙一样空旷...'}
                         </p>
                     </motion.div>
+                )}
+                {(page > 1 || hasNext) && !loadFailed && (
+                    <nav aria-label="文章列表分页" className="mt-12 flex flex-wrap items-center justify-center gap-4">
+                        {page > 1 ? (
+                            <Link to={pageHref(page - 1)} prefetch="intent"
+                                className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">
+                                上一页
+                            </Link>
+                        ) : <span className="w-20" />}
+                        <span aria-live="polite" className="text-sm text-slate-500 dark:text-slate-400">第 {page} 页</span>
+                        {hasNext ? (
+                            <Link to={pageHref(page + 1)} prefetch="intent"
+                                className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">
+                                下一页
+                            </Link>
+                        ) : <span className="w-20" />}
+                    </nav>
                 )}
             </div>
         </div>
