@@ -49,7 +49,7 @@ function statement(filter: ArticleFilter, useFts: boolean) {
   const args: Array<string | number> = [];
   let join = "";
   if (filter.q && useFts) {
-    join = " JOIN articles_fts AS f ON f.rowid = a.id";
+    join = " JOIN articles_fts ON articles_fts.rowid = a.id";
     conditions.push("articles_fts MATCH ?");
     args.push(literalFtsPhrase(filter.q));
   } else if (filter.q) {
@@ -86,7 +86,7 @@ export async function listPublishedArticles<T>(
   const filter = {
     q: normalizeSearch(options.q),
     category: normalizeCategory(options.category),
-    page: options.page && options.page >= 1 && options.page <= MAX_ARTICLE_PAGE
+    page: Number.isInteger(options.page) && options.page! >= 1 && options.page! <= MAX_ARTICLE_PAGE
       ? Math.trunc(options.page) : 1,
   };
   let rows: T[];
